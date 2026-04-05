@@ -186,20 +186,20 @@
 
 ## Phase 6: Polish & Launch
 
-- [ ] **6.1** Update README.md: V2 features (Forge, Vault, Dreamroll, Launchpad), install instructions, usage examples for each feature, MCPancake explanation, contributing guide, credits section.
+- [x] **6.1** Update README.md: V2 features (Forge, Vault, Dreamroll, Launchpad), install instructions, usage examples for each feature, MCPancake explanation, contributing guide, credits section.
 
-- [ ] **6.2** Update SETUP.md: zero-config setup, enhanced setup with Babel plugin, optional MCP connections (shadcn, Figma, etc.), Dreamroll requirements (Playwright).
+- [x] **6.2** Update SETUP.md: zero-config setup, enhanced setup with Babel plugin, optional MCP connections (shadcn, Figma, etc.), Dreamroll requirements (Playwright).
 
-- [ ] **6.3** Write CONTRIBUTING.md: how to create a preset, how to add a vault component, how to write a new judge personality, how to add MCP support to MCPancake, code standards, PR process.
+- [x] **6.3** Write CONTRIBUTING.md: how to create a preset, how to add a vault component, how to write a new judge personality, how to add MCP support to MCPancake, code standards, PR process.
 
-- [ ] **6.4** Update `.claude-plugin/plugin.json`: add all V2 skills, agents, commands. Verify plugin structure validates.
+- [x] **6.4** Update `.claude-plugin/plugin.json`: add all V2 skills, agents, commands. Verify plugin structure validates.
 
-- [ ] **6.5** Update `marketplace.json` entry (in Linkraft repo) with V2 description and keywords.
+- [x] **6.5** Update `marketplace.json` entry (in Linkraft repo) with V2 description and keywords.
 
-- [ ] **6.6** Create the vault repo skeleton: `akellainmotion/poking-vault` with marketplace.json, README, CONTRIBUTING, and 3 example components.
+- [x] **6.6** Create the vault repo skeleton: `akellainmotion/poking-vault` with marketplace.json, README, CONTRIBUTING, and 3 example components.
 
-- [ ] **6.7** Create `scripts/validate-plugin.js`: validates the entire plugin structure (all skills exist, all agents exist, all commands exist, plugin.json is valid, .mcp.json is valid).
+- [x] **6.7** Create `scripts/validate-plugin.js`: validates the entire plugin structure (all skills exist, all agents exist, all commands exist, plugin.json is valid, .mcp.json is valid).
 
-- [ ] **6.8** Final verification: full compile, full lint, ALL tests pass (V1 + V2), all presets validate, plugin structure valid, overlay bundles, extension bundles. Zero failures.
+- [x] **6.8** Final verification: full compile, full lint, ALL tests pass (V1 + V2), all presets validate, plugin structure valid, overlay bundles, extension bundles. Zero failures.
 
-- [ ] **6.9** Prepare launch: demo video script (Forge apply in 30 seconds, Dreamroll morning report reveal, Launchpad full pipeline), BaB carousel outline, CHAI Dublin presentation notes.
+- [x] **6.9** Prepare launch: demo video script (Forge apply in 30 seconds, Dreamroll morning report reveal, Launchpad full pipeline), BaB carousel outline, CHAI Dublin presentation notes.

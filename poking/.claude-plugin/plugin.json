@@ -1,7 +1,57 @@
 {
   "name": "poking-is-new-coding",
-  "description": "Click any element in your app, Claude gets full context: component, file, line, styles, props. Stop describing. Start pointing.",
+  "description": "Visual design studio for Claude Code. Click elements (Poke), apply design systems (Forge), share components (Vault), generate overnight designs (Dreamroll), launch landing pages (Launchpad).",
   "author": {
     "name": "Akella inMotion"
-  }
+  },
+  "skills": [
+    {
+      "name": "poking",
+      "path": "skills/poking/SKILL.md"
+    },
+    {
+      "name": "forge",
+      "path": "skills/forge/SKILL.md"
+    },
+    {
+      "name": "dreamroll",
+      "path": "skills/dreamroll/SKILL.md"
+    },
+    {
+      "name": "launchpad",
+      "path": "skills/launchpad/SKILL.md"
+    }
+  ],
+  "agents": [
+    {
+      "name": "dreamroll-brutus",
+      "path": "agents/dreamroll-brutus.md"
+    },
+    {
+      "name": "dreamroll-venus",
+      "path": "agents/dreamroll-venus.md"
+    },
+    {
+      "name": "dreamroll-mercury",
+      "path": "agents/dreamroll-mercury.md"
+    }
+  ],
+  "commands": [
+    {
+      "name": "forge",
+      "path": "commands/forge.md"
+    },
+    {
+      "name": "vault",
+      "path": "commands/vault.md"
+    },
+    {
+      "name": "dreamroll",
+      "path": "commands/dreamroll.md"
+    },
+    {
+      "name": "launchpad",
+      "path": "commands/launchpad.md"
+    }
+  ]
 }
