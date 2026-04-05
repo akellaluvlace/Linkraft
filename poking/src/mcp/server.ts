@@ -9,6 +9,7 @@ import { registerNavigationTools } from './tools/navigation.js';
 import { registerComponentTools } from './tools/components.js';
 import { registerForgeTools } from './tools/forge-tools.js';
 import { registerMcpancakeTools } from './tools/mcpancake.js';
+import { registerVaultTools } from './tools/vault-tools.js';
 
 // Shared state - updated when the extension sends element selection data
 let currentSelection: PokeContext | null = null;
@@ -39,6 +40,7 @@ async function main(): Promise<void> {
   registerComponentTools(server);
   registerForgeTools(server);
   registerMcpancakeTools(server);
+  registerVaultTools(server);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

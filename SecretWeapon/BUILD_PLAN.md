@@ -92,23 +92,23 @@
 
 ## Phase 3: Vault
 
-- [ ] **3.1** Define vault component schema in `src/vault/types.ts`: name, author, description, framework, styling, tags, designSystem, code (file contents as record), preview (screenshot base64 or URL), dependencies, props interface, downloads count, stars count.
+- [x] **3.1** Define vault component schema in `src/vault/types.ts`: name, author, description, framework, styling, tags, designSystem, code (file contents as record), preview (screenshot base64 or URL), dependencies, props interface, downloads count, stars count.
 
-- [ ] **3.2** Create `src/vault/component-packager.ts`: given a source file path (from poke selection or manual input), extracts the component and its local dependencies into a self-contained vault package. Reads imports, resolves relative imports, bundles them. Strips project-specific paths. Generates metadata from the component's props/exports.
+- [x] **3.2** Create `src/vault/component-packager.ts`: given a source file path (from poke selection or manual input), extracts the component and its local dependencies into a self-contained vault package. Reads imports, resolves relative imports, bundles them. Strips project-specific paths. Generates metadata from the component's props/exports.
 
-- [ ] **3.3** Create `src/vault/vault-client.ts`: reads the vault GitHub repo (`akellainmotion/poking-vault`). Lists available components, searches by tag/name/style, downloads a component package. For V2: read-only. Uses GitHub raw content URLs (no API key needed for public repos).
+- [x] **3.3** Create `src/vault/vault-client.ts`: reads the vault GitHub repo (`akellainmotion/poking-vault`). Lists available components, searches by tag/name/style, downloads a component package. For V2: read-only. Uses GitHub raw content URLs (no API key needed for public repos).
 
-- [ ] **3.4** Create `src/vault/competition.ts`: manages competition state in `.vault/competitions.json`. Create competition (name, deadline, prize). Submit component (links to vault entry). List submissions. Leaderboard (sorted by stars/downloads).
+- [x] **3.4** Create `src/vault/competition.ts`: manages competition state in `.vault/competitions.json`. Create competition (name, deadline, prize). Submit component (links to vault entry). List submissions. Leaderboard (sorted by stars/downloads).
 
-- [ ] **3.5** Create `src/mcp/tools/vault-tools.ts`: MCP tools: `vault_browse`, `vault_search`, `vault_install`, `vault_save` (packages current poke selection), `vault_my_components`, `vault_competition_list`, `vault_competition_submit`. Register in server.ts.
+- [x] **3.5** Create `src/mcp/tools/vault-tools.ts`: MCP tools: `vault_browse`, `vault_search`, `vault_install`, `vault_save` (packages current poke selection), `vault_my_components`, `vault_competition_list`, `vault_competition_submit`. Register in server.ts.
 
-- [ ] **3.6** Write `commands/vault.md`: /vault command with subcommands: browse, search, save, install, my-components, share, competition.
+- [x] **3.6** Write `commands/vault.md`: /vault command with subcommands: browse, search, save, install, my-components, share, competition.
 
-- [ ] **3.7** Write `tests/vault/component-packager.test.ts`: mock a React component with local imports, package it, verify output is self-contained and metadata is correct.
+- [x] **3.7** Write `tests/vault/component-packager.test.ts`: mock a React component with local imports, package it, verify output is self-contained and metadata is correct.
 
-- [ ] **3.8** Write `tests/vault/vault-client.test.ts`: mock GitHub API responses, test browse, search, download. Test offline/unavailable gracefully.
+- [x] **3.8** Write `tests/vault/vault-client.test.ts`: mock GitHub API responses, test browse, search, download. Test offline/unavailable gracefully.
 
-- [ ] **3.9** Verify Phase 3: vault client reads mock repo, packager produces valid packages, competition system tracks state, no regressions.
+- [x] **3.9** Verify Phase 3: vault client reads mock repo, packager produces valid packages, competition system tracks state, no regressions.
 
 ---
 
