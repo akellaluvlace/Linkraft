@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "poking": {
+      "command": "node",
+      "args": ["dist/mcp/server.js"]
+    }
+  }
+}

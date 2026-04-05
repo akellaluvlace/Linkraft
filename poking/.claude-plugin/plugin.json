@@ -1,0 +1,7 @@
+{
+  "name": "poking-is-new-coding",
+  "description": "Click any element in your app, Claude gets full context: component, file, line, styles, props. Stop describing. Start pointing.",
+  "author": {
+    "name": "Akella inMotion"
+  }
+}
