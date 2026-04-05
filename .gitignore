@@ -1,0 +1,35 @@
+node_modules/
+dist/
+*.js.map
+*.d.ts
+!scripts/*.js
+!generator/bin/*.js
+
+# Config with secrets
+mcpkit.config.json
+!config.example.json
+
+# Token storage
+.linkraft/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.*
+
+# Build artifacts
+coverage/
+.tsbuildinfo

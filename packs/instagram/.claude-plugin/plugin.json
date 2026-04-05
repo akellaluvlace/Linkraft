@@ -1,0 +1,20 @@
+{
+  "name": "linkraft-instagram",
+  "version": "0.1.0",
+  "description": "Instagram integration for Claude Code: media, comments, insights, publishing",
+  "author": "Akella inMotion",
+  "license": "MIT",
+  "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/instagram",
+  "skills": [
+    {
+      "name": "instagram",
+      "path": "skills/instagram/SKILL.md"
+    }
+  ],
+  "mcpServers": {
+    "linkraft-instagram": {
+      "command": "node",
+      "args": ["dist/server.js"]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@linkraft/google-calendar",
+  "version": "0.1.0",
+  "description": "Google Calendar integration for Claude Code via MCP: events, calendars, scheduling",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@linkraft/core": "*",
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  },
+  "license": "MIT"
+}

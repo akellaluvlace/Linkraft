@@ -1,0 +1,60 @@
+{
+  "name": "linkraft",
+  "version": "0.1.0",
+  "description": "Open-source toolkit connecting Claude Code to any service via MCP servers. Pre-built packs for Telegram, Discord, Twitter/X, LinkedIn, and more.",
+  "author": "Akella inMotion",
+  "license": "MIT",
+  "homepage": "https://github.com/akellaluvlace/Linkraft",
+  "packs": [
+    {
+      "name": "telegram",
+      "path": "packs/telegram",
+      "description": "Telegram Bot API: messages, groups, keyboards, webhooks"
+    },
+    {
+      "name": "discord",
+      "path": "packs/discord",
+      "description": "Discord Bot API: messages, channels, guilds, member management"
+    },
+    {
+      "name": "twitter-x",
+      "path": "packs/twitter-x",
+      "description": "Twitter/X API v2: tweets, users, likes, retweets, bookmarks"
+    },
+    {
+      "name": "linkedin",
+      "path": "packs/linkedin",
+      "description": "LinkedIn API: posts, profiles, organizations"
+    },
+    {
+      "name": "instagram",
+      "path": "packs/instagram",
+      "description": "Instagram Graph API: media, comments, insights"
+    },
+    {
+      "name": "gmail",
+      "path": "packs/gmail",
+      "description": "Gmail API: send, read, label, and manage email threads"
+    },
+    {
+      "name": "notion",
+      "path": "packs/notion",
+      "description": "Notion API: pages, databases, blocks"
+    },
+    {
+      "name": "slack",
+      "path": "packs/slack",
+      "description": "Slack API: messages, channels, reactions, pins"
+    },
+    {
+      "name": "google-calendar",
+      "path": "packs/google-calendar",
+      "description": "Google Calendar API: events, calendars, quick add"
+    },
+    {
+      "name": "google-sheets",
+      "path": "packs/google-sheets",
+      "description": "Google Sheets API: read, write, append, and manage spreadsheets"
+    }
+  ]
+}

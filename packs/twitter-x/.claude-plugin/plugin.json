@@ -1,0 +1,20 @@
+{
+  "name": "linkraft-twitter-x",
+  "version": "0.1.0",
+  "description": "Twitter/X integration for Claude Code: tweets, users, likes, retweets, bookmarks",
+  "author": "Akella inMotion",
+  "license": "MIT",
+  "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/twitter-x",
+  "skills": [
+    {
+      "name": "twitter-x",
+      "path": "skills/twitter-x/SKILL.md"
+    }
+  ],
+  "mcpServers": {
+    "linkraft-twitter-x": {
+      "command": "node",
+      "args": ["dist/server.js"]
+    }
+  }
+}

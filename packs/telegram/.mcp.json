@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "linkraft-telegram": {
+      "command": "node",
+      "args": ["dist/server.js"],
+      "env": {
+        "TELEGRAM_BOT_TOKEN": ""
+      }
+    }
+  }
+}

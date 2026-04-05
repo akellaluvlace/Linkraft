@@ -1,0 +1,23 @@
+{
+  "name": "instagram",
+  "version": "0.1.0",
+  "auth": {
+    "type": "oauth2",
+    "clientId": "YOUR_CLIENT_ID",
+    "clientSecret": "YOUR_CLIENT_SECRET",
+    "scopes": ["instagram_basic", "instagram_content_publish", "instagram_manage_comments", "instagram_manage_insights", "pages_show_list", "pages_read_engagement"]
+  },
+  "rateLimits": {
+    "requestsPerMinute": 200,
+    "requestsPerDay": 100000,
+    "retryOnRateLimit": true,
+    "retryMaxAttempts": 3,
+    "retryBackoffMs": 1000
+  },
+  "transport": {
+    "type": "stdio"
+  },
+  "logging": {
+    "level": "info"
+  }
+}

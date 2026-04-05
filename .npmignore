@@ -1,0 +1,17 @@
+src/
+tests/
+*.test.ts
+.github/
+coverage/
+.tmp-*
+tsconfig.json
+tsconfig.base.json
+vitest.config.ts
+.eslintrc.json
+.prettierrc
+CLAUDE.md
+CONTRIBUTING.md
+BUILD_PLAN.md
+PROMPT.md
+SYSTEM.md
+plan.md

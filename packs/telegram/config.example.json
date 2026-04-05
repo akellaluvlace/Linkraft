@@ -1,0 +1,21 @@
+{
+  "name": "telegram",
+  "version": "0.1.0",
+  "auth": {
+    "type": "bot-token",
+    "botToken": "YOUR_BOT_TOKEN_FROM_BOTFATHER"
+  },
+  "rateLimits": {
+    "requestsPerMinute": 30,
+    "requestsPerDay": 50000,
+    "retryOnRateLimit": true,
+    "retryMaxAttempts": 3,
+    "retryBackoffMs": 1000
+  },
+  "transport": {
+    "type": "stdio"
+  },
+  "logging": {
+    "level": "info"
+  }
+}

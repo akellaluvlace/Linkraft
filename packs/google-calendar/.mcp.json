@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "linkraft-google-calendar": {
+      "command": "node",
+      "args": ["dist/server.js"],
+      "env": {
+        "GOOGLE_CALENDAR_CLIENT_ID": "",
+        "GOOGLE_CALENDAR_CLIENT_SECRET": ""
+      }
+    }
+  }
+}

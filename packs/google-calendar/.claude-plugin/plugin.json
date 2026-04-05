@@ -1,0 +1,20 @@
+{
+  "name": "linkraft-google-calendar",
+  "version": "0.1.0",
+  "description": "Google Calendar integration for Claude Code: events, calendars, scheduling, quick add",
+  "author": "Akella inMotion",
+  "license": "MIT",
+  "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/google-calendar",
+  "skills": [
+    {
+      "name": "google-calendar",
+      "path": "skills/google-calendar/SKILL.md"
+    }
+  ],
+  "mcpServers": {
+    "linkraft-google-calendar": {
+      "command": "node",
+      "args": ["dist/server.js"]
+    }
+  }
+}

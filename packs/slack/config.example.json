@@ -1,0 +1,23 @@
+{
+  "name": "slack",
+  "version": "0.1.0",
+  "auth": {
+    "type": "oauth2",
+    "clientId": "YOUR_CLIENT_ID",
+    "clientSecret": "YOUR_CLIENT_SECRET",
+    "scopes": ["chat:write", "channels:read", "channels:history", "users:read", "reactions:write", "files:write", "pins:write"]
+  },
+  "rateLimits": {
+    "requestsPerMinute": 50,
+    "requestsPerDay": 100000,
+    "retryOnRateLimit": true,
+    "retryMaxAttempts": 3,
+    "retryBackoffMs": 1000
+  },
+  "transport": {
+    "type": "stdio"
+  },
+  "logging": {
+    "level": "info"
+  }
+}

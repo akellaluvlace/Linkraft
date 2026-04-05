@@ -1,0 +1,23 @@
+{
+  "name": "twitter-x",
+  "version": "0.1.0",
+  "auth": {
+    "type": "oauth2",
+    "clientId": "YOUR_CLIENT_ID",
+    "clientSecret": "YOUR_CLIENT_SECRET",
+    "scopes": ["tweet.read", "tweet.write", "users.read", "like.read", "like.write", "bookmark.read", "bookmark.write", "offline.access"]
+  },
+  "rateLimits": {
+    "requestsPerMinute": 15,
+    "requestsPerDay": 50000,
+    "retryOnRateLimit": true,
+    "retryMaxAttempts": 3,
+    "retryBackoffMs": 1000
+  },
+  "transport": {
+    "type": "stdio"
+  },
+  "logging": {
+    "level": "info"
+  }
+}

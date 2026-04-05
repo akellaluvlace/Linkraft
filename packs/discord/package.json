@@ -1,0 +1,17 @@
+{
+  "name": "@linkraft/discord",
+  "version": "0.1.0",
+  "description": "Discord Bot integration for Claude Code via MCP: messages, channels, guilds, members",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@linkraft/core": "*",
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "linkraft-discord": {
+      "command": "node",
+      "args": ["dist/server.js"],
+      "env": {
+        "DISCORD_BOT_TOKEN": ""
+      }
+    }
+  }
+}

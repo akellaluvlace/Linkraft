@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "linkraft-linkedin": {
+      "command": "node",
+      "args": ["dist/server.js"],
+      "env": {
+        "LINKEDIN_CLIENT_ID": "",
+        "LINKEDIN_CLIENT_SECRET": ""
+      }
+    }
+  }
+}

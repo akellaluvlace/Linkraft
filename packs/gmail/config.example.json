@@ -1,0 +1,28 @@
+{
+  "name": "gmail",
+  "version": "0.1.0",
+  "auth": {
+    "type": "oauth2",
+    "clientId": "YOUR_CLIENT_ID",
+    "clientSecret": "YOUR_CLIENT_SECRET",
+    "scopes": [
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/gmail.send",
+      "https://www.googleapis.com/auth/gmail.modify",
+      "https://www.googleapis.com/auth/gmail.labels"
+    ]
+  },
+  "rateLimits": {
+    "requestsPerMinute": 250,
+    "requestsPerDay": 1000000,
+    "retryOnRateLimit": true,
+    "retryMaxAttempts": 3,
+    "retryBackoffMs": 1000
+  },
+  "transport": {
+    "type": "stdio"
+  },
+  "logging": {
+    "level": "info"
+  }
+}

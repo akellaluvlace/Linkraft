@@ -1,0 +1,20 @@
+{
+  "name": "linkraft-google-sheets",
+  "version": "0.1.0",
+  "description": "Google Sheets integration for Claude Code: create spreadsheets, read/write cell values, batch operations",
+  "author": "Akella inMotion",
+  "license": "MIT",
+  "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/google-sheets",
+  "skills": [
+    {
+      "name": "google-sheets",
+      "path": "skills/google-sheets/SKILL.md"
+    }
+  ],
+  "mcpServers": {
+    "linkraft-google-sheets": {
+      "command": "node",
+      "args": ["dist/server.js"]
+    }
+  }
+}

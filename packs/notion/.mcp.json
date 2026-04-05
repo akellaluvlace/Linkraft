@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "linkraft-notion": {
+      "command": "node",
+      "args": ["dist/server.js"],
+      "env": {
+        "NOTION_API_KEY": ""
+      }
+    }
+  }
+}

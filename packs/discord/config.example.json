@@ -1,0 +1,21 @@
+{
+  "name": "discord",
+  "version": "0.1.0",
+  "auth": {
+    "type": "bot-token",
+    "botToken": "YOUR_BOT_TOKEN_FROM_DISCORD_DEVELOPER_PORTAL"
+  },
+  "rateLimits": {
+    "requestsPerMinute": 50,
+    "requestsPerDay": 100000,
+    "retryOnRateLimit": true,
+    "retryMaxAttempts": 3,
+    "retryBackoffMs": 1000
+  },
+  "transport": {
+    "type": "stdio"
+  },
+  "logging": {
+    "level": "info"
+  }
+}

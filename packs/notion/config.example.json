@@ -1,0 +1,21 @@
+{
+  "name": "notion",
+  "version": "0.1.0",
+  "auth": {
+    "type": "bot-token",
+    "botToken": "YOUR_NOTION_INTERNAL_INTEGRATION_TOKEN"
+  },
+  "rateLimits": {
+    "requestsPerMinute": 180,
+    "requestsPerDay": 100000,
+    "retryOnRateLimit": true,
+    "retryMaxAttempts": 3,
+    "retryBackoffMs": 1000
+  },
+  "transport": {
+    "type": "stdio"
+  },
+  "logging": {
+    "level": "info"
+  }
+}
