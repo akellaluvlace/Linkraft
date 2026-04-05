@@ -68,6 +68,22 @@ When user says "browse presets" or "/forge browse":
 2. Present each preset with name, description, and key visual characteristics
 3. Group by style category if helpful
 
+## Component Browsing
+
+When user says "find me a component" or "/forge components":
+
+1. Call `mcpancake_search_components` with the user's query
+2. Results come from all connected MCPs (shadcn, Magic UI, Vault)
+3. Present results with name, source, description, and install command
+4. If user picks one, use the appropriate install command
+5. If no MCPs are connected, inform the user that component browsing requires MCP connections
+
+### MCPancake Tools
+
+- `mcpancake_search_components`: search components across all sources
+- `mcpancake_get_docs`: fetch docs for a specific component
+- `mcpancake_available_mcps`: check which MCPs are connected
+
 ## Design Token Format
 
 Tokens follow a consistent structure across all presets:

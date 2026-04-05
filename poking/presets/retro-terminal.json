@@ -1,0 +1,62 @@
+{
+  "name": "Retro Terminal",
+  "id": "retro-terminal",
+  "author": "akellainmotion",
+  "description": "Monospace type, green on black, scanline textures, CRT glow effects",
+  "tokens": {
+    "colors": {
+      "primary": "#00FF41",
+      "secondary": "#008F11",
+      "background": "#0D0208",
+      "accent": "#00FF41",
+      "surface": "#0D0208"
+    },
+    "typography": {
+      "heading": { "family": "VT323", "weight": "400", "transform": "uppercase" },
+      "body": { "family": "IBM Plex Mono", "weight": "400" },
+      "mono": { "family": "IBM Plex Mono", "weight": "500" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 4, 8, 12, 16, 24, 32, 48, 64, 96]
+    },
+    "borders": {
+      "width": "1px",
+      "style": "solid",
+      "color": "#00FF41",
+      "radius": "0px"
+    },
+    "shadows": {
+      "default": "0 0 10px rgba(0, 255, 65, 0.3)",
+      "hover": "0 0 20px rgba(0, 255, 65, 0.5)"
+    },
+    "animations": {
+      "style": "ease 150ms",
+      "hover": "none"
+    }
+  },
+  "componentOverrides": {
+    "button": "border border-green-400 rounded-none bg-transparent text-green-400 font-mono uppercase tracking-widest hover:bg-green-400/10 hover:shadow-[0_0_15px_rgba(0,255,65,0.4)]",
+    "card": "border border-green-400/50 rounded-none bg-black/80 text-green-400 font-mono",
+    "input": "border border-green-400/50 rounded-none bg-transparent text-green-400 font-mono placeholder:text-green-400/30 focus:border-green-400 focus:shadow-[0_0_10px_rgba(0,255,65,0.3)]",
+    "link": "text-green-400 font-mono underline underline-offset-4 hover:text-green-300",
+    "badge": "border border-green-400/50 rounded-none bg-green-400/10 text-green-400 font-mono text-xs px-2 py-1 uppercase",
+    "alert": "border border-green-400 rounded-none bg-green-400/5 text-green-400 font-mono p-4"
+  },
+  "forbiddenPatterns": [
+    "rounded-lg",
+    "rounded-xl",
+    "rounded-full",
+    "rounded-2xl",
+    "bg-gradient-to-",
+    "bg-white",
+    "text-black",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "font-sans",
+    "font-serif"
+  ],
+  "requiredFonts": ["VT323", "IBM Plex Mono"],
+  "shadcnTheme": null
+}

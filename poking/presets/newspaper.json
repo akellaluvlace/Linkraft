@@ -1,0 +1,63 @@
+{
+  "name": "Newspaper",
+  "id": "newspaper",
+  "author": "akellainmotion",
+  "description": "Serif typography, column layouts, ruled lines, print-inspired editorial design",
+  "tokens": {
+    "colors": {
+      "primary": "#1A1A1A",
+      "secondary": "#8B0000",
+      "background": "#FAF8F5",
+      "accent": "#8B0000",
+      "surface": "#FFFFFF"
+    },
+    "typography": {
+      "heading": { "family": "Merriweather", "weight": "900" },
+      "body": { "family": "Source Serif 4", "weight": "400" },
+      "mono": { "family": "Courier Prime", "weight": "400" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 4, 8, 12, 16, 24, 32, 48, 64, 96]
+    },
+    "borders": {
+      "width": "1px",
+      "style": "solid",
+      "color": "#1A1A1A",
+      "radius": "0px"
+    },
+    "shadows": {
+      "default": "none",
+      "hover": "none"
+    },
+    "animations": {
+      "style": "none",
+      "hover": "none"
+    }
+  },
+  "componentOverrides": {
+    "button": "border-2 border-black rounded-none font-serif font-bold px-6 py-2 hover:bg-black hover:text-white transition-colors",
+    "card": "border-t-2 border-b border-black rounded-none pt-4 pb-4",
+    "input": "border-b-2 border-black rounded-none bg-transparent font-serif focus:border-red-800 px-0 py-2",
+    "link": "text-red-900 font-serif underline decoration-1 underline-offset-2 hover:decoration-2",
+    "badge": "border border-black rounded-none font-serif font-bold text-xs uppercase tracking-wider px-2 py-0.5",
+    "alert": "border-l-4 border-black rounded-none pl-4 py-3 font-serif italic"
+  },
+  "forbiddenPatterns": [
+    "rounded-lg",
+    "rounded-xl",
+    "rounded-full",
+    "rounded-2xl",
+    "bg-gradient-to-",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "backdrop-blur",
+    "blur-",
+    "font-sans",
+    "font-mono"
+  ],
+  "requiredFonts": ["Merriweather", "Source Serif 4", "Courier Prime"],
+  "shadcnTheme": null
+}

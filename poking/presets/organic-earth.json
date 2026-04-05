@@ -1,0 +1,60 @@
+{
+  "name": "Organic Earth",
+  "id": "organic-earth",
+  "author": "akellainmotion",
+  "description": "Natural colors, organic shapes, warm tones, hand-crafted feel",
+  "tokens": {
+    "colors": {
+      "primary": "#5C4033",
+      "secondary": "#8B7355",
+      "background": "#F5F0EB",
+      "accent": "#6B8E23",
+      "surface": "#FFFFFF"
+    },
+    "typography": {
+      "heading": { "family": "Lora", "weight": "700" },
+      "body": { "family": "Source Sans 3", "weight": "400" },
+      "mono": { "family": "IBM Plex Mono", "weight": "400" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 4, 8, 12, 16, 24, 32, 48, 64, 96]
+    },
+    "borders": {
+      "width": "1px",
+      "style": "solid",
+      "color": "#8B7355",
+      "radius": "8px"
+    },
+    "shadows": {
+      "default": "0 2px 8px rgba(92, 64, 51, 0.1)",
+      "hover": "0 4px 16px rgba(92, 64, 51, 0.15)"
+    },
+    "animations": {
+      "style": "ease 250ms",
+      "hover": "translateY(-1px)"
+    }
+  },
+  "componentOverrides": {
+    "button": "bg-amber-800 text-amber-50 rounded-lg font-medium px-6 py-3 hover:bg-amber-700 transition-all border-0",
+    "card": "bg-white rounded-lg border border-amber-200 shadow-sm p-6",
+    "input": "bg-stone-50 rounded-lg border border-stone-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-200 px-4 py-2",
+    "link": "text-amber-800 hover:text-amber-600 transition-colors underline underline-offset-2 decoration-amber-300",
+    "badge": "bg-olive-100 text-olive-800 rounded-md text-xs font-medium px-2 py-1",
+    "alert": "bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-900"
+  },
+  "forbiddenPatterns": [
+    "rounded-none",
+    "rounded-full",
+    "border-3",
+    "border-4",
+    "bg-gradient-to-",
+    "shadow-[",
+    "neon",
+    "font-mono",
+    "uppercase",
+    "tracking-widest"
+  ],
+  "requiredFonts": ["Lora", "Source Sans 3", "IBM Plex Mono"],
+  "shadcnTheme": null
+}

@@ -1,0 +1,59 @@
+{
+  "name": "Soft Pastel",
+  "id": "soft-pastel",
+  "author": "akellainmotion",
+  "description": "Rounded everything, soft gradients, warm pastels, gentle and approachable",
+  "tokens": {
+    "colors": {
+      "primary": "#F9A8D4",
+      "secondary": "#C4B5FD",
+      "background": "#FFF7ED",
+      "accent": "#93C5FD",
+      "surface": "#FFFFFF"
+    },
+    "typography": {
+      "heading": { "family": "Nunito", "weight": "700" },
+      "body": { "family": "Nunito", "weight": "400" },
+      "mono": { "family": "Fira Code", "weight": "400" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 4, 8, 12, 16, 24, 32, 48, 64, 96]
+    },
+    "borders": {
+      "width": "1px",
+      "style": "solid",
+      "color": "#F9A8D4",
+      "radius": "16px"
+    },
+    "shadows": {
+      "default": "0 4px 14px rgba(249, 168, 212, 0.15)",
+      "hover": "0 8px 25px rgba(249, 168, 212, 0.25)"
+    },
+    "animations": {
+      "style": "ease-out 200ms",
+      "hover": "translateY(-2px)"
+    }
+  },
+  "componentOverrides": {
+    "button": "bg-pink-200 text-pink-900 rounded-2xl font-semibold px-6 py-3 hover:bg-pink-300 hover:shadow-lg transition-all border-0",
+    "card": "bg-white rounded-2xl shadow-md border border-pink-100 p-6",
+    "input": "bg-white/80 rounded-xl border border-pink-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 px-4 py-2",
+    "link": "text-pink-500 hover:text-pink-700 transition-colors font-medium",
+    "badge": "bg-purple-100 text-purple-700 rounded-full text-xs font-medium px-3 py-1",
+    "alert": "bg-blue-50 border border-blue-200 rounded-2xl p-4 text-blue-800"
+  },
+  "forbiddenPatterns": [
+    "border-3",
+    "border-4",
+    "rounded-none",
+    "shadow-[",
+    "uppercase",
+    "tracking-widest",
+    "font-mono",
+    "bg-black",
+    "text-white"
+  ],
+  "requiredFonts": ["Nunito", "Fira Code"],
+  "shadcnTheme": null
+}

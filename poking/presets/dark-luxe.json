@@ -1,0 +1,62 @@
+{
+  "name": "Dark Luxe",
+  "id": "dark-luxe",
+  "author": "akellainmotion",
+  "description": "Dark backgrounds, gold accents, serif headings, premium and sophisticated",
+  "tokens": {
+    "colors": {
+      "primary": "#C9A84C",
+      "secondary": "#8B7355",
+      "background": "#0A0A0A",
+      "accent": "#C9A84C",
+      "surface": "#1A1A1A"
+    },
+    "typography": {
+      "heading": { "family": "Playfair Display", "weight": "700" },
+      "body": { "family": "Inter", "weight": "300" },
+      "mono": { "family": "JetBrains Mono", "weight": "400" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 4, 8, 16, 24, 32, 48, 64, 96, 128]
+    },
+    "borders": {
+      "width": "1px",
+      "style": "solid",
+      "color": "#C9A84C",
+      "radius": "4px"
+    },
+    "shadows": {
+      "default": "0 4px 20px rgba(0, 0, 0, 0.4)",
+      "hover": "0 8px 30px rgba(201, 168, 76, 0.15)"
+    },
+    "animations": {
+      "style": "ease 300ms",
+      "hover": "translateY(-1px)"
+    }
+  },
+  "componentOverrides": {
+    "button": "bg-amber-600/90 text-white rounded border border-amber-500/50 font-light tracking-wider uppercase text-sm px-8 py-3 hover:bg-amber-500 transition-all",
+    "card": "bg-neutral-900 border border-neutral-800 rounded p-8 shadow-xl",
+    "input": "bg-neutral-900 border border-neutral-700 rounded text-white placeholder:text-neutral-500 focus:border-amber-500 px-4 py-3",
+    "link": "text-amber-400 hover:text-amber-300 transition-colors tracking-wide",
+    "badge": "border border-amber-500/30 bg-amber-500/10 text-amber-400 rounded text-xs tracking-widest uppercase px-3 py-1",
+    "alert": "bg-neutral-900 border border-amber-500/30 rounded p-6 text-neutral-200"
+  },
+  "forbiddenPatterns": [
+    "bg-white",
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-3xl",
+    "border-3",
+    "border-4",
+    "font-bold",
+    "shadow-[",
+    "text-pink",
+    "text-purple",
+    "bg-pink",
+    "bg-purple"
+  ],
+  "requiredFonts": ["Playfair Display", "Inter", "JetBrains Mono"],
+  "shadcnTheme": null
+}

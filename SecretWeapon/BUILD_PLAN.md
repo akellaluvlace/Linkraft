@@ -72,21 +72,21 @@
 
 ## Phase 2: Forge Full + MCPancake
 
-- [ ] **2.1** Create remaining 7 presets: retro-terminal, soft-pastel, dark-luxe, newspaper, y2k, organic-earth, corporate-clean. Each with full tokens, overrides, forbidden patterns. Validate all.
+- [x] **2.1** Create remaining 7 presets: retro-terminal, soft-pastel, dark-luxe, newspaper, y2k, organic-earth, corporate-clean. Each with full tokens, overrides, forbidden patterns. Validate all.
 
-- [ ] **2.2** Create `src/shared/mcpancake-router.ts`: MCP orchestration layer. On init, discovers which MCPs are available (shadcn, figma, context7, magic-ui, playwright, linkraft). Exposes intent-based methods: `findComponent(query)`, `getDesignTokens()`, `getDocs(component, library)`, `generateComponent(prompt, tokens)`, `screenshot(selector?)`, `distribute(platform, content)`. Every method handles MCP unavailability gracefully (returns empty array or null, logs warning).
+- [x] **2.2** Create `src/shared/mcpancake-router.ts`: MCP orchestration layer. On init, discovers which MCPs are available (shadcn, figma, context7, magic-ui, playwright, linkraft). Exposes intent-based methods: `findComponent(query)`, `getDesignTokens()`, `getDocs(component, library)`, `generateComponent(prompt, tokens)`, `screenshot(selector?)`, `distribute(platform, content)`. Every method handles MCP unavailability gracefully (returns empty array or null, logs warning).
 
-- [ ] **2.3** Create `src/forge/component-browser.ts`: uses MCPancake to search components across all available MCPs. Returns unified results with: name, source library, preview URL (if available), install command, description. Filters by tag, framework, styling approach.
+- [x] **2.3** Create `src/forge/component-browser.ts`: uses MCPancake to search components across all available MCPs. Returns unified results with: name, source library, preview URL (if available), install command, description. Filters by tag, framework, styling approach.
 
-- [ ] **2.4** Create `src/mcp/tools/mcpancake.ts`: MCP tools that expose the router: `mcpancake_search_components`, `mcpancake_get_docs`, `mcpancake_available_mcps`. Register in server.ts.
+- [x] **2.4** Create `src/mcp/tools/mcpancake.ts`: MCP tools that expose the router: `mcpancake_search_components`, `mcpancake_get_docs`, `mcpancake_available_mcps`. Register in server.ts.
 
-- [ ] **2.5** Write `tests/forge/component-browser.test.ts`: mock MCP responses from shadcn and magic-ui, verify unified results format, verify graceful handling when one MCP is unavailable.
+- [x] **2.5** Write `tests/forge/component-browser.test.ts`: mock MCP responses from shadcn and magic-ui, verify unified results format, verify graceful handling when one MCP is unavailable.
 
-- [ ] **2.6** Write `tests/shared/mcpancake-router.test.ts`: test with zero MCPs available (should work), one MCP, multiple MCPs. Test fallback behavior.
+- [x] **2.6** Write `tests/shared/mcpancake-router.test.ts`: test with zero MCPs available (should work), one MCP, multiple MCPs. Test fallback behavior.
 
-- [ ] **2.7** Update `skills/forge/SKILL.md` with component browsing instructions: when user says "find me a hero component", use mcpancake to search. When user says "install this component", use the appropriate MCP's install tool.
+- [x] **2.7** Update `skills/forge/SKILL.md` with component browsing instructions: when user says "find me a hero component", use mcpancake to search. When user says "install this component", use the appropriate MCP's install tool.
 
-- [ ] **2.8** Verify Phase 2: all presets valid, MCPancake works with mocked MCPs, component browser returns unified results, no regressions.
+- [x] **2.8** Verify Phase 2: all presets valid, MCPancake works with mocked MCPs, component browser returns unified results, no regressions.
 
 ---
 

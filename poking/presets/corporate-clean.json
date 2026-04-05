@@ -1,0 +1,62 @@
+{
+  "name": "Corporate Clean",
+  "id": "corporate-clean",
+  "author": "akellainmotion",
+  "description": "Professional blue and gray palette, structured layout, trustworthy and clean",
+  "tokens": {
+    "colors": {
+      "primary": "#1E40AF",
+      "secondary": "#6B7280",
+      "background": "#FFFFFF",
+      "accent": "#2563EB",
+      "surface": "#F9FAFB"
+    },
+    "typography": {
+      "heading": { "family": "Inter", "weight": "600" },
+      "body": { "family": "Inter", "weight": "400" },
+      "mono": { "family": "Fira Code", "weight": "400" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 4, 8, 12, 16, 24, 32, 48, 64, 96]
+    },
+    "borders": {
+      "width": "1px",
+      "style": "solid",
+      "color": "#E5E7EB",
+      "radius": "8px"
+    },
+    "shadows": {
+      "default": "0 1px 3px rgba(0, 0, 0, 0.1)",
+      "hover": "0 4px 12px rgba(0, 0, 0, 0.1)"
+    },
+    "animations": {
+      "style": "ease 150ms",
+      "hover": "translateY(-1px)"
+    }
+  },
+  "componentOverrides": {
+    "button": "bg-blue-700 text-white rounded-lg font-medium px-5 py-2.5 hover:bg-blue-800 transition-colors shadow-sm",
+    "card": "bg-white rounded-lg border border-gray-200 shadow-sm p-6",
+    "input": "bg-white rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 px-4 py-2",
+    "link": "text-blue-700 hover:text-blue-900 transition-colors font-medium",
+    "badge": "bg-blue-50 text-blue-700 rounded-md text-xs font-medium px-2.5 py-0.5",
+    "alert": "bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800"
+  },
+  "forbiddenPatterns": [
+    "rounded-none",
+    "rounded-full",
+    "rounded-3xl",
+    "border-3",
+    "border-4",
+    "shadow-[",
+    "font-serif",
+    "font-mono",
+    "uppercase",
+    "tracking-widest",
+    "bg-gradient-to-",
+    "neon"
+  ],
+  "requiredFonts": ["Inter", "Fira Code"],
+  "shadcnTheme": null
+}

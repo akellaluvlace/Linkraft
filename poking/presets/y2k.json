@@ -1,0 +1,58 @@
+{
+  "name": "Y2K",
+  "id": "y2k",
+  "author": "akellainmotion",
+  "description": "Bubbly shapes, bright gradients, chrome effects, early-2000s nostalgia",
+  "tokens": {
+    "colors": {
+      "primary": "#FF69B4",
+      "secondary": "#7B68EE",
+      "background": "#F0F0FF",
+      "accent": "#00CED1",
+      "surface": "#FFFFFF"
+    },
+    "typography": {
+      "heading": { "family": "Fredoka", "weight": "600" },
+      "body": { "family": "Quicksand", "weight": "400" },
+      "mono": { "family": "Space Mono", "weight": "400" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 4, 8, 12, 16, 24, 32, 48, 64, 96]
+    },
+    "borders": {
+      "width": "2px",
+      "style": "solid",
+      "color": "#7B68EE",
+      "radius": "24px"
+    },
+    "shadows": {
+      "default": "4px 4px 0px #7B68EE",
+      "hover": "6px 6px 0px #FF69B4"
+    },
+    "animations": {
+      "style": "ease-in-out 200ms",
+      "hover": "scale(1.05)"
+    }
+  },
+  "componentOverrides": {
+    "button": "bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-full font-bold px-6 py-3 shadow-[4px_4px_0px_#7B68EE] hover:shadow-[6px_6px_0px_#FF69B4] hover:scale-105 transition-all border-2 border-purple-300",
+    "card": "bg-white rounded-3xl border-2 border-purple-200 shadow-[4px_4px_0px_#7B68EE] p-6",
+    "input": "bg-white rounded-full border-2 border-purple-300 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 px-5 py-2",
+    "link": "text-purple-500 font-bold hover:text-pink-500 transition-colors",
+    "badge": "bg-gradient-to-r from-cyan-300 to-purple-300 text-purple-900 rounded-full font-bold text-xs px-3 py-1",
+    "alert": "bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-purple-200 rounded-3xl p-4"
+  },
+  "forbiddenPatterns": [
+    "rounded-none",
+    "font-serif",
+    "shadow-none",
+    "bg-black",
+    "text-gray-900",
+    "border-black",
+    "tracking-widest",
+    "uppercase"
+  ],
+  "requiredFonts": ["Fredoka", "Quicksand", "Space Mono"],
+  "shadcnTheme": null
+}
