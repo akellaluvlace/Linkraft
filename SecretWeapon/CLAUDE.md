@@ -4,11 +4,11 @@
 
 PokingIsNewCoding is a Claude Code plugin that turns VS Code into a visual design studio. Five pillars:
 
-1. **Poke** (V1, BUILT): click any element, Claude gets full context
-2. **Forge**: browse, preview, and apply design systems and component libraries instantly
-3. **Vault**: community component library (save, share, remix, compete)
-4. **Dreamroll**: overnight autonomous design generation with AI judges
-5. **Launchpad**: plan, research, build, test, and distribute landing pages end-to-end
+1. **Poke** (BUILT): click any element, Claude gets full context
+2. **Forge** (BUILT): browse, preview, and apply design systems and component libraries instantly
+3. **Vault** (BUILT): community component library (save, share, remix, compete)
+4. **Dreamroll** (BUILT): overnight autonomous design generation with AI judges
+5. **Launchpad** (BUILT): plan, research, build, test, and distribute landing pages end-to-end
 
 **MCPancake Mix** is the underlying MCP orchestration layer that composes shadcn, Figma, Context7, Magic UI, Playwright, and Linkraft MCPs into unified workflows.
 
@@ -19,7 +19,7 @@ PokingIsNewCoding is a Claude Code plugin that turns VS Code into a visual desig
 
 ## Current State
 
-V1 (Poke) is built and passing tests. Code review found 5 critical issues and 7 important issues that must be fixed before V2 work begins. See BUILD_PLAN.md Phase 0.
+V2 COMPLETE. All 87 build plan items done across Phases 0-6. 215 tests passing, 20 test files, zero failures. 30+ MCP tools, 10 design presets, 63 wildcard mutations, 3 AI judge agents. Blocked items: Playwright screenshots (needs optional dep), real judge scoring (needs API key), Lighthouse (needs CLI install).
 
 ## Tech Stack
 
