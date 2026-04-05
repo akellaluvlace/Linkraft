@@ -1,20 +1,7 @@
 {
   "name": "linkraft-notion",
-  "version": "0.1.0",
   "description": "Notion integration for Claude Code: pages, databases, blocks",
-  "author": "Akella inMotion",
-  "license": "MIT",
-  "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/notion",
-  "skills": [
-    {
-      "name": "notion",
-      "path": "skills/notion/SKILL.md"
-    }
-  ],
-  "mcpServers": {
-    "linkraft-notion": {
-      "command": "node",
-      "args": ["dist/server.js"]
-    }
+  "author": {
+    "name": "Akella inMotion"
   }
 }

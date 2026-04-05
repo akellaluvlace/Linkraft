@@ -1,20 +1,7 @@
 {
   "name": "linkraft-slack",
-  "version": "0.1.0",
   "description": "Slack integration for Claude Code: messages, channels, reactions, pins",
-  "author": "Akella inMotion",
-  "license": "MIT",
-  "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/slack",
-  "skills": [
-    {
-      "name": "slack",
-      "path": "skills/slack/SKILL.md"
-    }
-  ],
-  "mcpServers": {
-    "linkraft-slack": {
-      "command": "node",
-      "args": ["dist/server.js"]
-    }
+  "author": {
+    "name": "Akella inMotion"
   }
 }

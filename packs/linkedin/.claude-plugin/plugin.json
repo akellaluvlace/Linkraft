@@ -1,20 +1,7 @@
 {
   "name": "linkraft-linkedin",
-  "version": "0.1.0",
   "description": "LinkedIn integration for Claude Code: posts, profiles, organizations, follower stats",
-  "author": "Akella inMotion",
-  "license": "MIT",
-  "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/linkedin",
-  "skills": [
-    {
-      "name": "linkedin",
-      "path": "skills/linkedin/SKILL.md"
-    }
-  ],
-  "mcpServers": {
-    "linkraft-linkedin": {
-      "command": "node",
-      "args": ["dist/server.js"]
-    }
+  "author": {
+    "name": "Akella inMotion"
   }
 }

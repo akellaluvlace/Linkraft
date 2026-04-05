@@ -1,20 +1,7 @@
 {
   "name": "linkraft-gmail",
-  "version": "0.1.0",
   "description": "Gmail integration for Claude Code: messages, labels, threads",
-  "author": "Akella inMotion",
-  "license": "MIT",
-  "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/gmail",
-  "skills": [
-    {
-      "name": "gmail",
-      "path": "skills/gmail/SKILL.md"
-    }
-  ],
-  "mcpServers": {
-    "linkraft-gmail": {
-      "command": "node",
-      "args": ["dist/server.js"]
-    }
+  "author": {
+    "name": "Akella inMotion"
   }
 }

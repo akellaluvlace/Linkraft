@@ -1,20 +1,7 @@
 {
   "name": "linkraft-telegram",
-  "version": "0.1.0",
   "description": "Telegram Bot integration for Claude Code: send messages, manage groups, inline keyboards, handle updates",
-  "author": "Akella inMotion",
-  "license": "MIT",
-  "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/telegram",
-  "skills": [
-    {
-      "name": "telegram",
-      "path": "skills/telegram/SKILL.md"
-    }
-  ],
-  "mcpServers": {
-    "linkraft-telegram": {
-      "command": "node",
-      "args": ["dist/server.js"]
-    }
+  "author": {
+    "name": "Akella inMotion"
   }
 }
