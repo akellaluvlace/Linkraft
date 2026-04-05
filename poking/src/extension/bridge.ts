@@ -81,11 +81,15 @@ export class PokeBridge {
     }
   }
 
-  dispose(): void {
+  closePreview(): void {
     this.panel?.dispose();
     this.panel = undefined;
     this.currentSelection = null;
     this.selectionListener = undefined;
+  }
+
+  dispose(): void {
+    this.closePreview();
     this.outputChannel.dispose();
   }
 }

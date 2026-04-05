@@ -36,6 +36,7 @@ export async function createServer(): Promise<McpServer> {
 
   const http = new HttpClient({
     baseUrl: auth.getApiBaseUrl(),
+    pathPrefix: auth.getPathPrefix(),
     rateLimits: config.rateLimits,
     retryMaxAttempts: config.rateLimits.retryMaxAttempts,
     retryBackoffMs: config.rateLimits.retryBackoffMs,

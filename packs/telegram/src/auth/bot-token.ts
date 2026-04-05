@@ -20,7 +20,11 @@ export class TelegramBotAuth extends BotTokenAuth {
   }
 
   getApiBaseUrl(): string {
+    return 'https://api.telegram.org';
+  }
+
+  getPathPrefix(): string {
     const token = this.getBotToken();
-    return `https://api.telegram.org/bot${token}`;
+    return `/bot${token}`;
   }
 }

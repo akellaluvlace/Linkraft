@@ -50,16 +50,23 @@ describe('TelegramBotAuth', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('builds correct API base URL', () => {
+  it('builds correct API base URL without token', () => {
     const auth = createAuth(VALID_TOKEN);
     const url = auth.getApiBaseUrl();
-    expect(url).toBe(`https://api.telegram.org/bot${VALID_TOKEN}`);
+    expect(url).toBe('https://api.telegram.org');
+    expect(url).not.toContain(VALID_TOKEN);
+  });
+
+  it('builds path prefix with token', () => {
+    const auth = createAuth(VALID_TOKEN);
+    const prefix = auth.getPathPrefix();
+    expect(prefix).toBe(`/bot${VALID_TOKEN}`);
   });
 
   it('prefers constructor token over env var', () => {
     process.env['TELEGRAM_BOT_TOKEN'] = '000000:envtoken_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
     const auth = createAuth(VALID_TOKEN);
-    const url = auth.getApiBaseUrl();
-    expect(url).toContain(VALID_TOKEN);
+    const prefix = auth.getPathPrefix();
+    expect(prefix).toContain(VALID_TOKEN);
   });
 });

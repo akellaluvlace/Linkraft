@@ -89,20 +89,21 @@ export class PreviewPanel {
   <iframe id="app-frame" src="${escapedUrl}" style="width:100%;height:100vh;border:none;"></iframe>
   <script>
     const vscode = acquireVsCodeApi();
+    const appFrame = document.getElementById('app-frame');
+    const frameOrigin = new URL('${escapedUrl}').origin;
 
-    // Listen for messages from the iframe.
-    // The overlay script running inside the app sends postMessage to parent.
+    // Listen for messages from the iframe only.
+    // Validate event.source matches the app iframe to prevent spoofing.
     window.addEventListener('message', (event) => {
-      if (event.data && event.data.type) {
+      if (event.source === appFrame.contentWindow && event.data && event.data.type) {
         vscode.postMessage(event.data);
       }
     });
 
-    // Forward messages from the extension to the iframe.
+    // Forward messages from the extension to the iframe with origin check.
     window.addEventListener('message', (event) => {
-      const frame = document.getElementById('app-frame');
-      if (frame && event.data && event.data._fromExtension) {
-        frame.contentWindow.postMessage(event.data, '*');
+      if (appFrame && event.data && event.data._fromExtension) {
+        appFrame.contentWindow.postMessage(event.data, frameOrigin);
       }
     });
   </script>

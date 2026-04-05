@@ -59,9 +59,9 @@ export function generateServerFile(
     lines.push(`  const oauth = create${toPascalCase(packName)}OAuth(config.auth, config.auth.tokenStorePath);`);
     lines.push('');
     lines.push('  if (!oauth.isAuthenticated()) {');
-    lines.push('    const { url, state } = oauth.generateAuthUrl();');
+    lines.push('    const { url, codeVerifier, state } = oauth.generateAuthUrl();');
     lines.push(`    process.stderr.write('[${serverName}] Not authenticated. Open this URL:\\n' + url + '\\n');`);
-    lines.push('    await oauth.startCallbackServer(state);');
+    lines.push('    await oauth.startCallbackServer(state, codeVerifier);');
     lines.push(`    process.stderr.write('[${serverName}] Authentication successful.\\n');`);
     lines.push('  }');
     lines.push('');

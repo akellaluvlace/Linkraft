@@ -11,6 +11,7 @@ export interface HttpClientOptions {
   retryMaxAttempts?: number;
   retryBackoffMs?: number;
   getAuthHeader?: () => Promise<string | undefined>;
+  pathPrefix?: string;
 }
 
 export class HttpClient {
@@ -21,9 +22,11 @@ export class HttpClient {
   private readonly retryMaxAttempts: number;
   private readonly retryBackoffMs: number;
   private readonly getAuthHeader?: () => Promise<string | undefined>;
+  private readonly pathPrefix: string;
 
   constructor(options: HttpClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, '');
+    this.pathPrefix = options.pathPrefix ?? '';
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -40,9 +43,12 @@ export class HttpClient {
   }
 
   async request<T = unknown>(options: HttpRequestOptions): Promise<HttpResponse<T>> {
-    const url = options.url.startsWith('http')
-      ? options.url
-      : `${this.baseUrl}${options.url.startsWith('/') ? '' : '/'}${options.url}`;
+    const prefixedPath = this.pathPrefix
+      ? `${this.pathPrefix}${options.url.startsWith('/') ? '' : '/'}${options.url}`
+      : options.url;
+    const url = prefixedPath.startsWith('http')
+      ? prefixedPath
+      : `${this.baseUrl}${prefixedPath.startsWith('/') ? '' : '/'}${prefixedPath}`;
 
     return withRetry(
       async () => {

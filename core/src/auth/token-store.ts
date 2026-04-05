@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import type { TokenData } from '../types.js';
@@ -68,7 +68,7 @@ export class TokenStore {
   clear(): void {
     this.cached = undefined;
     if (existsSync(this.filePath)) {
-      writeFileSync(this.filePath, '{}', 'utf-8');
+      unlinkSync(this.filePath);
     }
   }
 

@@ -32,7 +32,7 @@ export function registerCommands(
   });
 
   const offCommand = vscode.commands.registerCommand('poking.off', () => {
-    bridge.dispose();
+    bridge.closePreview();
   });
 
   context.subscriptions.push(openCommand, toggleCommand, parentCommand, offCommand);

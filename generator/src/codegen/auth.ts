@@ -42,7 +42,7 @@ export function create${pascal}OAuth(authConfig: AuthConfig, tokenStorePath?: st
     callbackPort: authConfig.callbackPort ?? 8585,
     tokenStoreName: '${packName}',
     tokenStorePath,
-    usePKCE: false,
+    usePKCE: true,
   });
 }
 `;
