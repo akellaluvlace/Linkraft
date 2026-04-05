@@ -84,10 +84,11 @@ function inferGroupName(path: string): string {
 }
 
 function sanitizeGroupName(name: string): string {
-  return name
+  const result = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+  return result || 'general';
 }
 
 function inferAuthType(spec: ParsedSpec): 'oauth2' | 'api-key' | 'bearer' {

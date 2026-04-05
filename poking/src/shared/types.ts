@@ -4,7 +4,6 @@ export interface DomInfo {
   classes: string[];
   attributes: Record<string, string>;
   textContent: string;
-  innerHTML: string;
 }
 
 export interface SourceInfo {

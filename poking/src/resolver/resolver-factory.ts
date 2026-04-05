@@ -48,21 +48,31 @@ export function detectFramework(): Framework {
   return 'html';
 }
 
-export function resolveSource(element: HTMLElement): SourceInfo {
+export function resolveElement(element: HTMLElement): { source: SourceInfo; componentData: ComponentData | null } {
   const framework = detectFramework();
+  return {
+    source: resolveSourceFor(element, framework),
+    componentData: resolveComponentDataFor(element, framework),
+  };
+}
 
+export function resolveSource(element: HTMLElement): SourceInfo {
+  return resolveSourceFor(element, detectFramework());
+}
+
+export function resolveComponentData(element: HTMLElement): ComponentData | null {
+  return resolveComponentDataFor(element, detectFramework());
+}
+
+function resolveSourceFor(element: HTMLElement, framework: Framework): SourceInfo {
   switch (framework) {
     case 'react': {
       const result = resolveReact(element);
-      if (result) {
-        return result;
-      }
-      // Fallback to generic if React resolver finds nothing
+      if (result) return result;
       return resolveGeneric(element);
     }
     case 'vue':
     case 'svelte':
-      // Vue and Svelte resolvers are V2 features, use generic for now
       return resolveGeneric(element);
     case 'html':
     default:
@@ -70,11 +80,7 @@ export function resolveSource(element: HTMLElement): SourceInfo {
   }
 }
 
-export function resolveComponentData(
-  element: HTMLElement,
-): ComponentData | null {
-  const framework = detectFramework();
-
+function resolveComponentDataFor(element: HTMLElement, framework: Framework): ComponentData | null {
   switch (framework) {
     case 'react':
       return extractReactComponentData(element);

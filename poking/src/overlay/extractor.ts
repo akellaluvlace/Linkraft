@@ -62,7 +62,6 @@ export function extractDomInfo(element: HTMLElement): DomInfo {
     classes: Array.from(element.classList),
     attributes,
     textContent: truncate(element.textContent ?? '', 200),
-    innerHTML: truncate(element.innerHTML ?? '', 200),
   };
 }
 

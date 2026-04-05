@@ -53,7 +53,11 @@ export class OAuth2Client {
 
   isAuthenticated(): boolean {
     const token = this.store.load();
-    return token != null && !this.store.isExpired();
+    if (!token) return false;
+    // Check actual expiry, not the refresh buffer.
+    // The buffer is for proactive refresh in getAuthHeader(), not for auth status.
+    if (token.expiresAt == null) return true;
+    return Date.now() < token.expiresAt;
   }
 
   generateAuthUrl(): { url: string; codeVerifier?: string; state: string } {

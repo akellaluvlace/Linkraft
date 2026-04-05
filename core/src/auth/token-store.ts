@@ -24,7 +24,15 @@ export class TokenStore {
 
     try {
       const raw = readFileSync(this.filePath, 'utf-8');
-      this.cached = JSON.parse(raw) as TokenData;
+      const parsed: unknown = JSON.parse(raw);
+      if (
+        typeof parsed !== 'object' ||
+        parsed === null ||
+        typeof (parsed as Record<string, unknown>)['accessToken'] !== 'string'
+      ) {
+        return undefined;
+      }
+      this.cached = parsed as TokenData;
       return this.cached;
     } catch {
       return undefined;

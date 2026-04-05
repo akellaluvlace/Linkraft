@@ -14,11 +14,14 @@ export class RateLimiter {
     void endpoint; // reserved for per-endpoint limits
     this.pruneExpired();
 
-    if (this.isMinuteExhausted() || this.isDayExhausted()) {
-      if (!this.config.retryOnRateLimit) {
-        throw new RateLimitError(this.getStats());
-      }
+    if (this.isDayExhausted()) {
+      throw new RateLimitError(this.getStats(), false);
+    }
 
+    if (this.isMinuteExhausted()) {
+      if (!this.config.retryOnRateLimit) {
+        throw new RateLimitError(this.getStats(), true);
+      }
       await this.waitForSlot();
     }
 
@@ -105,9 +108,13 @@ export class RateLimiter {
 }
 
 export class RateLimitError extends Error {
-  constructor(public readonly stats: RateLimitStats) {
+  constructor(
+    public readonly stats: RateLimitStats,
+    public readonly retryable: boolean = true,
+  ) {
+    const reason = retryable ? 'minute limit' : 'daily limit';
     super(
-      `Rate limit exceeded: ${stats.requestsInWindow} requests in window, ` +
+      `Rate limit exceeded (${reason}): ${stats.requestsInWindow} requests in window, ` +
       `${stats.requestsToday} requests today`,
     );
     this.name = 'RateLimitError';

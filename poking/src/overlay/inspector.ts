@@ -7,7 +7,7 @@ import {
   extractBoundingBox,
 } from './extractor';
 import type { PokeContext, PokeMessage } from '../shared/types';
-import { resolveSource, resolveComponentData } from '../resolver/resolver-factory';
+import { resolveElement } from '../resolver/resolver-factory';
 import { OVERLAY_STYLES } from './styles';
 
 let highlighter: Highlighter;
@@ -139,8 +139,7 @@ function handleElementSelected(element: HTMLElement): void {
   const layout = extractLayout(element);
   const boundingBox = extractBoundingBox(element);
 
-  const source = resolveSource(element);
-  const componentData = resolveComponentData(element);
+  const { source, componentData } = resolveElement(element);
 
   const context: PokeContext = {
     dom,
