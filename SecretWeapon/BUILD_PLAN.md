@@ -114,45 +114,45 @@
 
 ## Phase 4: Dreamroll
 
-- [ ] **4.1** Create `src/dreamroll/types.ts`: interfaces for DreamrollConfig, DreamrollState, Variation, JudgeScore, JudgeVerdict, SeedParameters, WildcardMutation, EvolutionAdjustment, MorningReport.
+- [x] **4.1** Create `src/dreamroll/types.ts`: interfaces for DreamrollConfig, DreamrollState, Variation, JudgeScore, JudgeVerdict, SeedParameters, WildcardMutation, EvolutionAdjustment, MorningReport.
 
-- [ ] **4.2** Create `src/dreamroll/wildcards.ts`: exported array of 50+ wildcard prompt mutations. Each is a string that gets injected into the generation prompt to force creative divergence. Include all wildcards from SecretWeapon-V2-SPEC.md section 5.5 plus at least 30 more covering: era-specific (1920s, 1960s, 1980s, 2000s, far future), medium-specific (magazine, poster, billboard, book cover, album art), constraint-specific (one font only, no images, monochrome, only circles), culture-specific (Japanese minimalism, Scandinavian, Bauhaus, Memphis), emotion-specific (anxiety, joy, nostalgia, urgency, calm).
+- [x] **4.2** Create `src/dreamroll/wildcards.ts`: exported array of 50+ wildcard prompt mutations. Each is a string that gets injected into the generation prompt to force creative divergence. Include all wildcards from SecretWeapon-V2-SPEC.md section 5.5 plus at least 30 more covering: era-specific (1920s, 1960s, 1980s, 2000s, far future), medium-specific (magazine, poster, billboard, book cover, album art), constraint-specific (one font only, no images, monochrome, only circles), culture-specific (Japanese minimalism, Scandinavian, Bauhaus, Memphis), emotion-specific (anxiety, joy, nostalgia, urgency, calm).
 
-- [ ] **4.3** Create `agents/dreamroll-brutus.md`: full judge personality prompt per SecretWeapon-V2-SPEC.md section 5.6. Ruthless minimalist. Scoring criteria, roast style, examples.
+- [x] **4.3** Create `agents/dreamroll-brutus.md`: full judge personality prompt per SecretWeapon-V2-SPEC.md section 5.6. Ruthless minimalist. Scoring criteria, roast style, examples.
 
-- [ ] **4.4** Create `agents/dreamroll-venus.md`: full aesthete personality per spec.
+- [x] **4.4** Create `agents/dreamroll-venus.md`: full aesthete personality per spec.
 
-- [ ] **4.5** Create `agents/dreamroll-mercury.md`: full conversion machine personality per spec.
+- [x] **4.5** Create `agents/dreamroll-mercury.md`: full conversion machine personality per spec.
 
-- [ ] **4.6** Create `src/dreamroll/judges.ts`: loads judge prompts from `agents/dreamroll-*.md`. Spawns a Claude API call for each judge (using Anthropic API via the plugin's context). Parses scores (1-10) and roast comments from responses. Returns JudgeVerdict with per-judge scores and overall average.
+- [x] **4.6** Create `src/dreamroll/judges.ts`: loads judge prompts from `agents/dreamroll-*.md`. Spawns a Claude API call for each judge (using Anthropic API via the plugin's context). Parses scores (1-10) and roast comments from responses. Returns JudgeVerdict with per-judge scores and overall average.
 
-- [ ] **4.7** Create `src/dreamroll/generator.ts`: the main generation loop. For each variation: roll random seed parameters (color palette, typography, layout archetype, genre, density, mood), select a random wildcard, vary temperature (0.7-1.3), generate a prompt, call Claude to create the variation, save to worktree, take screenshot via Playwright. This is the core engine.
+- [x] **4.7** Create `src/dreamroll/generator.ts`: the main generation loop. For each variation: roll random seed parameters (color palette, typography, layout archetype, genre, density, mood), select a random wildcard, vary temperature (0.7-1.3), generate a prompt, call Claude to create the variation, save to worktree, take screenshot via Playwright. This is the core engine.
 
-- [ ] **4.8** Create `src/dreamroll/state.ts`: persistent state manager. Saves/loads `.dreamroll/state.json`. Tracks: current variation number, all seed params used, all gems, all scores, evolution adjustments, elapsed time. Enables resume after crash.
+- [x] **4.8** Create `src/dreamroll/state.ts`: persistent state manager. Saves/loads `.dreamroll/state.json`. Tracks: current variation number, all seed params used, all gems, all scores, evolution adjustments, elapsed time. Enables resume after crash.
 
-- [ ] **4.9** Create `src/dreamroll/evolution.ts`: every N variations (configurable, default 10), analyze the gems so far. Detect patterns: which layout archetypes score highest? which color approaches? which wildcards produced gems? Adjust seed parameter weights to explore promising directions. BUT: also inject mandatory chaos (at least 20% of variations use fully random params regardless of evolution).
+- [x] **4.9** Create `src/dreamroll/evolution.ts`: every N variations (configurable, default 10), analyze the gems so far. Detect patterns: which layout archetypes score highest? which color approaches? which wildcards produced gems? Adjust seed parameter weights to explore promising directions. BUT: also inject mandatory chaos (at least 20% of variations use fully random params regardless of evolution).
 
-- [ ] **4.10** Create `src/dreamroll/reporter.ts`: generates the morning report. Reads state, formats top gems, emerging patterns, wildcard discoveries, full statistics. Writes to `.dreamroll/report.md`. Also generates a compact summary for MEMORY.md.
+- [x] **4.10** Create `src/dreamroll/reporter.ts`: generates the morning report. Reads state, formats top gems, emerging patterns, wildcard discoveries, full statistics. Writes to `.dreamroll/report.md`. Also generates a compact summary for MEMORY.md.
 
-- [ ] **4.11** Create `src/mcp/tools/dreamroll-tools.ts`: MCP tools: `dreamroll_start` (begins a run with config), `dreamroll_status` (shows current progress), `dreamroll_stop` (gracefully stops after current variation), `dreamroll_gems` (lists all gems with scores), `dreamroll_report` (generates/shows morning report), `dreamroll_resume` (continues from state file). Register in server.ts.
+- [x] **4.11** Create `src/mcp/tools/dreamroll-tools.ts`: MCP tools: `dreamroll_start` (begins a run with config), `dreamroll_status` (shows current progress), `dreamroll_stop` (gracefully stops after current variation), `dreamroll_gems` (lists all gems with scores), `dreamroll_report` (generates/shows morning report), `dreamroll_resume` (continues from state file). Register in server.ts.
 
-- [ ] **4.12** Write `commands/dreamroll.md`: /dreamroll command with subcommands: start, status, stop, gems, report, resume.
+- [x] **4.12** Write `commands/dreamroll.md`: /dreamroll command with subcommands: start, status, stop, gems, report, resume.
 
-- [ ] **4.13** Write `skills/dreamroll/SKILL.md`: teaches Claude when and how to run Dreamroll. Explains the generation loop, judge system, evolution, resume capability. Instructs Claude on how to present results to user.
+- [x] **4.13** Write `skills/dreamroll/SKILL.md`: teaches Claude when and how to run Dreamroll. Explains the generation loop, judge system, evolution, resume capability. Instructs Claude on how to present results to user.
 
-- [ ] **4.14** Write `tests/dreamroll/wildcards.test.ts`: verify all wildcards are unique strings, no duplicates, minimum 50 entries.
+- [x] **4.14** Write `tests/dreamroll/wildcards.test.ts`: verify all wildcards are unique strings, no duplicates, minimum 50 entries.
 
-- [ ] **4.15** Write `tests/dreamroll/judges.test.ts`: mock Claude API responses, test judge prompt loading, score parsing, verdict calculation. Test: average >= 7 = gem, average >= 5 = iterate, < 5 = discard, any single 10 = instant keep.
+- [x] **4.15** Write `tests/dreamroll/judges.test.ts`: mock Claude API responses, test judge prompt loading, score parsing, verdict calculation. Test: average >= 7 = gem, average >= 5 = iterate, < 5 = discard, any single 10 = instant keep.
 
-- [ ] **4.16** Write `tests/dreamroll/state.test.ts`: test save/load cycle, test resume from partial state, test corruption handling.
+- [x] **4.16** Write `tests/dreamroll/state.test.ts`: test save/load cycle, test resume from partial state, test corruption handling.
 
-- [ ] **4.17** Write `tests/dreamroll/evolution.test.ts`: provide mock gem data, verify pattern detection produces reasonable adjustments, verify chaos injection (>= 20% random).
+- [x] **4.17** Write `tests/dreamroll/evolution.test.ts`: provide mock gem data, verify pattern detection produces reasonable adjustments, verify chaos injection (>= 20% random).
 
-- [ ] **4.18** Write `tests/dreamroll/reporter.test.ts`: provide mock state, verify report output contains top gems, patterns, stats.
+- [x] **4.18** Write `tests/dreamroll/reporter.test.ts`: provide mock state, verify report output contains top gems, patterns, stats.
 
-- [ ] **4.19** Integration test: run a mini Dreamroll (3 variations, mocked Claude + mocked Playwright). Verify full loop: generate -> judge -> score -> state update -> report.
+- [x] **4.19** Integration test: run a mini Dreamroll (3 variations, mocked Claude + mocked Playwright). Verify full loop: generate -> judge -> score -> state update -> report.
 
-- [ ] **4.20** Verify Phase 4: all tests pass, judge prompts load correctly, state persists and resumes, evolution adjusts, reporter produces readable output, no regressions.
+- [x] **4.20** Verify Phase 4: all tests pass, judge prompts load correctly, state persists and resumes, evolution adjusts, reporter produces readable output, no regressions.
 
 ---
 
