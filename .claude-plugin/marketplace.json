@@ -76,6 +76,13 @@
       "category": "productivity",
       "source": "./packs/google-sheets",
       "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/google-sheets"
+    },
+    {
+      "name": "linkraft-make-your-own",
+      "description": "Step-by-step guide to building your own Linkraft MCP server pack from any API. Covers generator CLI and manual creation.",
+      "category": "development",
+      "source": "./packs/make-your-own",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/make-your-own"
     }
   ]
 }
