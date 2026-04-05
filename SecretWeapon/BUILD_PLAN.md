@@ -158,29 +158,29 @@
 
 ## Phase 5: Launchpad
 
-- [ ] **5.1** Create `src/launchpad/types.ts`: interfaces for LaunchBrief, CompetitorAnalysis, PageCopy, Wireframe, AssetList, SEOConfig, AnalyticsConfig, TestResults, DistributionPlan.
+- [x] **5.1** Create `src/launchpad/types.ts`: interfaces for LaunchBrief, CompetitorAnalysis, PageCopy, Wireframe, AssetList, SEOConfig, AnalyticsConfig, TestResults, DistributionPlan.
 
-- [ ] **5.2** Create `src/launchpad/planner.ts`: generates the `.launchpad/` directory with planning documents. Takes a product description as input. Uses web search MCP (if available) for competitor analysis. Generates: brief.md, research.md, copy.md (headline, subhead, features, testimonials, CTA), wireframe.md (section-by-section structure), assets.md (image/icon/illustration requirements), seo.md (meta tags, OG tags, schema), analytics.md (tracking events).
+- [x] **5.2** Create `src/launchpad/planner.ts`: generates the `.launchpad/` directory with planning documents. Takes a product description as input. Uses web search MCP (if available) for competitor analysis. Generates: brief.md, research.md, copy.md (headline, subhead, features, testimonials, CTA), wireframe.md (section-by-section structure), assets.md (image/icon/illustration requirements), seo.md (meta tags, OG tags, schema), analytics.md (tracking events).
 
-- [ ] **5.3** Create `src/launchpad/builder.ts`: reads the plan files, selects a Forge preset (user-chosen or auto-selected based on product type), uses MCPancake to find and install components, orchestrates Claude to build the full page. Output: a complete page file in the user's project.
+- [x] **5.3** Create `src/launchpad/builder.ts`: reads the plan files, selects a Forge preset (user-chosen or auto-selected based on product type), uses MCPancake to find and install components, orchestrates Claude to build the full page. Output: a complete page file in the user's project.
 
-- [ ] **5.4** Create `src/launchpad/tester.ts`: runs quality checks on the built page. Lighthouse CLI for performance/accessibility/SEO/best-practices scores. Playwright for screenshots at 375, 768, 1024, 1440px widths. CTA visibility check (is primary CTA in viewport at each width?). Social preview mock (OG image rendering). Returns TestResults with scores, screenshots, and recommendations.
+- [x] **5.4** Create `src/launchpad/tester.ts`: runs quality checks on the built page. Lighthouse CLI for performance/accessibility/SEO/best-practices scores. Playwright for screenshots at 375, 768, 1024, 1440px widths. CTA visibility check (is primary CTA in viewport at each width?). Social preview mock (OG image rendering). Returns TestResults with scores, screenshots, and recommendations.
 
-- [ ] **5.5** Create `src/launchpad/distributor.ts`: generates distribution content. Uses Linkraft MCPs (if available) to draft posts for LinkedIn, Twitter, Instagram. Generates Reddit/forum post drafts. Generates Product Hunt launch copy. Generates email announcement draft. All drafts saved to `.launchpad/distribution/`. Does NOT post automatically (drafts for human review).
+- [x] **5.5** Create `src/launchpad/distributor.ts`: generates distribution content. Uses Linkraft MCPs (if available) to draft posts for LinkedIn, Twitter, Instagram. Generates Reddit/forum post drafts. Generates Product Hunt launch copy. Generates email announcement draft. All drafts saved to `.launchpad/distribution/`. Does NOT post automatically (drafts for human review).
 
-- [ ] **5.6** Create `src/mcp/tools/launchpad-tools.ts`: MCP tools: `launchpad_plan`, `launchpad_build`, `launchpad_test`, `launchpad_distribute`, `launchpad_status`. Register in server.ts.
+- [x] **5.6** Create `src/mcp/tools/launchpad-tools.ts`: MCP tools: `launchpad_plan`, `launchpad_build`, `launchpad_test`, `launchpad_distribute`, `launchpad_status`. Register in server.ts.
 
-- [ ] **5.7** Write `commands/launchpad.md`: /launchpad command with subcommands: plan, build, test, distribute, status.
+- [x] **5.7** Write `commands/launchpad.md`: /launchpad command with subcommands: plan, build, test, distribute, status.
 
-- [ ] **5.8** Write `skills/launchpad/SKILL.md`: teaches Claude the full pipeline. When user says "build me a landing page for X", run the full plan -> build -> test -> distribute flow. When user says "just plan", stop after planning. When user says "test my page", run tester on existing page.
+- [x] **5.8** Write `skills/launchpad/SKILL.md`: teaches Claude the full pipeline. When user says "build me a landing page for X", run the full plan -> build -> test -> distribute flow. When user says "just plan", stop after planning. When user says "test my page", run tester on existing page.
 
-- [ ] **5.9** Write `tests/launchpad/planner.test.ts`: mock web search results, verify plan output has all required files with non-empty content.
+- [x] **5.9** Write `tests/launchpad/planner.test.ts`: mock web search results, verify plan output has all required files with non-empty content.
 
-- [ ] **5.10** Write `tests/launchpad/tester.test.ts`: mock Lighthouse and Playwright, verify TestResults structure, verify CTA check logic.
+- [x] **5.10** Write `tests/launchpad/tester.test.ts`: mock Lighthouse and Playwright, verify TestResults structure, verify CTA check logic.
 
-- [ ] **5.11** Write `tests/launchpad/distributor.test.ts`: mock Linkraft MCPs, verify draft generation for each platform. Verify graceful handling when Linkraft not available.
+- [x] **5.11** Write `tests/launchpad/distributor.test.ts`: mock Linkraft MCPs, verify draft generation for each platform. Verify graceful handling when Linkraft not available.
 
-- [ ] **5.12** Verify Phase 5: all tests pass, plan generates complete docs, builder produces a page, tester returns scores, distributor generates drafts, no regressions.
+- [x] **5.12** Verify Phase 5: all tests pass, plan generates complete docs, builder produces a page, tester returns scores, distributor generates drafts, no regressions.
 
 ---
 
