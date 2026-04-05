@@ -1,0 +1,63 @@
+{
+  "name": "Minimalist Swiss",
+  "id": "minimalist-swiss",
+  "author": "akellainmotion",
+  "description": "Helvetica, strict grid, black and white with red accents, generous whitespace",
+  "tokens": {
+    "colors": {
+      "primary": "#000000",
+      "secondary": "#FF0000",
+      "background": "#FFFFFF",
+      "accent": "#FF0000",
+      "surface": "#F5F5F5"
+    },
+    "typography": {
+      "heading": { "family": "Helvetica Neue", "weight": "700", "transform": "uppercase" },
+      "body": { "family": "Helvetica Neue", "weight": "400" },
+      "mono": { "family": "SF Mono", "weight": "400" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 8, 16, 24, 32, 48, 64, 96, 128, 192]
+    },
+    "borders": {
+      "width": "1px",
+      "style": "solid",
+      "color": "#000000",
+      "radius": "0px"
+    },
+    "shadows": {
+      "default": "none",
+      "hover": "none"
+    },
+    "animations": {
+      "style": "none",
+      "hover": "none"
+    }
+  },
+  "componentOverrides": {
+    "button": "border border-black rounded-none font-bold uppercase tracking-wider px-8 py-3 hover:bg-black hover:text-white transition-colors",
+    "card": "border border-black rounded-none p-8",
+    "input": "border-b border-black rounded-none bg-transparent focus:border-red-500 px-0 py-2",
+    "link": "font-bold uppercase tracking-wider text-sm hover:text-red-500 transition-colors",
+    "badge": "border border-black rounded-none font-bold uppercase text-xs tracking-widest px-3 py-1",
+    "alert": "border-l-4 border-black rounded-none pl-6 py-4"
+  },
+  "forbiddenPatterns": [
+    "bg-gradient-to-",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "rounded-lg",
+    "rounded-xl",
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-3xl",
+    "backdrop-blur",
+    "blur-",
+    "italic"
+  ],
+  "requiredFonts": ["Helvetica Neue", "SF Mono"],
+  "shadcnTheme": null
+}

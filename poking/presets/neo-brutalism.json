@@ -1,0 +1,63 @@
+{
+  "name": "Neo Brutalism",
+  "id": "neo-brutalism",
+  "author": "akellainmotion",
+  "description": "Bold borders, raw colors, chunky shadows, no rounded corners",
+  "tokens": {
+    "colors": {
+      "primary": "#000000",
+      "secondary": "#FF5733",
+      "background": "#FFFBE6",
+      "accent": "#3B82F6",
+      "surface": "#FFFFFF"
+    },
+    "typography": {
+      "heading": { "family": "Space Grotesk", "weight": "800", "transform": "uppercase" },
+      "body": { "family": "Inter", "weight": "400" },
+      "mono": { "family": "JetBrains Mono", "weight": "500" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 4, 8, 12, 16, 24, 32, 48, 64, 96]
+    },
+    "borders": {
+      "width": "3px",
+      "style": "solid",
+      "color": "#000000",
+      "radius": "0px"
+    },
+    "shadows": {
+      "default": "4px 4px 0px #000000",
+      "hover": "6px 6px 0px #000000"
+    },
+    "animations": {
+      "style": "none",
+      "hover": "translate(-2px, -2px)"
+    }
+  },
+  "componentOverrides": {
+    "button": "border-3 border-black shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:-translate-x-0.5 hover:-translate-y-0.5 rounded-none font-bold uppercase",
+    "card": "border-3 border-black shadow-[4px_4px_0px_#000] rounded-none",
+    "input": "border-3 border-black rounded-none focus:shadow-[4px_4px_0px_#000]",
+    "link": "font-bold underline underline-offset-4 decoration-2 hover:decoration-4",
+    "badge": "border-2 border-black rounded-none font-bold uppercase text-xs px-2 py-1",
+    "alert": "border-3 border-black rounded-none shadow-[4px_4px_0px_#000] p-4 font-bold"
+  },
+  "forbiddenPatterns": [
+    "rounded-lg",
+    "rounded-xl",
+    "rounded-full",
+    "rounded-2xl",
+    "rounded-3xl",
+    "bg-gradient-to-",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "opacity-",
+    "blur-",
+    "backdrop-blur"
+  ],
+  "requiredFonts": ["Space Grotesk", "Inter", "JetBrains Mono"],
+  "shadcnTheme": "neo-brutalism"
+}

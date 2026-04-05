@@ -1,0 +1,54 @@
+{
+  "name": "Glassmorphism",
+  "id": "glassmorphism",
+  "author": "akellainmotion",
+  "description": "Frosted glass effects, backdrop blur, transparent layers, soft edges",
+  "tokens": {
+    "colors": {
+      "primary": "#6366F1",
+      "secondary": "#8B5CF6",
+      "background": "#0F172A",
+      "accent": "#38BDF8",
+      "surface": "#FFFFFF"
+    },
+    "typography": {
+      "heading": { "family": "Inter", "weight": "700" },
+      "body": { "family": "Inter", "weight": "400" },
+      "mono": { "family": "Fira Code", "weight": "400" }
+    },
+    "spacing": {
+      "unit": "8px",
+      "scale": [0, 4, 8, 12, 16, 24, 32, 48, 64, 96]
+    },
+    "borders": {
+      "width": "1px",
+      "style": "solid",
+      "color": "#FFFFFF33",
+      "radius": "16px"
+    },
+    "shadows": {
+      "default": "0 8px 32px rgba(0, 0, 0, 0.12)",
+      "hover": "0 12px 40px rgba(0, 0, 0, 0.18)"
+    },
+    "animations": {
+      "style": "ease-out 200ms",
+      "hover": "translateY(-2px)"
+    }
+  },
+  "componentOverrides": {
+    "button": "bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl hover:bg-white/20 transition-all",
+    "card": "bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-lg",
+    "input": "bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl focus:border-white/30 focus:bg-white/10",
+    "link": "text-white/80 hover:text-white transition-colors underline-offset-4",
+    "badge": "bg-white/15 backdrop-blur-md border border-white/20 rounded-full text-xs px-3 py-1",
+    "alert": "bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4"
+  },
+  "forbiddenPatterns": [
+    "border-3",
+    "border-4",
+    "shadow-[",
+    "rounded-none"
+  ],
+  "requiredFonts": ["Inter", "Fira Code"],
+  "shadcnTheme": null
+}

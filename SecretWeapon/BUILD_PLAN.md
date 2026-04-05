@@ -36,37 +36,37 @@
 
 ## Phase 1: Forge Foundation
 
-- [ ] **1.1** Create `src/forge/preset-schema.ts`: define the TypeScript interface and validation function for design presets. Fields: name, id, author, description, tokens (colors, typography, spacing, borders, shadows, animations), componentOverrides, forbiddenPatterns, requiredFonts, shadcnTheme. Validation: all required fields present, Tailwind classes in overrides are syntactically valid, no contradictions between overrides and forbidden patterns.
+- [x] **1.1** Create `src/forge/preset-schema.ts`: define the TypeScript interface and validation function for design presets. Fields: name, id, author, description, tokens (colors, typography, spacing, borders, shadows, animations), componentOverrides, forbiddenPatterns, requiredFonts, shadcnTheme. Validation: all required fields present, Tailwind classes in overrides are syntactically valid, no contradictions between overrides and forbidden patterns.
 
-- [ ] **1.2** Create `presets/neo-brutalism.json`: first design preset. Bold borders (3px solid black), no rounded corners, chunky offset shadows, uppercase headings in Space Grotesk, raw background colors. Full component overrides for button, card, input, link, badge, alert. Forbidden: rounded-lg, rounded-xl, bg-gradient-to-*, shadow-sm, shadow-md, opacity-*, blur-*.
+- [x] **1.2** Create `presets/neo-brutalism.json`: first design preset. Bold borders (3px solid black), no rounded corners, chunky offset shadows, uppercase headings in Space Grotesk, raw background colors. Full component overrides for button, card, input, link, badge, alert. Forbidden: rounded-lg, rounded-xl, bg-gradient-to-*, shadow-sm, shadow-md, opacity-*, blur-*.
 
-- [ ] **1.3** Create `presets/glassmorphism.json`: frosted glass effects, backdrop-blur, semi-transparent backgrounds, subtle borders, soft shadows, rounded corners, Inter font. Forbidden: border-3, shadow-[*px_*px], uppercase.
+- [x] **1.3** Create `presets/glassmorphism.json`: frosted glass effects, backdrop-blur, semi-transparent backgrounds, subtle borders, soft shadows, rounded corners, Inter font. Forbidden: border-3, shadow-[*px_*px], uppercase.
 
-- [ ] **1.4** Create `presets/minimalist-swiss.json`: Helvetica/Arial, strict grid, black/white/red only, lots of whitespace, no decorative elements, no shadows, thin borders. Forbidden: gradient, shadow, rounded-full, text-transform except uppercase for headings.
+- [x] **1.4** Create `presets/minimalist-swiss.json`: Helvetica/Arial, strict grid, black/white/red only, lots of whitespace, no decorative elements, no shadows, thin borders. Forbidden: gradient, shadow, rounded-full, text-transform except uppercase for headings.
 
-- [ ] **1.5** Create `scripts/validate-presets.js`: reads all JSON files in `presets/`, validates each against the schema, reports errors. Exit 1 if any fail.
+- [x] **1.5** Create `scripts/validate-presets.js`: reads all JSON files in `presets/`, validates each against the schema, reports errors. Exit 1 if any fail.
 
-- [ ] **1.6** Write `tests/forge/preset-schema.test.ts`: test validation with valid preset, invalid preset (missing fields), preset with contradictions, preset with invalid Tailwind classes.
+- [x] **1.6** Write `tests/forge/preset-schema.test.ts`: test validation with valid preset, invalid preset (missing fields), preset with contradictions, preset with invalid Tailwind classes.
 
-- [ ] **1.7** Create `src/forge/preset-applicator.ts`: given a preset and a project root, generates instructions for Claude to apply the preset. Reads tailwind.config.ts/js, outputs the token changes needed. Reads all .tsx/.jsx files, identifies component classes that match override targets, outputs the class replacements. Does NOT make changes directly, it produces a structured changeset that Claude applies.
+- [x] **1.7** Create `src/forge/preset-applicator.ts`: given a preset and a project root, generates instructions for Claude to apply the preset. Reads tailwind.config.ts/js, outputs the token changes needed. Reads all .tsx/.jsx files, identifies component classes that match override targets, outputs the class replacements. Does NOT make changes directly, it produces a structured changeset that Claude applies.
 
-- [ ] **1.8** Create `src/forge/token-editor.ts`: reads the current project's tailwind.config, extracts design tokens (colors, fonts, spacing, radii, shadows), returns them as structured data. Also: writes updated tokens back to tailwind config when given new values.
+- [x] **1.8** Create `src/forge/token-editor.ts`: reads the current project's tailwind.config, extracts design tokens (colors, fonts, spacing, radii, shadows), returns them as structured data. Also: writes updated tokens back to tailwind config when given new values.
 
-- [ ] **1.9** Create `src/forge/anti-slop.ts`: given a preset's forbiddenPatterns and a file's content, detects violations. Returns list of { file, line, pattern, suggestion }. Used by the SKILL.md to teach Claude what not to do.
+- [x] **1.9** Create `src/forge/anti-slop.ts`: given a preset's forbiddenPatterns and a file's content, detects violations. Returns list of { file, line, pattern, suggestion }. Used by the SKILL.md to teach Claude what not to do.
 
-- [ ] **1.10** Write `skills/forge/SKILL.md`: teaches Claude how to use Forge. When user says "apply neo-brutalism", read the preset, use the applicator, apply changes systematically. Always check forbiddenPatterns before generating any code. When editing existing elements, check the active preset's rules. When user says "show me my tokens", use the token editor to read and display.
+- [x] **1.10** Write `skills/forge/SKILL.md`: teaches Claude how to use Forge. When user says "apply neo-brutalism", read the preset, use the applicator, apply changes systematically. Always check forbiddenPatterns before generating any code. When editing existing elements, check the active preset's rules. When user says "show me my tokens", use the token editor to read and display.
 
-- [ ] **1.11** Write `commands/forge.md`: defines /forge command with subcommands: browse, apply, tokens, components.
+- [x] **1.11** Write `commands/forge.md`: defines /forge command with subcommands: browse, apply, tokens, components.
 
-- [ ] **1.12** Create `src/mcp/tools/forge-tools.ts`: MCP tools: `forge_list_presets`, `forge_get_preset`, `forge_apply_preset`, `forge_get_tokens`, `forge_set_tokens`, `forge_check_violations`. Register in server.ts.
+- [x] **1.12** Create `src/mcp/tools/forge-tools.ts`: MCP tools: `forge_list_presets`, `forge_get_preset`, `forge_apply_preset`, `forge_get_tokens`, `forge_set_tokens`, `forge_check_violations`. Register in server.ts.
 
-- [ ] **1.13** Write `tests/forge/preset-applicator.test.ts`: mock a simple tailwind.config and .tsx file, apply neo-brutalism preset, verify output changeset is correct.
+- [x] **1.13** Write `tests/forge/preset-applicator.test.ts`: mock a simple tailwind.config and .tsx file, apply neo-brutalism preset, verify output changeset is correct.
 
-- [ ] **1.14** Write `tests/forge/token-editor.test.ts`: mock tailwind.config, read tokens, modify a color, write back, verify config is updated correctly.
+- [x] **1.14** Write `tests/forge/token-editor.test.ts`: mock tailwind.config, read tokens, modify a color, write back, verify config is updated correctly.
 
-- [ ] **1.15** Write `tests/forge/anti-slop.test.ts`: provide code with forbidden patterns, verify violations are detected with correct file/line/pattern.
+- [x] **1.15** Write `tests/forge/anti-slop.test.ts`: provide code with forbidden patterns, verify violations are detected with correct file/line/pattern.
 
-- [ ] **1.16** Verify Phase 1: all tests pass, presets validate, applicator produces correct output, no V1 regressions.
+- [x] **1.16** Verify Phase 1: all tests pass, presets validate, applicator produces correct output, no V1 regressions.
 
 ---
 
