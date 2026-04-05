@@ -1,89 +1,81 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "linkraft",
-  "description": "Open-source MCP toolkit for Claude Code. Curated, tested integrations for popular services.",
-  "version": "0.1.0",
-  "author": "Akella inMotion",
-  "repository": "https://github.com/akellaluvlace/Linkraft",
-  "packs": [
+  "description": "Open-source MCP toolkit for Claude Code. Curated, tested integrations for Telegram, Discord, Twitter/X, LinkedIn, Instagram, Gmail, Notion, Slack, Google Calendar, Google Sheets.",
+  "owner": {
+    "name": "Akella inMotion",
+    "email": "nikita.akella13@gmail.com"
+  },
+  "plugins": [
     {
-      "name": "telegram",
-      "path": "packs/telegram",
-      "version": "0.1.0",
-      "description": "Telegram Bot API: send messages, manage groups, inline keyboards, webhooks",
-      "auth": "bot-token",
-      "tags": ["messaging", "telegram", "bot"]
+      "name": "linkraft-telegram",
+      "description": "Telegram Bot API: send messages, manage groups, inline keyboards, webhooks. 18 tools.",
+      "category": "productivity",
+      "source": "./packs/telegram",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/telegram"
     },
     {
-      "name": "discord",
-      "path": "packs/discord",
-      "version": "0.1.0",
-      "description": "Discord Bot API: messages, channels, guilds, member management",
-      "auth": "bot-token",
-      "tags": ["messaging", "discord", "bot"]
+      "name": "linkraft-discord",
+      "description": "Discord Bot API: messages, channels, guilds, member management. 22 tools.",
+      "category": "productivity",
+      "source": "./packs/discord",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/discord"
     },
     {
-      "name": "twitter-x",
-      "path": "packs/twitter-x",
-      "version": "0.1.0",
-      "description": "Twitter/X API v2: tweets, users, likes, retweets, bookmarks",
-      "auth": "oauth2",
-      "tags": ["social", "twitter", "x"]
+      "name": "linkraft-twitter-x",
+      "description": "Twitter/X API v2: tweets, users, likes, retweets, bookmarks. 17 tools.",
+      "category": "productivity",
+      "source": "./packs/twitter-x",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/twitter-x"
     },
     {
-      "name": "linkedin",
-      "path": "packs/linkedin",
-      "version": "0.1.0",
-      "description": "LinkedIn API: posts, profiles, organizations",
-      "auth": "oauth2",
-      "tags": ["social", "linkedin", "professional"]
+      "name": "linkraft-linkedin",
+      "description": "LinkedIn API: posts, profiles, organizations. 9 tools.",
+      "category": "productivity",
+      "source": "./packs/linkedin",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/linkedin"
     },
     {
-      "name": "instagram",
-      "path": "packs/instagram",
-      "version": "0.1.0",
-      "description": "Instagram Graph API: media, comments, insights",
-      "auth": "oauth2",
-      "tags": ["social", "instagram", "media"]
+      "name": "linkraft-instagram",
+      "description": "Instagram Graph API: media, comments, insights. 10 tools.",
+      "category": "productivity",
+      "source": "./packs/instagram",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/instagram"
     },
     {
-      "name": "gmail",
-      "path": "packs/gmail",
-      "version": "0.1.0",
-      "description": "Gmail API: send, read, label, and manage email threads",
-      "auth": "oauth2",
-      "tags": ["productivity", "gmail", "email"]
+      "name": "linkraft-gmail",
+      "description": "Gmail API: send, read, label, and manage email threads. 11 tools.",
+      "category": "productivity",
+      "source": "./packs/gmail",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/gmail"
     },
     {
-      "name": "notion",
-      "path": "packs/notion",
-      "version": "0.1.0",
-      "description": "Notion API: pages, databases, blocks",
-      "auth": "bearer",
-      "tags": ["productivity", "notion", "wiki"]
+      "name": "linkraft-notion",
+      "description": "Notion API: pages, databases, blocks. 10 tools.",
+      "category": "productivity",
+      "source": "./packs/notion",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/notion"
     },
     {
-      "name": "slack",
-      "path": "packs/slack",
-      "version": "0.1.0",
-      "description": "Slack API: messages, channels, reactions, pins",
-      "auth": "oauth2",
-      "tags": ["productivity", "slack", "messaging"]
+      "name": "linkraft-slack",
+      "description": "Slack API: messages, channels, reactions, pins. 14 tools.",
+      "category": "productivity",
+      "source": "./packs/slack",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/slack"
     },
     {
-      "name": "google-calendar",
-      "path": "packs/google-calendar",
-      "version": "0.1.0",
-      "description": "Google Calendar API: events, calendars, quick add",
-      "auth": "oauth2",
-      "tags": ["productivity", "google", "calendar"]
+      "name": "linkraft-google-calendar",
+      "description": "Google Calendar API: events, calendars, quick add. 9 tools.",
+      "category": "productivity",
+      "source": "./packs/google-calendar",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/google-calendar"
     },
     {
-      "name": "google-sheets",
-      "path": "packs/google-sheets",
-      "version": "0.1.0",
-      "description": "Google Sheets API: read, write, append, and manage spreadsheets",
-      "auth": "oauth2",
-      "tags": ["productivity", "google", "spreadsheets"]
+      "name": "linkraft-google-sheets",
+      "description": "Google Sheets API: read, write, append, and manage spreadsheets. 8 tools.",
+      "category": "productivity",
+      "source": "./packs/google-sheets",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/packs/google-sheets"
     }
   ]
 }
