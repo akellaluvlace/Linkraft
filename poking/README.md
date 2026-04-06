@@ -1,86 +1,128 @@
-# PokingIsNewCoding
+# Linkraft
 
-Click any element in your app. Claude gets the exact component, file, line, styles, props. Stop describing. Start pointing.
-
-## The Problem
+One plugin. Three modes. Ship everything.
 
 ```
-You: "Make the header text bigger"
-Claude: *changes the wrong h1*
-You: "No, the one in the hero section"
-Claude: *changes the right h1 but breaks the layout*
+/linkraft plan     -> before you build (research, CLAUDE.md, architecture)
+/linkraft poke     -> while you build (click elements, design systems, components)
+/linkraft sheep    -> after you build (autonomous QA, overnight bug hunting)
 ```
-
-This happens 10-15 times per UI task. PokingIsNewCoding kills this loop.
-
-## How It Works
-
-1. Start your dev server (`npm run dev`)
-2. Run `/poke http://localhost:3000` in Claude Code
-3. Click any element in the preview
-4. Claude receives: component name, source file, line number, Tailwind classes, computed styles, parent chain, props, state
-5. Say what you want changed. Claude edits the right file, right line. One shot.
 
 ## Install
 
 ```bash
-# Clone and build
 git clone https://github.com/akellaluvlace/Linkraft.git
 cd Linkraft/poking
 npm install
 npm run build
 ```
 
-Add to your Claude Code MCP settings (`.mcp.json`):
+Add to your project's `.mcp.json`:
 ```json
 {
   "mcpServers": {
-    "poking": {
+    "linkraft": {
       "command": "node",
-      "args": ["path/to/Linkraft/poking/dist/mcp/server.js"]
+      "args": ["/absolute/path/to/Linkraft/poking/dist/mcp/server.js"]
     }
   }
 }
 ```
 
-## For React 19+ (optional Babel plugin)
+Restart Claude Code. Done.
 
-React 19 removed `_debugSource`. For exact source locations, add the Babel plugin:
+## /linkraft plan
 
-```bash
-npm install --save-dev poking-babel-plugin
+Before you build. Scans your project and generates a CLAUDE.md that actually knows your stack.
+
+```
+/linkraft plan claude-md    # Generate CLAUDE.md from existing code
+/linkraft plan stack        # Analyze tech stack and conventions
+/linkraft plan              # Full planning flow with research
 ```
 
-```typescript
-// vite.config.ts
-react({ babel: { plugins: ['poking-babel-plugin'] } })
+Detects: 15+ frameworks, styling, database, auth, testing, deployment, coding conventions (indentation, quotes, semicolons, state management). Zero external dependencies.
+
+## /linkraft poke
+
+While you build. Click any element, Claude gets full context.
+
 ```
+/linkraft poke http://localhost:3000   # Start visual inspection
+```
+
+On first run, Linkraft detects your framework (Vite, Next.js, etc.) and offers to add the overlay automatically. One line in your dev config. Or use the bookmarklet fallback for any framework.
+
+### Forge: Design Systems
+
+```
+/linkraft forge browse          # 10 built-in presets
+/linkraft forge apply neo-brutalism   # Transform your project
+/linkraft forge tokens          # Visual token editor
+```
+
+Presets: Neo Brutalism, Glassmorphism, Minimalist Swiss, Retro Terminal, Soft Pastel, Dark Luxe, Newspaper, Y2K, Organic Earth, Corporate Clean.
+
+### Vault: Component Library
+
+```
+/linkraft vault browse          # 10+ community components
+/linkraft vault search hero     # Search by keyword
+/linkraft vault install hero-split   # Install into project
+```
+
+Works offline with bundled components. Online: reads from [poking-vault](https://github.com/akellaluvlace/poking-vault).
+
+### Dreamroll: Overnight Design Generation
+
+```
+/linkraft dreamroll start       # Begin autonomous generation
+/linkraft dreamroll report      # Morning report with top gems
+```
+
+Three AI judges (BRUTUS the minimalist, VENUS the aesthete, MERCURY the conversion machine) score every variation. 63 wildcard mutations force creative divergence. No separate API key needed: judges use Claude's own context.
+
+### Launchpad: Landing Page Pipeline
+
+```
+/linkraft launchpad plan        # Brief, copy, wireframe, SEO
+/linkraft launchpad test        # Quality checks
+/linkraft launchpad distribute  # Social media drafts
+```
+
+## /linkraft sheep
+
+After you build. Auto-configuring QA that hunts bugs while you sleep.
+
+```
+/linkraft sheep                 # Auto-configure and start hunting
+/linkraft sheep report          # Session report with stats
+/linkraft sheep content         # Social media content from results
+```
+
+Zero config. Reads your package.json, detects the stack, finds build/test commands, identifies high-risk areas, generates a QA plan, and starts hunting.
+
+The cast:
+- **SheepCalledShip**: the narrator. Existential. Dramatic. Finds bugs.
+- **deezeebalz99**: code reviewer. Reddit mod energy. Suggests rewriting in Rust.
+- **Martha**: beta tester. Sweet elderly lady. Tests with one finger. Finds real UX problems.
+
+## Zero-Friction Doctrine
+
+Every feature works with zero config on first run. If something is unavailable (offline, no CLI tool, no MCP), Linkraft degrades gracefully with a clear message and a useful fallback. Never returns empty. Never returns null silently.
 
 ## MCP Tools
 
-| Tool | Description |
-|------|-------------|
-| `poke_get_selected_element` | Full context of clicked element |
-| `poke_get_parent` | Parent element info |
-| `poke_get_siblings` | Sibling elements |
-| `poke_get_children` | Child elements |
-| `poke_get_computed_styles` | All computed CSS properties |
-| `poke_screenshot_element` | Screenshot with highlight |
-| `poke_compare_elements` | Compare two elements (V2) |
-| `poke_navigate` | Navigate to URL |
+40+ tools across three modes. Full list: `plan_analyze_stack`, `plan_generate_claude_md`, `poke_setup`, `poke_bookmarklet`, `forge_list_presets`, `forge_apply_preset`, `forge_get_tokens`, `forge_check_violations`, `vault_browse`, `vault_search`, `vault_install`, `dreamroll_judge`, `dreamroll_record_verdict`, `dreamroll_status`, `dreamroll_gems`, `dreamroll_report`, `launchpad_plan`, `launchpad_test`, `launchpad_distribute`, `sheep_scan`, `sheep_init`, `sheep_status`, `sheep_report`, and more.
 
-## Supported Frameworks
+## Numbers
 
-- React (full support: component name, file, line, props, state)
-- Vue, Svelte (generic support, component mapping in V2)
-- Plain HTML/CSS (DOM context, selector path, search hints)
-
-## Tech
-
-- Overlay: 10.9KB vanilla TypeScript bundle, zero dependencies, Shadow DOM isolated
-- Extension: VS Code WebView with message bridge
-- MCP Server: stdio transport, 13 tools
-- 41 tests
+- 265 tests across 25 test files
+- 10 design presets
+- 63 wildcard mutations
+- 10 bundled vault components
+- 5 agent personalities
+- 6 skills, 7 commands
 
 ## License
 
