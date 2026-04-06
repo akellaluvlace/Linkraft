@@ -1,12 +1,19 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "linkraft",
-  "description": "Open-source MCP toolkit for Claude Code. Curated, tested integrations for Telegram, Discord, Twitter/X, LinkedIn, Instagram, Gmail, Notion, Slack, Google Calendar, Google Sheets.",
+  "description": "One plugin. Three modes. Ship everything. Plan (CLAUDE.md gen), Poke (visual design), Sheep (auto QA). Plus 10 MCP packs for social and productivity APIs.",
   "owner": {
     "name": "Akella inMotion",
     "email": "nikita.akella13@gmail.com"
   },
   "plugins": [
+    {
+      "name": "linkraft",
+      "description": "Full development lifecycle: /linkraft plan (research + CLAUDE.md), /linkraft poke (click elements, design systems, overnight generation), /linkraft sheep (auto-configuring QA). 40+ tools, 10 presets, 5 agent personalities.",
+      "category": "development",
+      "source": "./poking",
+      "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/poking"
+    },
     {
       "name": "linkraft-telegram",
       "description": "Telegram Bot API: send messages, manage groups, inline keyboards, webhooks. 18 tools.",
