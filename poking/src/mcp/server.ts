@@ -14,6 +14,7 @@ import { registerDreamrollTools } from './tools/dreamroll-tools.js';
 import { registerLaunchpadTools } from './tools/launchpad-tools.js';
 import { registerPokeInjectionTools } from './tools/poke-injection.js';
 import { registerSheepTools } from './tools/sheep-tools.js';
+import { registerPlanTools } from './tools/plan-tools.js';
 
 // Shared state - updated when the extension sends element selection data
 let currentSelection: PokeContext | null = null;
@@ -49,6 +50,7 @@ async function main(): Promise<void> {
   registerLaunchpadTools(server);
   registerPokeInjectionTools(server);
   registerSheepTools(server);
+  registerPlanTools(server);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
