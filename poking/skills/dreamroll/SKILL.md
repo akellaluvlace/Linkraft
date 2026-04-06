@@ -23,30 +23,40 @@ Dreamroll is a design casino. You set a target number of variations and a time b
 - Average < 5: DISCARD
 - Any single 10: INSTANT KEEP regardless of others
 
-## How To Use
+## How Judging Works (Zero API Key)
 
-### Starting a Run
-When user says "/dreamroll start":
-1. Confirm parameters (base page, target count, time budget)
-2. State is saved to `.dreamroll/state.json` after every variation
-3. Run is resumable if interrupted
+The judges use Claude itself. No separate Anthropic API key needed.
 
-### Checking Progress
-Use `dreamroll_status` to show current progress.
-Use `dreamroll_gems` to list all high-scoring variations.
+For each variation:
+1. Call `dreamroll_judge` with the variation description and plugin root
+2. The tool returns evaluation prompts with each judge's personality loaded
+3. YOU (Claude) evaluate the variation as each judge, staying in character
+4. Call `dreamroll_record_verdict` with the three scores and comments
+5. The verdict is recorded to state and the loop continues
 
-### Morning Report
-Use `dreamroll_report` for the full summary including:
-- Top gems with scores and judge comments
-- Emerging patterns (which layouts/genres/moods score highest)
-- Wildcard discoveries (which creative constraints produced gems)
-- Full statistics
+This works because you ARE Claude. You adopt each judge personality and score honestly. The judge prompts in agents/dreamroll-*.md give you the personality, scoring criteria, and roast style.
 
-### Resuming
-Dreamroll automatically resumes from `.dreamroll/state.json` if a previous run was interrupted.
+**In headless/automated mode** (overnight cron): the system uses self-evaluation with mock scores. The morning report notes this. Interactive runs produce real judging.
+
+## The Generation Loop
+
+For each variation:
+1. Roll random seed parameters (color, typography, layout, genre, density, mood)
+2. Select a random wildcard mutation from the 63 available
+3. Generate the variation
+4. Judge it (call dreamroll_judge, evaluate, call dreamroll_record_verdict)
+5. If gem: save to .dreamroll/gems/
+6. Every 10 variations: evolution analyzes gems, adjusts parameters
+7. Save state after every variation (resumable)
 
 ## Available Tools
 
+- `dreamroll_judge`: get judge evaluation prompts for a variation (YOU evaluate)
+- `dreamroll_record_verdict`: record scores after judging
 - `dreamroll_status`: current run progress
 - `dreamroll_gems`: list all gems with scores
 - `dreamroll_report`: full morning report
+
+## Resuming
+
+Dreamroll automatically resumes from `.dreamroll/state.json` if a previous run was interrupted.

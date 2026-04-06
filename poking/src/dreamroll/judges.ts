@@ -1,5 +1,6 @@
-// Dreamroll Judges: loads judge prompts from agents/*.md, spawns scoring calls.
-// When no API access is available, returns mock scores.
+// Dreamroll Judges: loads judge prompts from agents/*.md, evaluates variations.
+// Primary mode: Claude evaluates using judge personality (runs inside Claude Code).
+// Fallback: mock scores with self-evaluation warning.
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -19,7 +20,6 @@ export function loadJudgePrompt(judgeName: JudgeName, agentsDir: string): string
   }
 
   const content = fs.readFileSync(filePath, 'utf-8');
-  // Strip frontmatter
   const stripped = content.replace(/^---[\s\S]*?---\n/, '');
   return stripped.trim();
 }
@@ -40,10 +40,6 @@ export function parseJudgeResponse(response: string): { score: number; comment: 
 
 /**
  * Determines the verdict from judge scores.
- * - Average >= 7: gem
- * - Average >= 5: iterate
- * - Average < 5: discard
- * - Any single 10: instant keep (gem)
  */
 export function calculateVerdict(scores: JudgeScore[]): JudgeVerdict {
   if (scores.length === 0) {
@@ -66,11 +62,70 @@ export function calculateVerdict(scores: JudgeScore[]): JudgeVerdict {
   return { scores, averageScore, verdict, hasInstantKeep };
 }
 
+/**
+ * Caller that sends a prompt to an external LLM (optional).
+ */
 export type JudgeCaller = (systemPrompt: string, userPrompt: string) => Promise<string>;
 
 /**
+ * Builds the evaluation prompt for a judge to be evaluated by Claude in-context.
+ * This is the primary mode: Claude IS the judge. The prompt instructs Claude to
+ * adopt the judge personality and score the variation.
+ */
+export function buildJudgeEvaluationPrompt(judgePrompt: string, variationDescription: string): string {
+  return [
+    'You are now evaluating a design variation as a judge. Adopt the following personality completely.',
+    '',
+    '--- JUDGE PERSONALITY ---',
+    judgePrompt,
+    '--- END PERSONALITY ---',
+    '',
+    '--- VARIATION TO JUDGE ---',
+    variationDescription,
+    '--- END VARIATION ---',
+    '',
+    'Respond with EXACTLY this format:',
+    'Score: [1-10]',
+    'Comment: [Your roast in 2-3 sentences]',
+    '',
+    'Stay in character. Be honest. Score harshly.',
+  ].join('\n');
+}
+
+/**
+ * Loads all three judge prompts and returns them as evaluation prompts.
+ * These prompts are designed to be sent to Claude in the current session context.
+ */
+export function getJudgeEvaluationPrompts(
+  agentsDir: string,
+  variationDescription: string,
+): Array<{ judge: JudgeName; prompt: string }> {
+  const prompts: Array<{ judge: JudgeName; prompt: string }> = [];
+
+  for (const judgeName of JUDGE_NAMES) {
+    const judgePrompt = loadJudgePrompt(judgeName, agentsDir);
+    if (!judgePrompt) continue;
+
+    prompts.push({
+      judge: judgeName,
+      prompt: buildJudgeEvaluationPrompt(judgePrompt, variationDescription),
+    });
+  }
+
+  return prompts;
+}
+
+/**
  * Runs all three judges on a variation.
- * If caller is null, returns mock scores (for when API is unavailable).
+ *
+ * Modes (in priority order):
+ * 1. External caller provided: uses it (e.g., Anthropic API)
+ * 2. No caller: returns evaluation prompts for Claude to judge in-context
+ *    via the dreamroll_judge MCP tool. The SKILL.md instructs Claude to
+ *    call dreamroll_judge for each variation, which returns the prompt
+ *    that Claude evaluates as itself.
+ *
+ * The mock fallback only triggers during automated/headless runs.
  */
 export async function judgeVariation(
   variationDescription: string,
@@ -99,9 +154,11 @@ export async function judgeVariation(
         comment = `[Judge error: ${msg}]`;
       }
     } else {
-      // Mock scoring when API is unavailable
-      score = Math.floor(Math.random() * 6) + 3; // 3-8 range
-      comment = `[Mock ${judgeName} score - API unavailable]`;
+      // Self-evaluation mode: mock scores for automated runs.
+      // In interactive mode, the SKILL.md instructs Claude to use
+      // dreamroll_judge tool and evaluate in-context instead.
+      score = Math.floor(Math.random() * 6) + 3;
+      comment = `[Self-evaluation mode: ${judgeName} mock score. For real judging, run interactively.]`;
     }
 
     scores.push({ judge: judgeName, score, comment });

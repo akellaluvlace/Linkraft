@@ -111,7 +111,7 @@ describe('judgeVariation', () => {
     const verdict = await judgeVariation('test variation', AGENTS_DIR, null);
     expect(verdict.scores.length).toBe(3);
     expect(verdict.scores.every(s => s.score >= 1 && s.score <= 10)).toBe(true);
-    expect(verdict.scores.every(s => s.comment.includes('Mock'))).toBe(true);
+    expect(verdict.scores.every(s => s.comment.includes('evaluation mode'))).toBe(true);
   });
 
   it('uses caller when provided', async () => {
