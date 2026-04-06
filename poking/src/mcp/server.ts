@@ -12,6 +12,7 @@ import { registerMcpancakeTools } from './tools/mcpancake.js';
 import { registerVaultTools } from './tools/vault-tools.js';
 import { registerDreamrollTools } from './tools/dreamroll-tools.js';
 import { registerLaunchpadTools } from './tools/launchpad-tools.js';
+import { registerPokeInjectionTools } from './tools/poke-injection.js';
 
 // Shared state - updated when the extension sends element selection data
 let currentSelection: PokeContext | null = null;
@@ -45,6 +46,7 @@ async function main(): Promise<void> {
   registerVaultTools(server);
   registerDreamrollTools(server);
   registerLaunchpadTools(server);
+  registerPokeInjectionTools(server);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
