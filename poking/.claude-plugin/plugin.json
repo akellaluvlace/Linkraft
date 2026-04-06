@@ -1,10 +1,14 @@
 {
-  "name": "poking-is-new-coding",
-  "description": "Visual design studio for Claude Code. Click elements (Poke), apply design systems (Forge), share components (Vault), generate overnight designs (Dreamroll), launch landing pages (Launchpad).",
+  "name": "linkraft",
+  "description": "One plugin. Three modes. Ship everything. /linkraft plan (research + CLAUDE.md), /linkraft poke (visual design studio), /linkraft sheep (autonomous QA).",
   "author": {
     "name": "Akella inMotion"
   },
   "skills": [
+    {
+      "name": "plan",
+      "path": "skills/plan/SKILL.md"
+    },
     {
       "name": "poking",
       "path": "skills/poking/SKILL.md"
@@ -20,6 +24,10 @@
     {
       "name": "launchpad",
       "path": "skills/launchpad/SKILL.md"
+    },
+    {
+      "name": "sheep",
+      "path": "skills/sheep/SKILL.md"
     }
   ],
   "agents": [
@@ -34,9 +42,25 @@
     {
       "name": "dreamroll-mercury",
       "path": "agents/dreamroll-mercury.md"
+    },
+    {
+      "name": "sheep-deezeebalz99",
+      "path": "agents/sheep-deezeebalz99.md"
+    },
+    {
+      "name": "sheep-martha",
+      "path": "agents/sheep-martha.md"
     }
   ],
   "commands": [
+    {
+      "name": "linkraft",
+      "path": "commands/linkraft.md"
+    },
+    {
+      "name": "plan",
+      "path": "commands/plan.md"
+    },
     {
       "name": "forge",
       "path": "commands/forge.md"
@@ -52,6 +76,10 @@
     {
       "name": "launchpad",
       "path": "commands/launchpad.md"
+    },
+    {
+      "name": "sheep",
+      "path": "commands/sheep.md"
     }
   ]
 }
