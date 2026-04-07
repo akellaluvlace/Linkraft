@@ -1,85 +1,21 @@
 {
   "name": "linkraft",
   "description": "One plugin. Three modes. Ship everything. /linkraft plan (research + CLAUDE.md), /linkraft poke (visual design studio), /linkraft sheep (autonomous QA).",
+  "version": "0.1.0",
   "author": {
-    "name": "Akella inMotion"
+    "name": "Akella inMotion",
+    "email": "nikita.akella13@gmail.com"
   },
-  "skills": [
-    {
-      "name": "plan",
-      "path": "skills/plan/SKILL.md"
-    },
-    {
-      "name": "poking",
-      "path": "skills/poking/SKILL.md"
-    },
-    {
-      "name": "forge",
-      "path": "skills/forge/SKILL.md"
-    },
-    {
-      "name": "dreamroll",
-      "path": "skills/dreamroll/SKILL.md"
-    },
-    {
-      "name": "launchpad",
-      "path": "skills/launchpad/SKILL.md"
-    },
-    {
-      "name": "sheep",
-      "path": "skills/sheep/SKILL.md"
-    }
-  ],
-  "agents": [
-    {
-      "name": "dreamroll-brutus",
-      "path": "agents/dreamroll-brutus.md"
-    },
-    {
-      "name": "dreamroll-venus",
-      "path": "agents/dreamroll-venus.md"
-    },
-    {
-      "name": "dreamroll-mercury",
-      "path": "agents/dreamroll-mercury.md"
-    },
-    {
-      "name": "sheep-deezeebalz99",
-      "path": "agents/sheep-deezeebalz99.md"
-    },
-    {
-      "name": "sheep-martha",
-      "path": "agents/sheep-martha.md"
-    }
-  ],
-  "commands": [
-    {
-      "name": "linkraft",
-      "path": "commands/linkraft.md"
-    },
-    {
-      "name": "plan",
-      "path": "commands/plan.md"
-    },
-    {
-      "name": "forge",
-      "path": "commands/forge.md"
-    },
-    {
-      "name": "vault",
-      "path": "commands/vault.md"
-    },
-    {
-      "name": "dreamroll",
-      "path": "commands/dreamroll.md"
-    },
-    {
-      "name": "launchpad",
-      "path": "commands/launchpad.md"
-    },
-    {
-      "name": "sheep",
-      "path": "commands/sheep.md"
-    }
+  "homepage": "https://github.com/akellaluvlace/Linkraft",
+  "repository": "https://github.com/akellaluvlace/Linkraft",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "design",
+    "qa",
+    "planning",
+    "mcp",
+    "frontend",
+    "linkraft"
   ]
 }
