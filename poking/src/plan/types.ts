@@ -1,61 +1,9 @@
-// Plan mode types: interfaces for market research, architecture, and CLAUDE.md generation
+// Plan mode types: interfaces for research, architecture, CLAUDE.md generation,
+// schema extraction, API mapping, design tokens, and risk analysis.
 
 export interface PlanConfig {
   projectRoot: string;
   productDescription: string;
-}
-
-export interface MarketResearch {
-  competitors: CompetitorInfo[];
-  gaps: string[];
-  opportunities: string[];
-  generatedAt: string;
-}
-
-export interface CompetitorInfo {
-  name: string;
-  url: string | null;
-  description: string;
-  strengths: string[];
-  weaknesses: string[];
-}
-
-export interface StackRecommendation {
-  framework: string;
-  language: string;
-  styling: string;
-  database: string;
-  auth: string;
-  deployment: string;
-  reasoning: string;
-}
-
-export interface ArchitectureProposal {
-  overview: string;
-  components: ArchComponent[];
-  dataFlow: string;
-  apiRoutes: string[];
-  schemaOutline: string;
-}
-
-export interface ArchComponent {
-  name: string;
-  type: 'page' | 'component' | 'hook' | 'util' | 'api' | 'service' | 'middleware';
-  description: string;
-  dependencies: string[];
-}
-
-export interface ClaudeMdConfig {
-  projectName: string;
-  projectDescription: string;
-  stack: DetectedProjectStack;
-  buildCommand: string | null;
-  testCommand: string | null;
-  lintCommand: string | null;
-  fileMap: FileMapEntry[];
-  conventions: CodeConventions;
-  hardConstraints: string[];
-  architecture: string;
 }
 
 export interface DetectedProjectStack {
@@ -68,11 +16,6 @@ export interface DetectedProjectStack {
   deployment: string | null;
 }
 
-export interface FileMapEntry {
-  path: string;
-  purpose: string;
-}
-
 export interface CodeConventions {
   indentation: 'tabs' | 'spaces-2' | 'spaces-4';
   quotes: 'single' | 'double';
@@ -80,4 +23,76 @@ export interface CodeConventions {
   namingStyle: string;
   importStyle: string;
   stateManagement: string | null;
+}
+
+export interface FileMapEntry {
+  path: string;
+  purpose: string;
+}
+
+export interface EnvVar {
+  name: string;
+  purpose: string;
+  file: string;
+  hasValue: boolean;
+}
+
+export interface ClaudeMdConfig {
+  projectName: string;
+  projectDescription: string;
+  stack: DetectedProjectStack;
+  buildCommand: string | null;
+  testCommand: string | null;
+  lintCommand: string | null;
+  devCommand: string | null;
+  fileMap: FileMapEntry[];
+  directoryStructure: string;
+  conventions: CodeConventions;
+  hardConstraints: string[];
+  architecture: string;
+  envVars: EnvVar[];
+  knownPatterns: string[];
+  neverTouch: string[];
+}
+
+// Schema extraction
+export interface SchemaTable {
+  name: string;
+  columns: SchemaColumn[];
+}
+
+export interface SchemaColumn {
+  name: string;
+  type: string;
+  nullable: boolean;
+  defaultValue: string | null;
+  notes: string | null;
+}
+
+// API mapping
+export interface ApiEndpoint {
+  path: string;
+  method: string;
+  auth: string;
+  purpose: string;
+  file: string;
+}
+
+// Design tokens
+export interface DesignTokens {
+  colors: Record<string, string>;
+  typography: Record<string, string>;
+  spacing: Record<string, string>;
+  radii: Record<string, string>;
+  shadows: Record<string, string>;
+}
+
+// Project feature detection
+export interface ProjectFeatures {
+  hasDatabase: boolean;
+  hasApiRoutes: boolean;
+  hasMobileApp: boolean;
+  hasDesignSystem: boolean;
+  isProduct: boolean;
+  databaseType: string | null;
 }

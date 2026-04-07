@@ -1,28 +1,34 @@
 ---
 name: plan
-description: Research, analyze, and configure a project before building
+description: Scan project, generate CLAUDE.md, extract schema, map API, detect design tokens
 ---
 
 # /linkraft plan
 
-Plan mode: research, architecture, and CLAUDE.md generation.
+Before you build. Scans your project and generates everything future sessions need.
 
 ## Subcommands
 
 ### /linkraft plan
-Full planning flow: research competitors, analyze stack, generate architecture, create CLAUDE.md.
+Full planning flow: stack analysis, CLAUDE.md generation, schema, API map, tokens.
 
 ### /linkraft plan claude-md
-Generate or regenerate CLAUDE.md from existing code. Scans stack, conventions, commands, file map.
+Generate or update CLAUDE.md from existing code. The key feature.
 
 ### /linkraft plan stack
-Analyze the current project's tech stack and coding conventions.
+Analyze tech stack, coding conventions, and project features.
 
-### /linkraft plan competitors
-Research competitors for a product idea (uses web search).
+### /linkraft plan schema
+Extract database schema from migrations, Prisma, or Drizzle.
 
-### /linkraft plan architecture
-Generate an architecture proposal for a new or existing project.
+### /linkraft plan api-map
+Map all API routes, Edge Functions, and server actions.
+
+### /linkraft plan tokens
+Extract design tokens from Tailwind config or CSS variables.
+
+### /linkraft plan features
+Detect which plan outputs are applicable for this project.
 
 ### /linkraft plan review
-Walk through an existing plan in .plan/.
+Walk through all generated docs in .plan/.
