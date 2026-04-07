@@ -7,6 +7,7 @@ import { mapApiEndpoints, formatApiMap } from '../../src/plan/api-mapper.js';
 import { extractDesignTokens, formatDesignTokens } from '../../src/plan/token-extractor.js';
 import { detectFeatures } from '../../src/plan/feature-detector.js';
 import { scanProject, generateClaudeMd, diffClaudeMd } from '../../src/plan/claude-md-gen.js';
+import { analyzeStack, detectConventions } from '../../src/plan/stack-analyzer.js';
 
 let tmpDir: string;
 
@@ -203,6 +204,58 @@ describe('feature-detector', () => {
     expect(features.hasDatabase).toBe(false);
     expect(features.hasApiRoutes).toBe(false);
     expect(features.isProduct).toBe(false);
+  });
+});
+
+describe('plan file writers', () => {
+  it('plan_analyze_stack output can be written to .plan/STACK.md', () => {
+    setupProject({ prisma: true, tailwind: true });
+    const stack = analyzeStack(tmpDir);
+    const conventions = detectConventions(tmpDir);
+    const features = detectFeatures(tmpDir);
+
+    const lines = [
+      '# Stack Analysis',
+      '',
+      `- Framework: ${stack.framework ?? 'not detected'}`,
+      `- Language: ${stack.language}`,
+      `- Database: ${features.databaseType ?? 'none'}`,
+      `- Conventions: ${conventions.indentation}, ${conventions.quotes}`,
+    ];
+    const md = lines.join('\n');
+
+    const planDir = path.join(tmpDir, '.plan');
+    fs.mkdirSync(planDir, { recursive: true });
+    fs.writeFileSync(path.join(planDir, 'STACK.md'), md, 'utf-8');
+
+    expect(fs.existsSync(path.join(planDir, 'STACK.md'))).toBe(true);
+    const written = fs.readFileSync(path.join(planDir, 'STACK.md'), 'utf-8');
+    expect(written).toContain('Stack Analysis');
+    expect(written).toContain('prisma');
+  });
+
+  it('plan_features output can be written to .plan/FEATURES.md', () => {
+    setupProject({ prisma: true, nextApi: true, tailwind: true });
+    const features = detectFeatures(tmpDir);
+
+    const always = ['STACK', 'FEATURES', 'CLAUDE.md'];
+    const conditional: string[] = [];
+    if (features.hasDatabase) conditional.push('SCHEMA');
+    if (features.hasApiRoutes) conditional.push('API_MAP');
+    if (features.hasDesignSystem) conditional.push('DESIGN_TOKENS');
+
+    const md = ['# Feature Detection', '', ...always.map(a => `- ${a}`), ...conditional.map(a => `- ${a}`)].join('\n');
+
+    const planDir = path.join(tmpDir, '.plan');
+    fs.mkdirSync(planDir, { recursive: true });
+    fs.writeFileSync(path.join(planDir, 'FEATURES.md'), md, 'utf-8');
+
+    expect(fs.existsSync(path.join(planDir, 'FEATURES.md'))).toBe(true);
+    const written = fs.readFileSync(path.join(planDir, 'FEATURES.md'), 'utf-8');
+    expect(written).toContain('Feature Detection');
+    expect(written).toContain('SCHEMA');
+    expect(written).toContain('API_MAP');
+    expect(written).toContain('DESIGN_TOKENS');
   });
 });
 

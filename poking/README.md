@@ -1,11 +1,11 @@
 # Linkraft
 
-One plugin. Three modes. Ship everything.
+Autonomous QA and project analysis for Claude Code.
 
 ```
-/linkraft plan     -> before you build (research, CLAUDE.md, architecture)
-/linkraft poke     -> while you build (click elements, design systems, components)
-/linkraft sheep    -> after you build (autonomous QA, overnight bug hunting)
+/linkraft plan        -> before you build (research, CLAUDE.md, architecture)
+/linkraft preflight   -> before you ship (security, health, readiness in 60 sec)
+/linkraft sheep       -> after you build (autonomous QA, overnight bug hunting)
 ```
 
 ## Install
@@ -33,96 +33,78 @@ Restart Claude Code. Done.
 
 ## /linkraft plan
 
-Before you build. Scans your project and generates a CLAUDE.md that actually knows your stack.
+Before you build. Scans your project and generates 10-12 planning documents.
 
 ```
-/linkraft plan claude-md    # Generate CLAUDE.md from existing code
-/linkraft plan stack        # Analyze tech stack and conventions
-/linkraft plan              # Full planning flow with research
+/linkraft plan               # Full planning flow (all outputs)
+/linkraft plan claude-md     # Generate CLAUDE.md from existing code
+/linkraft plan stack         # Analyze tech stack and conventions
+/linkraft plan competitors   # Competitive analysis (uses web search)
+/linkraft plan architecture  # System architecture review
+/linkraft plan risks         # Risk matrix
+/linkraft plan deps          # Task dependency graph
 ```
 
-Detects: 15+ frameworks, styling, database, auth, testing, deployment, coding conventions (indentation, quotes, semicolons, state management). Zero external dependencies.
+Outputs written to `.plan/`: stack, features, schema, API map, design tokens, competitors, architecture, executive summary, risk matrix, dependency graph, plus conditional monetization and ASO.
 
-## /linkraft poke
+CLAUDE.md is the key output: tech stack, commands, directory structure, coding standards, hard constraints, architecture notes, environment variables, never-touch areas.
 
-While you build. Click any element, Claude gets full context.
+## /linkraft preflight
 
-```
-/linkraft poke http://localhost:3000   # Start visual inspection
-```
-
-On first run, Linkraft detects your framework (Vite, Next.js, etc.) and offers to add the overlay automatically. One line in your dev config. Or use the bookmarklet fallback for any framework.
-
-### Forge: Design Systems
+Before you ship. 60-second read-only scan. Three scores.
 
 ```
-/linkraft forge browse          # 10 built-in presets
-/linkraft forge apply neo-brutalism   # Transform your project
-/linkraft forge tokens          # Visual token editor
+/linkraft preflight           # Full scan
+/linkraft preflight security  # Security only (0-10)
+/linkraft preflight health    # Health only (0-100)
+/linkraft preflight ready     # Ship readiness only (0-100%)
 ```
 
-Presets: Neo Brutalism, Glassmorphism, Minimalist Swiss, Retro Terminal, Soft Pastel, Dark Luxe, Newspaper, Y2K, Organic Earth, Corporate Clean.
-
-### Vault: Component Library
-
-```
-/linkraft vault browse          # 10+ community components
-/linkraft vault search hero     # Search by keyword
-/linkraft vault install hero-split   # Install into project
-```
-
-Works offline with bundled components. Online: reads from [poking-vault](https://github.com/akellaluvlace/poking-vault).
-
-### Dreamroll: Overnight Design Generation
-
-```
-/linkraft dreamroll start       # Begin autonomous generation
-/linkraft dreamroll report      # Morning report with top gems
-```
-
-Three AI judges (BRUTUS the minimalist, VENUS the aesthete, MERCURY the conversion machine) score every variation. 63 wildcard mutations force creative divergence. No separate API key needed: judges use Claude's own context.
-
-### Launchpad: Landing Page Pipeline
-
-```
-/linkraft launchpad plan        # Brief, copy, wireframe, SEO
-/linkraft launchpad test        # Quality checks
-/linkraft launchpad distribute  # Social media drafts
-```
+Security: hardcoded secrets, missing auth, rate limiting, fail-open patterns, XSS, injection vectors, env leaks, RLS.
+Health: console.logs, TypeScript any, test coverage, file complexity, TODOs, empty catches.
+Readiness: error handling, loading states, 404, auth, deploy config, env docs, favicon, OG tags, robots.txt.
 
 ## /linkraft sheep
 
 After you build. Auto-configuring QA that hunts bugs while you sleep.
 
 ```
-/linkraft sheep                 # Auto-configure and start hunting
-/linkraft sheep report          # Session report with stats
-/linkraft sheep content         # Social media content from results
+/linkraft sheep               # Auto-configure and start hunting
+/linkraft sheep report        # Session report with stats
 ```
 
-Zero config. Reads your package.json, detects the stack, finds build/test commands, identifies high-risk areas, generates a QA plan, and starts hunting.
+Zero config. Reads your package.json, detects the stack, finds build/test commands, identifies high-risk areas, generates a QA plan, and starts hunting. Fixes what's safe, commits after each cycle, logs what needs human review.
 
 The cast:
 - **SheepCalledShip**: the narrator. Existential. Dramatic. Finds bugs.
 - **deezeebalz99**: code reviewer. Reddit mod energy. Suggests rewriting in Rust.
 - **Martha**: beta tester. Sweet elderly lady. Tests with one finger. Finds real UX problems.
 
+Proven: 122 bugs found across 4 runs, 94 auto-fixed, 0 tests broken.
+
+## The Chain
+
+```
+/linkraft plan        -> understand the project
+/linkraft preflight   -> see what's wrong (60 sec)
+/linkraft sheep       -> fix what's wrong (autonomous)
+```
+
 ## Zero-Friction Doctrine
 
-Every feature works with zero config on first run. If something is unavailable (offline, no CLI tool, no MCP), Linkraft degrades gracefully with a clear message and a useful fallback. Never returns empty. Never returns null silently.
+Every feature works with zero config on first run. No API keys. No MCPs required. If something is unavailable, Linkraft degrades gracefully with a clear message and a useful fallback.
 
 ## MCP Tools
 
-40+ tools across three modes. Full list: `plan_analyze_stack`, `plan_generate_claude_md`, `poke_setup`, `poke_bookmarklet`, `forge_list_presets`, `forge_apply_preset`, `forge_get_tokens`, `forge_check_violations`, `vault_browse`, `vault_search`, `vault_install`, `dreamroll_judge`, `dreamroll_record_verdict`, `dreamroll_status`, `dreamroll_gems`, `dreamroll_report`, `launchpad_plan`, `launchpad_test`, `launchpad_distribute`, `sheep_scan`, `sheep_init`, `sheep_status`, `sheep_report`, and more.
+26 tools across three modes: 15 plan tools, 4 preflight tools, 7 sheep tools.
 
 ## Numbers
 
-- 265 tests across 25 test files
-- 10 design presets
-- 63 wildcard mutations
-- 10 bundled vault components
-- 5 agent personalities
-- 6 skills, 7 commands
+- 370 tests across 29 test files
+- 3 modes (plan, preflight, sheep)
+- 13 plan outputs (10 always + 3 conditional)
+- 3 preflight scores (security, health, readiness)
+- 3 agent personalities
 
 ## License
 

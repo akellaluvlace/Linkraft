@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { getCurrentSelection } from '../server.js';
+import { getCurrentSelection } from '../../poke/state.js';
 
 export function registerInspectionTools(server: McpServer): void {
   server.tool(

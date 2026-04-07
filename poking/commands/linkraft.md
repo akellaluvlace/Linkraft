@@ -1,38 +1,27 @@
 ---
 name: linkraft
-description: One plugin. Three modes. Ship everything.
+description: Claude Code plugin for project analysis, preflight checks, and autonomous QA.
 ---
 
 # /linkraft
 
-The complete development lifecycle plugin.
+Three modes for your development lifecycle.
 
 ## Modes
 
 ### /linkraft plan
-Before you build. Research competitors, analyze tech stacks, generate architecture, create CLAUDE.md.
+Before you build. Scans your project, generates CLAUDE.md, analyzes competitors, reviews architecture, produces 10-12 planning documents.
 
-### /linkraft poke [url]
-While you build. Click elements, apply design systems, browse components, generate designs overnight.
+### /linkraft preflight
+Before you ship. 60-second read-only scan: security (0-10), health (0-100), ship readiness (0-100%). No fixes, no commits.
 
 ### /linkraft sheep
-After you build. Auto-configuring QA agent that hunts bugs while you sleep.
+After you build. Auto-configuring QA agent that hunts bugs, fixes what's safe, commits, writes a narrative report, and generates social content.
 
-## Poke Subcommands
-
-- `/linkraft poke <url>` - Open preview with element selection
-- `/linkraft forge browse` - Browse design presets
-- `/linkraft forge apply <preset>` - Apply a design system
-- `/linkraft forge tokens` - View/edit design tokens
-- `/linkraft vault browse` - Browse community components
-- `/linkraft vault search <query>` - Search components
-- `/linkraft dreamroll start` - Begin overnight design generation
-- `/linkraft launchpad plan` - Plan a landing page
-
-## Quick Start
+## The Chain
 
 ```
-/linkraft plan claude-md     # Generate CLAUDE.md for your project
-/linkraft poke localhost:3000 # Click elements, get full context
-/linkraft sheep               # Auto-QA your codebase
+/linkraft plan               # understand the project
+/linkraft preflight           # see what's wrong (60 sec)
+/linkraft sheep              # fix what's wrong (autonomous)
 ```

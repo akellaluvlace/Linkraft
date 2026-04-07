@@ -11,7 +11,7 @@ import {
   generatePersistenceCode,
   parsePollResult,
 } from '../../poke/cdp-injector.js';
-import { setCurrentSelection } from '../server.js';
+import { setCurrentSelection } from '../../poke/state.js';
 
 export function registerPokeInjectionTools(server: McpServer): void {
 

@@ -6,21 +6,37 @@ import { extractSchema, formatSchema } from '../../plan/schema-extractor.js';
 import { mapApiEndpoints, formatApiMap } from '../../plan/api-mapper.js';
 import { extractDesignTokens, formatDesignTokens } from '../../plan/token-extractor.js';
 import { detectFeatures } from '../../plan/feature-detector.js';
+import { collectCompetitorContext, generateCompetitorTemplate, writeCompetitors } from '../../plan/competitors-gen.js';
+import { collectArchitectureContext, generateArchitectureTemplate, writeArchitecture } from '../../plan/architecture-gen.js';
+import { collectExecutiveSummaryContext, generateExecutiveSummaryTemplate, writeExecutiveSummary } from '../../plan/executive-summary-gen.js';
+import { collectRiskMatrixContext, generateRiskMatrixTemplate, writeRiskMatrix } from '../../plan/risk-matrix-gen.js';
+import { collectDependencyGraphContext, generateDependencyGraphTemplate, writeDependencyGraph } from '../../plan/dependency-graph-gen.js';
+import { collectMonetizationContext, generateMonetizationTemplate, writeMonetization } from '../../plan/monetization-gen.js';
+import { collectAsoContext, generateAsoTemplate, writeAso } from '../../plan/aso-gen.js';
 import * as fs from 'fs';
 import * as path from 'path';
+
+const projectRootSchema = { projectRoot: z.string().describe('Project root directory') };
+
+const twoModeSchema = {
+  projectRoot: z.string().describe('Project root directory'),
+  content: z.string().optional().describe('Completed analysis to write. If omitted, returns local context and template.'),
+};
 
 export function registerPlanTools(server: McpServer): void {
   server.tool(
     'plan_analyze_stack',
     'Detects tech stack, coding conventions, and project features.',
-    { projectRoot: z.string().describe('Project root directory') },
+    projectRootSchema,
     async ({ projectRoot }) => {
       const stack = analyzeStack(projectRoot);
       const conventions = detectConventions(projectRoot);
       const features = detectFeatures(projectRoot);
 
       const lines = [
-        '**Tech Stack:**',
+        '# Stack Analysis',
+        '',
+        '## Tech Stack',
         `- Framework: ${stack.framework ?? 'not detected'}`,
         `- Language: ${stack.language}`,
         `- Styling: ${stack.styling ?? 'not detected'}`,
@@ -29,27 +45,35 @@ export function registerPlanTools(server: McpServer): void {
         `- Testing: ${stack.testing ?? 'not detected'}`,
         `- Deployment: ${stack.deployment ?? 'not detected'}`,
         '',
-        '**Conventions:**',
+        '## Conventions',
         `- Indentation: ${conventions.indentation}`,
         `- Quotes: ${conventions.quotes}`,
         `- Semicolons: ${conventions.semicolons ? 'yes' : 'no'}`,
-        `- State: ${conventions.stateManagement ?? 'none'}`,
+        `- Naming: ${conventions.namingStyle}`,
+        `- Imports: ${conventions.importStyle}`,
+        `- State management: ${conventions.stateManagement ?? 'none'}`,
         '',
-        '**Features detected:**',
+        '## Features Detected',
         `- Database: ${features.hasDatabase ? `yes (${features.databaseType})` : 'no'}`,
         `- API routes: ${features.hasApiRoutes ? 'yes' : 'no'}`,
         `- Mobile app: ${features.hasMobileApp ? 'yes' : 'no'}`,
         `- Design system: ${features.hasDesignSystem ? 'yes' : 'no'}`,
         `- Is product: ${features.isProduct ? 'yes' : 'no'}`,
       ];
-      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
+
+      const md = lines.join('\n');
+      const planDir = path.join(projectRoot, '.plan');
+      if (!fs.existsSync(planDir)) fs.mkdirSync(planDir, { recursive: true });
+      fs.writeFileSync(path.join(planDir, 'STACK.md'), md, 'utf-8');
+
+      return { content: [{ type: 'text' as const, text: `Written to .plan/STACK.md\n\n${md}` }] };
     },
   );
 
   server.tool(
     'plan_generate_claude_md',
     'Generates a complete CLAUDE.md from scanning the project. If one exists, reports diff for merge review.',
-    { projectRoot: z.string().describe('Project root directory') },
+    projectRootSchema,
     async ({ projectRoot }) => {
       const result = generateAndWriteClaudeMd(projectRoot);
       if (result.merged) {
@@ -86,7 +110,7 @@ export function registerPlanTools(server: McpServer): void {
   server.tool(
     'plan_preview_claude_md',
     'Previews generated CLAUDE.md without writing it.',
-    { projectRoot: z.string().describe('Project root directory') },
+    projectRootSchema,
     async ({ projectRoot }) => {
       const config = scanProject(projectRoot);
       const content = generateClaudeMd(config);
@@ -97,7 +121,7 @@ export function registerPlanTools(server: McpServer): void {
   server.tool(
     'plan_schema',
     'Extracts database schema from migrations, Prisma, or Drizzle. Returns SCHEMA.md content.',
-    { projectRoot: z.string().describe('Project root directory') },
+    projectRootSchema,
     async ({ projectRoot }) => {
       const result = extractSchema(projectRoot);
       if (!result) {
@@ -105,7 +129,6 @@ export function registerPlanTools(server: McpServer): void {
       }
       const md = formatSchema(result.tables, result.source);
 
-      // Write to .plan/
       const planDir = path.join(projectRoot, '.plan');
       if (!fs.existsSync(planDir)) fs.mkdirSync(planDir, { recursive: true });
       fs.writeFileSync(path.join(planDir, 'SCHEMA.md'), md, 'utf-8');
@@ -117,7 +140,7 @@ export function registerPlanTools(server: McpServer): void {
   server.tool(
     'plan_api_map',
     'Maps all API endpoints, Edge Functions, and server actions. Returns API_MAP.md.',
-    { projectRoot: z.string().describe('Project root directory') },
+    projectRootSchema,
     async ({ projectRoot }) => {
       const endpoints = mapApiEndpoints(projectRoot);
       const md = formatApiMap(endpoints);
@@ -133,7 +156,7 @@ export function registerPlanTools(server: McpServer): void {
   server.tool(
     'plan_tokens',
     'Extracts design tokens from tailwind.config or CSS variables. Returns DESIGN_TOKENS.md.',
-    { projectRoot: z.string().describe('Project root directory') },
+    projectRootSchema,
     async ({ projectRoot }) => {
       const tokens = extractDesignTokens(projectRoot);
       if (!tokens) {
@@ -152,31 +175,154 @@ export function registerPlanTools(server: McpServer): void {
   server.tool(
     'plan_features',
     'Detects project features: database, API routes, mobile app, design system, product vs tool.',
-    { projectRoot: z.string().describe('Project root directory') },
+    projectRootSchema,
     async ({ projectRoot }) => {
       const features = detectFeatures(projectRoot);
-      const applicable: string[] = ['CLAUDE.md', 'STACK_ANALYSIS', 'ARCHITECTURE', 'RISK_MATRIX', 'DEPENDENCY_GRAPH'];
-      if (features.hasDatabase) applicable.push('SCHEMA');
-      if (features.hasApiRoutes) applicable.push('API_MAP');
-      if (features.hasDesignSystem) applicable.push('DESIGN_TOKENS');
-      if (features.isProduct) applicable.push('MONETIZATION');
-      if (features.hasMobileApp) applicable.push('ASO_KEYWORDS');
+      const always = ['STACK', 'FEATURES', 'CLAUDE.md', 'COMPETITORS', 'ARCHITECTURE', 'EXECUTIVE_SUMMARY', 'RISK_MATRIX', 'DEPENDENCY_GRAPH'];
+      const conditional: string[] = [];
+      if (features.hasDatabase) conditional.push('SCHEMA');
+      if (features.hasApiRoutes) conditional.push('API_MAP');
+      if (features.hasDesignSystem) conditional.push('DESIGN_TOKENS');
+      if (features.isProduct) conditional.push('MONETIZATION');
+      if (features.hasMobileApp) conditional.push('ASO_KEYWORDS');
+
+      const lines = [
+        '# Feature Detection',
+        '',
+        '## Always Generated',
+        ...always.map(a => `- ${a}`),
+        '',
+        '## Conditional (detected)',
+        ...(conditional.length > 0 ? conditional.map(a => `- ${a}`) : ['(none detected)']),
+        '',
+        '## Detection Results',
+        `- Database: ${features.hasDatabase ? `yes (${features.databaseType})` : 'no'}`,
+        `- API routes: ${features.hasApiRoutes ? 'yes' : 'no'}`,
+        `- Mobile app: ${features.hasMobileApp ? 'yes' : 'no'}`,
+        `- Design system: ${features.hasDesignSystem ? 'yes' : 'no'}`,
+        `- Is product: ${features.isProduct ? 'yes' : 'no'}`,
+        '',
+        `**Total outputs: ${always.length + conditional.length}**`,
+      ];
+
+      const md = lines.join('\n');
+      const planDir = path.join(projectRoot, '.plan');
+      if (!fs.existsSync(planDir)) fs.mkdirSync(planDir, { recursive: true });
+      fs.writeFileSync(path.join(planDir, 'FEATURES.md'), md, 'utf-8');
 
       return {
         content: [{
           type: 'text' as const,
-          text: [
-            'Applicable plan outputs:',
-            ...applicable.map(a => `  - ${a}`),
-            '',
-            `Database: ${features.databaseType ?? 'none'}`,
-            `API routes: ${features.hasApiRoutes}`,
-            `Mobile: ${features.hasMobileApp}`,
-            `Design system: ${features.hasDesignSystem}`,
-            `Product: ${features.isProduct}`,
-          ].join('\n'),
+          text: `Written to .plan/FEATURES.md\n\n${md}`,
         }],
       };
+    },
+  );
+
+  // --- New analytical tools ---
+
+  server.tool(
+    'plan_competitors',
+    'Competitive analysis. Without content: returns project context and template for web_search research. With content: writes COMPETITORS.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeCompetitors(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = collectCompetitorContext(projectRoot);
+      const template = generateCompetitorTemplate(ctx);
+      return { content: [{ type: 'text' as const, text: template }] };
+    },
+  );
+
+  server.tool(
+    'plan_architecture',
+    'Architecture review. Without content: returns codebase analysis and template. With content: writes ARCHITECTURE.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeArchitecture(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = collectArchitectureContext(projectRoot);
+      const template = generateArchitectureTemplate(ctx);
+      return { content: [{ type: 'text' as const, text: template }] };
+    },
+  );
+
+  server.tool(
+    'plan_executive_summary',
+    'Executive summary. Without content: reads all .plan/ files and returns synthesis template. With content: writes EXECUTIVE_SUMMARY.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeExecutiveSummary(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = collectExecutiveSummaryContext(projectRoot);
+      const template = generateExecutiveSummaryTemplate(ctx);
+      return { content: [{ type: 'text' as const, text: template }] };
+    },
+  );
+
+  server.tool(
+    'plan_risk_matrix',
+    'Risk matrix. Without content: extracts risks from architecture and competitor analysis. With content: writes RISK_MATRIX.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeRiskMatrix(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = collectRiskMatrixContext(projectRoot);
+      const template = generateRiskMatrixTemplate(ctx);
+      return { content: [{ type: 'text' as const, text: template }] };
+    },
+  );
+
+  server.tool(
+    'plan_dependency_graph',
+    'Dependency graph. Without content: extracts action items from executive summary. With content: writes DEPENDENCY_GRAPH.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeDependencyGraph(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = collectDependencyGraphContext(projectRoot);
+      const template = generateDependencyGraphTemplate(ctx);
+      return { content: [{ type: 'text' as const, text: template }] };
+    },
+  );
+
+  server.tool(
+    'plan_monetization',
+    'Monetization analysis (products only). Without content: returns pricing context and template. With content: writes MONETIZATION.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeMonetization(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = collectMonetizationContext(projectRoot);
+      const template = generateMonetizationTemplate(ctx);
+      return { content: [{ type: 'text' as const, text: template }] };
+    },
+  );
+
+  server.tool(
+    'plan_aso',
+    'App Store Optimization keywords (mobile apps only). Without content: returns app context and template. With content: writes ASO_KEYWORDS.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeAso(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = collectAsoContext(projectRoot);
+      const template = generateAsoTemplate(ctx);
+      return { content: [{ type: 'text' as const, text: template }] };
     },
   );
 }

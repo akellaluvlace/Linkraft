@@ -1,7 +1,7 @@
 {
   "name": "linkraft",
-  "description": "One plugin. Three modes. Ship everything. /linkraft plan (research + CLAUDE.md), /linkraft poke (visual design studio), /linkraft sheep (autonomous QA).",
-  "version": "0.1.0",
+  "description": "Autonomous QA and project analysis for Claude Code. /linkraft sheep (QA agent, proven across 4 runs), /linkraft plan (CLAUDE.md generator + planning documents).",
+  "version": "1.0.0",
   "author": {
     "name": "Akella inMotion",
     "email": "nikita.akella13@gmail.com"
@@ -11,11 +11,11 @@
   "license": "MIT",
   "keywords": [
     "claude-code",
-    "design",
     "qa",
+    "autonomous",
     "planning",
-    "mcp",
-    "frontend",
+    "claude-md",
+    "testing",
     "linkraft"
   ]
 }

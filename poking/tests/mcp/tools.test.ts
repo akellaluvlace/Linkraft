@@ -4,7 +4,7 @@ import {
   setCurrentSelection,
   getCurrentSelection,
   getFormattedSelection,
-} from '../../src/mcp/server.js';
+} from '../../src/poke/state.js';
 
 function makeMockContext(overrides?: Partial<PokeContext>): PokeContext {
   return {
