@@ -76,21 +76,32 @@ export function registerPlanTools(server: McpServer): void {
     projectRootSchema,
     async ({ projectRoot }) => {
       const result = generateAndWriteClaudeMd(projectRoot);
-      if (result.merged) {
-        const lines = [
-          'Existing CLAUDE.md found.',
-          '',
-          `New sections to add (${result.newSections.length}): ${result.newSections.join(', ') || 'none'}`,
-          `Sections with updates (${result.updatedSections.length}): ${result.updatedSections.join(', ') || 'none'}`,
-          '',
-          'Generated CLAUDE.md preview:',
-          '---',
-          result.content,
-        ];
-        return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
+
+      // Case 1: No CLAUDE.md existed, generated and written
+      if (!result.existed) {
+        return { content: [{ type: 'text' as const, text: `CLAUDE.md generated and written to: ${result.path}\n\n---\n\n${result.content}` }] };
       }
 
-      return { content: [{ type: 'text' as const, text: `CLAUDE.md written to: ${result.path}\n\n---\n\n${result.content}` }] };
+      // Case 3: CLAUDE.md exists and is comprehensive, nothing to add
+      if (!result.hasChanges) {
+        return { content: [{ type: 'text' as const, text: 'Existing CLAUDE.md is comprehensive. No new sections or updates detected from scan. Skipping.' }] };
+      }
+
+      // Case 2: CLAUDE.md exists but is stale/incomplete, propose merge
+      const lines = [
+        'Existing CLAUDE.md found with gaps.',
+        '',
+        `New sections to add (${result.newSections.length}): ${result.newSections.join(', ')}`,
+        `Sections with updates (${result.updatedSections.length}): ${result.updatedSections.join(', ')}`,
+        '',
+        'Proposed merged CLAUDE.md:',
+        '---',
+        result.mergedContent,
+        '---',
+        '',
+        'To apply, call plan_write_claude_md with the merged content above.',
+      ];
+      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
     },
   );
 

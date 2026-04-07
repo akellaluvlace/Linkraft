@@ -196,7 +196,9 @@ export function writeClaudeMd(projectRoot: string, content: string): string {
 export function generateAndWriteClaudeMd(projectRoot: string): {
   path: string;
   content: string;
-  merged: boolean;
+  mergedContent: string;
+  existed: boolean;
+  hasChanges: boolean;
   newSections: string[];
   updatedSections: string[];
 } {
@@ -207,17 +209,20 @@ export function generateAndWriteClaudeMd(projectRoot: string): {
   if (fs.existsSync(existingPath)) {
     const existing = fs.readFileSync(existingPath, 'utf-8');
     const diff = diffClaudeMd(existing, generated);
+    const hasChanges = diff.newSections.length > 0 || diff.updatedSections.length > 0;
     return {
       path: existingPath,
       content: generated,
-      merged: true,
+      mergedContent: diff.mergedContent,
+      existed: true,
+      hasChanges,
       newSections: diff.newSections,
       updatedSections: diff.updatedSections,
     };
   }
 
   const filePath = writeClaudeMd(projectRoot, generated);
-  return { path: filePath, content: generated, merged: false, newSections: [], updatedSections: [] };
+  return { path: filePath, content: generated, mergedContent: generated, existed: false, hasChanges: false, newSections: [], updatedSections: [] };
 }
 
 // --- Helpers ---
