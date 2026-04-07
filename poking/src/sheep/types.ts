@@ -6,6 +6,7 @@ export interface SheepConfig {
   testCommand: string | null;
   stack: DetectedStack;
   maxCycles: number;
+  allowCommits: boolean;
 }
 
 export interface DetectedStack {
@@ -32,6 +33,7 @@ export interface SheepStats {
   sessionStart: string;
   sessionEnd: string | null;
   cycleCount: number;
+  totalRuntimeMinutes: number;
   bugs: {
     discovered: number;
     autoFixed: number;
@@ -41,7 +43,8 @@ export interface SheepStats {
   files: {
     scanned: number;
     modified: number;
-    linesChanged: number;
+    linesAdded: number;
+    linesRemoved: number;
   };
   tests: {
     before: number;
@@ -50,27 +53,40 @@ export interface SheepStats {
   };
   commits: number;
   areas: {
-    tested: number;
-    passed: number;
-    failed: number;
+    tested: string[];
+    passed: string[];
+    failed: string[];
   };
-  worstBug: string | null;
-  funniestBug: string | null;
+  worstBug: BugSummary | null;
+  funniestBug: BugSummary | null;
   marthaMessages: string[];
   deezeebalzRoasts: string[];
   sheepMonologues: string[];
   status: 'running' | 'paused' | 'completed';
 }
 
+export interface BugSummary {
+  description: string;
+  severity: string;
+  file: string;
+  howFound: string;
+}
+
 export interface CycleResult {
   cycleNumber: number;
   area: string;
+  target: string;
+  filesScanned: string[];
   bugsFound: BugReport[];
   bugsFixed: BugReport[];
   bugsLogged: BugReport[];
+  buildPassed: boolean;
+  testsPassed: boolean;
+  testCount: number;
   marthaMessage: string | null;
   deezeebalzRoast: string | null;
   sheepMonologue: string | null;
+  commitHash: string | null;
   timestamp: string;
 }
 
@@ -83,6 +99,7 @@ export interface BugReport {
   description: string;
   fix: string | null;
   autoFixed: boolean;
+  whyNotFixed: string | null;
 }
 
 export interface ContentPack {

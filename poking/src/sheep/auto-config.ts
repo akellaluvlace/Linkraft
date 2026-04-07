@@ -293,12 +293,23 @@ function walkDir(dir: string, callback: (filePath: string) => void, depth: numbe
  * Generates a complete SheepConfig from auto-detection.
  */
 export function autoConfig(projectRoot: string): SheepConfig {
+  // Check if CLAUDE.md disallows auto-commits
+  const claudeMdPath = path.join(projectRoot, 'CLAUDE.md');
+  let allowCommits = true;
+  if (fs.existsSync(claudeMdPath)) {
+    const content = fs.readFileSync(claudeMdPath, 'utf-8').toLowerCase();
+    if (content.includes('no auto-commit') || content.includes('no autocommit')) {
+      allowCommits = false;
+    }
+  }
+
   return {
     projectRoot,
     buildCommand: findBuildCommand(projectRoot),
     testCommand: findTestCommand(projectRoot),
     stack: detectStack(projectRoot),
     maxCycles: 20,
+    allowCommits,
   };
 }
 

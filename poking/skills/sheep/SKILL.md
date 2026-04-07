@@ -1,57 +1,123 @@
 ---
 name: sheep
-description: SheepCalledShip - auto-configuring QA agent. Scans your codebase, generates a targeted QA plan, hunts bugs with personality-driven narrative.
+description: SheepCalledShip - autonomous QA operator. Scans, fixes, commits, narrates. Full KAIROS-style loop with deezeebalz99, Martha, and the Sheep narrator.
 ---
 
-# SheepCalledShip: Autonomous QA
+# SheepCalledShip: Autonomous QA Operator
 
 ## What This Does
 
-An innocent sheep wanders into your codebase. Looks around. Blinks. Then systematically identifies every bug, every missing null check, every unhandled promise. Fixes what's safe. Logs what isn't. Documents everything as a narrative story.
+An innocent sheep wanders into your codebase. Finds bugs. Fixes safe ones. Commits after each cycle. Writes a narrative field report with character commentary. Generates social media content from the results. Resumes from state on restart.
 
-## Zero Config
+## The Loop
 
 When user says "/linkraft sheep":
-1. Call `sheep_scan` to detect stack and generate QA plan
-2. Call `sheep_init` to set up the .sheep/ directory
-3. Start cycling through the QA plan areas
-4. For each area: analyze code, find bugs, fix safe ones, log risky ones
-5. Generate persona commentary (Martha, deezeebalz99, Sheep narrator)
-6. Write narrative to .sheep/story.md
-7. Generate content pack at the end
+
+### Step 1: Initialize
+Call `sheep_init`. This auto-detects the stack, generates a QA plan, creates .sheep/ with stats, story, and human-review files. If a running session exists, it resumes.
+
+### Step 2: Get next target
+Call `sheep_next`. Returns the next high-risk area with files to scan and instructions.
+
+### Step 3: Analyze (YOU do this)
+Read the listed files. Look for:
+- Missing null/undefined checks
+- Unhandled promise rejections (missing try/catch, no .catch())
+- Missing error boundaries
+- Type safety gaps (any types, missing validation)
+- Security issues (unsanitized input, exposed secrets)
+- Dead code, console.log statements
+- Missing loading/error states
+- Accessibility gaps
+
+### Step 4: Categorize
+For each finding, decide:
+
+**FIX immediately** (safe, reversible):
+- Missing null checks, unhandled rejections
+- Missing try/catch wrappers
+- Dead code, console.log cleanup
+- Missing TypeScript types (removing `any`)
+- Simple validation gaps
+- Missing loading/error states (if straightforward)
+
+**LOG for human** (risky, needs judgment):
+- Architectural changes, database schema changes
+- Breaking API changes
+- Changes requiring env var changes
+- Changes touching auth providers
+- Significant behavior changes
+- Performance optimizations requiring refactoring
+
+### Step 5: Fix (YOU do this)
+For each FIX item:
+1. Edit the file to apply the fix
+2. Run the build command (from auto-config)
+3. If build fails: revert immediately, mark as LOG instead
+4. Run the test command
+5. If tests fail: revert, mark as LOG
+6. If both pass: keep the fix
+
+### Step 6: Commit (YOU do this)
+If fixes were applied and build+tests pass:
+```
+git add [modified files]
+git commit -m "[sheep] cycle N: description of fixes"
+```
+Rules: never push, never commit if build/tests fail, include cycle number.
+
+### Step 7: Record
+Call `sheep_record_cycle` with all the data: area, files scanned, bugs found (with severity, category, whether auto-fixed, why not fixed if logged), build/test status, commit hash.
+
+The tool automatically:
+- Updates stats.json with live numbers
+- Writes the cycle to story.md with persona commentary
+- Appends logged bugs to human-review.md
+- Generates deezeebalz99 roast, Martha moment, sheep monologue
+
+### Step 8: Repeat
+Call `sheep_next` again. Keep going until it says all cycles are complete.
+
+### Step 9: Complete
+Call `sheep_complete` to generate content-pack.md and write the epilogue.
+
+## Resume Behavior
+
+If the session is interrupted (context window fills, crash, user stops):
+- .sheep/stats.json has the exact state
+- Next `/linkraft sheep` call detects the running session
+- `sheep_init` resumes from the last completed cycle
+- No work is repeated
+
+This enables overnight operation:
+```bash
+while true; do
+  claude -p "/linkraft sheep" --dangerously-skip-permissions
+  sleep 10
+done
+```
 
 ## The Cast
 
-**SheepCalledShip** (narrator): existential, dramatic, occasionally beautiful. Narrates its journey through the codebase as a field report.
-
-**deezeebalz99** (code reviewer): Reddit mod, Arch Linux user, never shipped production code. Reviews every fix with concentrated condescension. Occasionally accidentally correct.
-
-**Martha** (beta tester): sweet elderly lady. One finger at a time. Reveals genuine UX problems through pure confusion. Loading spinners are "little tornadoes."
-
-## How To Analyze Each Area
-
-For each QA plan area, Claude should:
-
-1. Read the files listed in the QA plan entry
-2. Look for: unhandled errors, missing null checks, type safety gaps, security issues, accessibility problems
-3. For each bug found: assess severity, determine if auto-fixable
-4. Fix safe bugs (null checks, missing error handling, type annotations)
-5. Log risky bugs (logic changes, architecture issues, data migrations)
-6. Generate Martha message based on the area
-7. Generate deezeebalz99 roast for the worst bug
-8. Generate sheep monologue about the journey
+**SheepCalledShip** (narrator): existential, dramatic. Narrates each cycle as a field report.
+**deezeebalz99** (reviewer): Reddit mod, Arch user. 2-3 sentences of condescension per cycle.
+**Martha** (tester): elderly lady, one finger. Reveals genuine UX problems through confusion.
 
 ## Available Tools
 
-- `sheep_scan`: auto-detect stack and generate QA plan
-- `sheep_init`: initialize session with .sheep/ directory
-- `sheep_status`: current progress
-- `sheep_report`: full report with narrative highlights
+- `sheep_scan`: auto-detect stack, generate QA plan
+- `sheep_init`: initialize or resume session
+- `sheep_next`: get next area to test
+- `sheep_record_cycle`: record cycle results (triggers persona commentary)
+- `sheep_complete`: finalize session, generate content pack
+- `sheep_status`: live stats
+- `sheep_report`: full report with file locations
 
 ## Output Files
 
 All in .sheep/:
 - QA_PLAN.md: auto-generated test plan
-- stats.json: live-updated statistics
-- story.md: narrative field report
-- content-pack.md: social media content (at session end)
+- stats.json: live statistics (updated every cycle)
+- story.md: narrative field report with persona commentary
+- human-review.md: bugs that need human attention
+- content-pack.md: LinkedIn post, Twitter thread, best moments (at session end)

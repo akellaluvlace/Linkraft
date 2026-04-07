@@ -18,8 +18,10 @@ export function generateContentPack(stats: SheepStats): ContentPack {
       bugsFound: stats.bugs.discovered,
       bugsFixed: stats.bugs.autoFixed,
       bugsLogged: stats.bugs.logged,
-      areasTested: stats.areas.tested,
-      areasPassed: stats.areas.passed,
+      areasTested: stats.areas.tested.length,
+      areasPassed: stats.areas.passed.length,
+      runtime: `${stats.totalRuntimeMinutes}m`,
+      commits: stats.commits,
     },
   };
 }
@@ -30,10 +32,10 @@ function generateLinkedInPost(stats: SheepStats): string {
     '',
     `It found ${stats.bugs.discovered} bugs. Fixed ${stats.bugs.autoFixed} automatically. Logged ${stats.bugs.logged} for me to review.`,
     '',
-    `${stats.cycleCount} test cycles across ${stats.areas.tested} high-risk areas. ${stats.areas.passed} passed clean.`,
+    `${stats.cycleCount} test cycles across ${stats.areas.tested.length} high-risk areas. ${stats.areas.passed.length} passed clean.`,
     '',
-    stats.worstBug ? `Worst bug: ${stats.worstBug}` : '',
-    stats.funniestBug ? `Funniest bug: ${stats.funniestBug}` : '',
+    stats.worstBug ? `Worst bug: ${stats.worstBug.description}` : '',
+    stats.funniestBug ? `Funniest bug: ${stats.funniestBug.description}` : '',
     '',
     `The sheep is called SheepCalledShip. It's a Claude Code plugin that auto-configures itself from your codebase and hunts bugs while you sleep.`,
     '',
@@ -49,11 +51,11 @@ function generateTwitterThread(stats: SheepStats): string[] {
   const thread: string[] = [];
 
   thread.push(`I let an AI sheep loose on my codebase overnight. Here's what happened. (thread)`);
-  thread.push(`It scanned ${stats.areas.tested} high-risk areas and ran ${stats.cycleCount} QA cycles. No manual setup. It read my package.json and figured everything out.`);
+  thread.push(`It scanned ${stats.areas.tested.length} high-risk areas and ran ${stats.cycleCount} QA cycles. No manual setup. It read my package.json and figured everything out.`);
   thread.push(`Found ${stats.bugs.discovered} bugs total. Fixed ${stats.bugs.autoFixed} automatically. Logged ${stats.bugs.logged} for human review.`);
 
   if (stats.worstBug) {
-    thread.push(`The worst bug: ${stats.worstBug}`);
+    thread.push(`The worst bug: ${stats.worstBug.description}`);
   }
 
   if (stats.marthaMessages.length > 0) {

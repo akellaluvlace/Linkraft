@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { SheepStats, CycleResult } from './types.js';
+import type { SheepStats } from './types.js';
 
 const SHEEP_DIR = '.sheep';
 const STATS_FILE = 'stats.json';
@@ -27,11 +27,12 @@ export function createStats(projectName: string): SheepStats {
     sessionStart: new Date().toISOString(),
     sessionEnd: null,
     cycleCount: 0,
+    totalRuntimeMinutes: 0,
     bugs: { discovered: 0, autoFixed: 0, logged: 0, falsePositives: 0 },
-    files: { scanned: 0, modified: 0, linesChanged: 0 },
+    files: { scanned: 0, modified: 0, linesAdded: 0, linesRemoved: 0 },
     tests: { before: 0, after: 0, added: 0 },
     commits: 0,
-    areas: { tested: 0, passed: 0, failed: 0 },
+    areas: { tested: [], passed: [], failed: [] },
     worstBug: null,
     funniestBug: null,
     marthaMessages: [],
@@ -57,7 +58,7 @@ export function loadStats(projectRoot: string): SheepStats | null {
 }
 
 /**
- * Saves stats to disk.
+ * Saves stats to disk. Called after EVERY cycle.
  */
 export function saveStats(projectRoot: string, stats: SheepStats): void {
   const filePath = getStatsPath(projectRoot);
@@ -66,31 +67,13 @@ export function saveStats(projectRoot: string, stats: SheepStats): void {
 }
 
 /**
- * Updates stats with a completed cycle's results.
- */
-export function recordCycle(
-  projectRoot: string,
-  stats: SheepStats,
-  cycle: CycleResult,
-): void {
-  stats.cycleCount++;
-  stats.bugs.discovered += cycle.bugsFound.length;
-  stats.bugs.autoFixed += cycle.bugsFixed.length;
-  stats.bugs.logged += cycle.bugsLogged.length;
-
-  if (cycle.marthaMessage) stats.marthaMessages.push(cycle.marthaMessage);
-  if (cycle.deezeebalzRoast) stats.deezeebalzRoasts.push(cycle.deezeebalzRoast);
-  if (cycle.sheepMonologue) stats.sheepMonologues.push(cycle.sheepMonologue);
-
-  saveStats(projectRoot, stats);
-}
-
-/**
  * Marks the session as completed.
  */
 export function completeSession(projectRoot: string, stats: SheepStats): void {
   stats.sessionEnd = new Date().toISOString();
   stats.status = 'completed';
+  const startTime = new Date(stats.sessionStart).getTime();
+  stats.totalRuntimeMinutes = Math.round((Date.now() - startTime) / 60000);
   saveStats(projectRoot, stats);
 }
 
