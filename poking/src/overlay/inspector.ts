@@ -164,12 +164,22 @@ function handleElementSelected(element: HTMLElement): void {
 }
 
 function sendToExtension(message: PokeMessage): void {
+  // CDP mode: store on window global for polling via execute_javascript
+  const win = window as unknown as Record<string, unknown>;
+  if (message.type === 'element-selected') {
+    win['__POKE_SELECTED__'] = (message.payload as Record<string, unknown>)['context'];
+  }
+
+  // CDP binding mode: call the binding if registered by Runtime.addBinding
+  if (typeof win['__poke_report__'] === 'function') {
+    (win['__poke_report__'] as (data: string) => void)(JSON.stringify(message));
+    return;
+  }
+
   const api = getVsCodeApi();
   if (api) {
-    // VS Code webview context
     api.postMessage(message);
   } else {
-    // Iframe mode fallback
     window.parent.postMessage(message, '*');
   }
 }
