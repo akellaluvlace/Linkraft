@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "linkraft",
-  "description": "One plugin. Three modes. Ship everything. Plan (CLAUDE.md gen), Poke (visual design), Sheep (auto QA). Plus 10 MCP packs for social and productivity APIs.",
+  "description": "Project analysis, preflight checks, and autonomous QA for Claude Code.",
   "owner": {
     "name": "Akella inMotion",
     "email": "nikita.akella13@gmail.com"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "linkraft",
-      "description": "Full development lifecycle: /linkraft plan (research + CLAUDE.md), /linkraft poke (click elements, design systems, overnight generation), /linkraft sheep (auto-configuring QA). 40+ tools, 10 presets, 5 agent personalities.",
+      "description": "/linkraft plan (CLAUDE.md + 12 planning docs), /linkraft preflight (security/health/readiness in 60 sec), /linkraft sheep (autonomous QA, 122 bugs found across 4 runs). 26 tools, 370 tests.",
       "category": "development",
       "source": "./poking",
       "homepage": "https://github.com/akellaluvlace/Linkraft/tree/main/poking"
