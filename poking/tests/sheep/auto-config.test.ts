@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { detectStack, findBuildCommand, findTestCommand, identifyHighRiskAreas, autoConfig, generateQAPlan } from '../../src/sheep/auto-config.js';
+import { detectStack, findBuildCommand, findTestCommand, identifyHighRiskAreas, autoConfig, generateQAPlan, readPreflightReport } from '../../src/sheep/auto-config.js';
 
 let tmpDir: string;
 
@@ -125,5 +125,81 @@ describe('generateQAPlan', () => {
     const plan = generateQAPlan(config);
     expect(plan).toContain('SheepCalledShip QA Plan');
     expect(plan).toContain('Priority Areas');
+  });
+});
+
+describe('readPreflightReport', () => {
+  it('returns null when no report exists', () => {
+    expect(readPreflightReport(tmpDir)).toBeNull();
+  });
+
+  it('parses preflight report and extracts flagged files', () => {
+    const preflightDir = path.join(tmpDir, '.preflight');
+    fs.mkdirSync(preflightDir, { recursive: true });
+    fs.writeFileSync(path.join(preflightDir, 'report.json'), JSON.stringify({
+      security: {
+        score: 6,
+        critical: [{ file: 'src/auth/login.ts', line: 10, description: 'Hardcoded secret', severity: 'critical', category: 'secrets' }],
+        warnings: [{ file: 'src/api/route.ts', line: 5, description: 'Missing rate limit', severity: 'medium', category: 'rate-limit' }],
+        passed: [],
+      },
+      health: { score: 70, metrics: [{ name: 'Console.logs', value: 15, status: 'WARN', detail: null }] },
+      readiness: { percentage: 60, checks: [{ name: 'Error handling', status: 'missing', passed: false }] },
+    }));
+
+    const findings = readPreflightReport(tmpDir);
+    expect(findings).not.toBeNull();
+    expect(findings!.flaggedFiles.has('src/auth/login.ts')).toBe(true);
+    expect(findings!.flaggedFiles.has('src/api/route.ts')).toBe(true);
+    expect(findings!.hasCritical).toBe(true);
+    expect(findings!.failingChecks.has('console.logs')).toBe(true);
+    expect(findings!.failingChecks.has('error handling')).toBe(true);
+  });
+
+  it('returns null for invalid JSON', () => {
+    const preflightDir = path.join(tmpDir, '.preflight');
+    fs.mkdirSync(preflightDir, { recursive: true });
+    fs.writeFileSync(path.join(preflightDir, 'report.json'), 'not json');
+    expect(readPreflightReport(tmpDir)).toBeNull();
+  });
+});
+
+describe('identifyHighRiskAreas with preflight', () => {
+  it('boosts areas where preflight found issues', () => {
+    writePkg();
+    const authDir = path.join(tmpDir, 'src', 'auth');
+    fs.mkdirSync(authDir, { recursive: true });
+    fs.writeFileSync(path.join(authDir, 'login.ts'), 'export function login() {}');
+
+    const apiDir = path.join(tmpDir, 'src', 'api');
+    fs.mkdirSync(apiDir, { recursive: true });
+    fs.writeFileSync(path.join(apiDir, 'route.ts'), 'export function GET() {}');
+
+    // Without preflight: get baseline priorities
+    const baseline = identifyHighRiskAreas(tmpDir);
+    const authBaseline = baseline.find(a => a.area.includes('Auth'));
+    const apiBaseline = baseline.find(a => a.area.includes('API'));
+    expect(authBaseline).toBeDefined();
+    expect(apiBaseline).toBeDefined();
+
+    // Add preflight report with auth issues only
+    const preflightDir = path.join(tmpDir, '.preflight');
+    fs.mkdirSync(preflightDir, { recursive: true });
+    fs.writeFileSync(path.join(preflightDir, 'report.json'), JSON.stringify({
+      security: {
+        score: 5,
+        critical: [{ file: 'src/auth/login.ts', line: 10, description: 'Secret', severity: 'critical', category: 'secrets' }],
+        warnings: [],
+        passed: [],
+      },
+      health: { score: 80, metrics: [] },
+      readiness: { percentage: 70, checks: [] },
+    }));
+
+    const boosted = identifyHighRiskAreas(tmpDir);
+    const authBoosted = boosted.find(a => a.area.includes('Auth'));
+    const apiBoosted = boosted.find(a => a.area.includes('API'));
+    expect(authBoosted!.description).toContain('[preflight: issues detected]');
+    expect(apiBoosted!.description).toContain('[preflight: clean]');
   });
 });

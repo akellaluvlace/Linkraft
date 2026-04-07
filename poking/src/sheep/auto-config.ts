@@ -151,10 +151,54 @@ function getRunner(projectRoot: string): string {
 }
 
 /**
+ * Reads .preflight/report.json if it exists. Returns null if missing or invalid.
+ */
+export function readPreflightReport(projectRoot: string): PreflightFindings | null {
+  const reportPath = path.join(projectRoot, '.preflight', 'report.json');
+  if (!fs.existsSync(reportPath)) return null;
+
+  try {
+    const raw = JSON.parse(fs.readFileSync(reportPath, 'utf-8')) as Record<string, unknown>;
+    const security = raw['security'] as { critical?: unknown[]; warnings?: unknown[] } | undefined;
+    const health = raw['health'] as { metrics?: Array<{ name: string; status: string }> } | undefined;
+    const readiness = raw['readiness'] as { checks?: Array<{ name: string; passed: boolean }> } | undefined;
+
+    // Collect files mentioned in security findings
+    const flaggedFiles = new Set<string>();
+    for (const finding of [...(security?.critical ?? []), ...(security?.warnings ?? [])]) {
+      const f = (finding as { file?: string }).file;
+      if (f) flaggedFiles.add(f);
+    }
+
+    // Collect failing health metrics and readiness checks
+    const failingChecks = new Set<string>();
+    for (const m of health?.metrics ?? []) {
+      if (m.status === 'FAIL' || m.status === 'WARN') failingChecks.add(m.name.toLowerCase());
+    }
+    for (const c of readiness?.checks ?? []) {
+      if (!c.passed) failingChecks.add(c.name.toLowerCase());
+    }
+
+    return { flaggedFiles, failingChecks, hasCritical: (security?.critical?.length ?? 0) > 0 };
+  } catch {
+    return null;
+  }
+}
+
+interface PreflightFindings {
+  flaggedFiles: Set<string>;
+  failingChecks: Set<string>;
+  hasCritical: boolean;
+}
+
+/**
  * Identifies high-risk areas in the codebase for the QA plan.
+ * If .preflight/report.json exists, uses it to boost areas with known issues
+ * and deprioritize areas preflight found clean.
  */
 export function identifyHighRiskAreas(projectRoot: string): QAPlanEntry[] {
   const areas: QAPlanEntry[] = [];
+  const preflight = readPreflightReport(projectRoot);
 
   // Auth files
   const authFiles = findFiles(projectRoot, ['auth', 'login', 'signup', 'session', 'middleware']);
@@ -237,6 +281,22 @@ export function identifyHighRiskAreas(projectRoot: string): QAPlanEntry[] {
       description: 'Type safety, error handling, null checks, async patterns',
       riskLevel: 'medium',
     });
+  }
+
+  // Apply preflight findings to reprioritize
+  if (preflight) {
+    for (const area of areas) {
+      const hasPreflightHit = area.files.some(f => preflight.flaggedFiles.has(f));
+      if (hasPreflightHit) {
+        // Boost: preflight found issues in files this area covers
+        area.priority = Math.max(0, area.priority - 1);
+        area.description += ' [preflight: issues detected]';
+      } else if (area.files.length > 0 && preflight.flaggedFiles.size > 0) {
+        // Deprioritize: preflight scanned and found no issues in these files
+        area.priority += 2;
+        area.description += ' [preflight: clean]';
+      }
+    }
   }
 
   return areas.sort((a, b) => a.priority - b.priority);

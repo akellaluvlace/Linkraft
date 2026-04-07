@@ -25,16 +25,18 @@ export function initSession(projectRoot: string): {
   qaPlan: string;
   stats: SheepStats;
   resumed: boolean;
+  preflightUsed: boolean;
 } {
   // Check for resumable session
   const existing = loadStats(projectRoot);
   if (existing && existing.status === 'running') {
     const config = autoConfig(projectRoot);
     const qaPlan = generateQAPlan(config);
-    return { config, qaPlan, stats: existing, resumed: true };
+    return { config, qaPlan, stats: existing, resumed: true, preflightUsed: false };
   }
 
   const config = autoConfig(projectRoot);
+  const hasPreflightReport = fs.existsSync(path.join(projectRoot, '.preflight', 'report.json'));
   const qaPlan = generateQAPlan(config);
   const projectName = path.basename(projectRoot);
 
@@ -53,7 +55,7 @@ export function initSession(projectRoot: string): {
     'utf-8',
   );
 
-  return { config, qaPlan, stats, resumed: false };
+  return { config, qaPlan, stats, resumed: false, preflightUsed: hasPreflightReport };
 }
 
 /**

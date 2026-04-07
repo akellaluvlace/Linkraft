@@ -38,6 +38,42 @@ describe('initSession', () => {
     expect(session2.resumed).toBe(true);
   });
 
+  it('resumes from cycle 3 after 2 recorded cycles', () => {
+    // Start session
+    initSession(tmpDir);
+
+    // Record 2 cycles
+    for (let i = 0; i < 2; i++) {
+      recordCycleResult(tmpDir, {
+        area: `Area ${i + 1}`,
+        target: `Target ${i + 1}`,
+        filesScanned: ['src/test.ts'],
+        bugsFound: [],
+        bugsFixed: [],
+        bugsLogged: [],
+        buildPassed: true,
+        testsPassed: true,
+        testCount: 10,
+        commitHash: null,
+      });
+    }
+
+    // Verify stats show 2 cycles
+    const stats = loadStats(tmpDir);
+    expect(stats!.cycleCount).toBe(2);
+    expect(stats!.status).toBe('running');
+
+    // "Interrupt" — just call initSession again (simulates restart)
+    const resumed = initSession(tmpDir);
+    expect(resumed.resumed).toBe(true);
+    expect(resumed.stats.cycleCount).toBe(2);
+
+    // getNextArea should return cycle 3
+    const next = getNextArea(tmpDir);
+    expect(next).not.toBeNull();
+    expect(next!.cycleNumber).toBe(3);
+  });
+
   it('generates QA plan', () => {
     const session = initSession(tmpDir);
     expect(session.qaPlan).toContain('SheepCalledShip QA Plan');

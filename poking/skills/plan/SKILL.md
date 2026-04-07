@@ -11,7 +11,7 @@ Plan mode scans your project and produces 10-12 documents that give every future
 
 ## /linkraft plan — Full Execution Flow
 
-When the user says "/linkraft plan", execute ALL steps below in order. Do not skip steps. Do not ask permission between steps. Run the full pipeline.
+When the user says "/linkraft plan", execute ALL 13 steps below in order. Do not skip steps. Do not ask permission between steps. Run the full pipeline start to finish.
 
 ### Phase 1: Scan (deterministic, local-only)
 
@@ -32,12 +32,9 @@ This writes `.plan/FEATURES.md`. Read the output to know which conditional outpu
 
 **Step 5:** Call `plan_tokens` (ONLY if design system detected). Writes `.plan/DESIGN_TOKENS.md`.
 
-**Step 6:** Call `plan_generate_claude_md`.
-If CLAUDE.md already exists: present the diff to the user, ask to apply. If new: writes directly.
-
 ### Phase 2: Research (needs web_search for competitors)
 
-**Step 7: COMPETITORS.md**
+**Step 6: COMPETITORS.md**
 1. Call `plan_competitors` WITHOUT content → get project context and template
 2. Use web_search to research competitors. Search for: "[project name] alternatives", "[category] comparison [year]", competitor products, pricing, failures
 3. Fill in the template: competitor table, feature matrix, dead competitors, advantages, risks
@@ -45,17 +42,17 @@ If CLAUDE.md already exists: present the diff to the user, ask to apply. If new:
 
 ### Phase 3: Analysis (reads earlier outputs)
 
-**Step 8: ARCHITECTURE.md**
+**Step 7: ARCHITECTURE.md**
 1. Call `plan_architecture` WITHOUT content → get directory tree, deps, infra, existing .plan/ files
 2. Analyze: describe request flow, data flow, identify strengths and weaknesses with severity, estimate costs at 1K/10K/100K DAU, review security posture, review database design
 3. Call `plan_architecture` WITH content → writes `.plan/ARCHITECTURE.md`
 
-**Step 9: EXECUTIVE_SUMMARY.md**
+**Step 8: EXECUTIVE_SUMMARY.md**
 1. Call `plan_executive_summary` WITHOUT content → get all .plan/ files synthesized
 2. Write one-page summary: what the project is, current state, competitive landscape (from COMPETITORS.md), technical health (from ARCHITECTURE.md), cost projection table, launch readiness checklist, action plan with priority/task/effort columns, the one thing that matters most
 3. Call `plan_executive_summary` WITH content → writes `.plan/EXECUTIVE_SUMMARY.md`
 
-**Step 10: RISK_MATRIX.md**
+**Step 9: RISK_MATRIX.md**
 1. Call `plan_risk_matrix` WITHOUT content → get extracted risks from architecture and competitors
 2. Categorize ALL risks into four tiers:
    - Critical (high probability + high impact): with mitigation and owner
@@ -64,24 +61,30 @@ If CLAUDE.md already exists: present the diff to the user, ask to apply. If new:
    - Accepted (known, won't fix now): with reason and revisit condition
 3. Call `plan_risk_matrix` WITH content → writes `.plan/RISK_MATRIX.md`
 
-**Step 11: DEPENDENCY_GRAPH.md**
+**Step 10: DEPENDENCY_GRAPH.md**
 1. Call `plan_dependency_graph` WITHOUT content → get action items from executive summary
 2. Map dependencies: identify critical path (longest chain), parallel tracks that can run simultaneously, blocked items with unblock conditions, execution order by phase
 3. Call `plan_dependency_graph` WITH content → writes `.plan/DEPENDENCY_GRAPH.md`
 
 ### Phase 4: Conditional (only if detected)
 
-**Step 12: MONETIZATION.md** (ONLY if isProduct = true)
+**Step 11: MONETIZATION.md** (ONLY if isProduct = true)
 1. Call `plan_monetization` WITHOUT content → get pricing indicators and competitor data
 2. Fill in: competitor pricing table, recommended pricing model with reasoning, suggested tiers, revenue projections at 1K/10K/50K/100K DAU with conversion rate and ARPU assumptions
 3. Call `plan_monetization` WITH content → writes `.plan/MONETIZATION.md`
 
-**Step 13: ASO_KEYWORDS.md** (ONLY if hasMobileApp = true)
+**Step 12: ASO_KEYWORDS.md** (ONLY if hasMobileApp = true)
 1. Call `plan_aso` WITHOUT content → get app metadata
 2. Use web_search for keyword research. Fill in: primary keywords with volume/difficulty/relevance, long-tail keywords, App Store description draft, screenshot strategy (what to show in each of 5 screenshots), category recommendation
 3. Call `plan_aso` WITH content → writes `.plan/ASO_KEYWORDS.md`
 
-### Phase 5: Summary
+### Phase 5: Capstone
+
+**Step 13:** Call `plan_generate_claude_md`.
+This is always the final step. It synthesizes everything from the scan into a CLAUDE.md.
+If CLAUDE.md already exists: present the diff to the user, ask to apply. If new: writes directly.
+
+### Summary
 
 After all steps complete, present a summary:
 ```
@@ -91,7 +94,6 @@ Plan complete. Generated [N] documents in .plan/:
 - SCHEMA.md ✓ (or skipped: no database)
 - API_MAP.md ✓ (or skipped: no API routes)
 - DESIGN_TOKENS.md ✓ (or skipped: no design system)
-- CLAUDE.md ✓ (or updated)
 - COMPETITORS.md ✓
 - ARCHITECTURE.md ✓
 - EXECUTIVE_SUMMARY.md ✓
@@ -99,6 +101,7 @@ Plan complete. Generated [N] documents in .plan/:
 - DEPENDENCY_GRAPH.md ✓
 - MONETIZATION.md ✓ (or skipped: not a product)
 - ASO_KEYWORDS.md ✓ (or skipped: not mobile)
+- CLAUDE.md ✓ (generated or updated)
 ```
 
 ## Subcommand Flows
