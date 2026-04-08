@@ -72,7 +72,7 @@ Proven: 122 bugs found across 4 runs, 94 auto-fixed, 0 tests broken.
 
 ## /linkraft dreamroll
 
-Overnight autonomous design generator. Rolls 10 random parameters per variation (style, palette, typography, layout, density, mood, era, animation, imagery, wildcard), generates standalone HTML landing pages, scores each with three judges, evolves toward gems. Never stops until you say so.
+Overnight autonomous design generator using a 14-dimension Style Genome: style archetype (30 options with CSS signatures), color harmony (algorithmic + curated, with random base hue), typography pairing (25 Google Font pairs), type scale, layout, density, mood, era, animation, imagery, border radius, shadow system, CTA style, oblique constraint. Generates standalone HTML landing pages, scores each with three judges, evolves toward gems. Never stops until you say so.
 
 ```
 /linkraft dreamroll               Start or resume (runs until stopped)
@@ -112,16 +112,19 @@ Every feature works with zero config on first run. No API keys. No MCPs required
 
 ## MCP Tools
 
-34 tools across four modes: 15 plan tools, 4 preflight tools, 7 sheep tools, 8 dreamroll tools.
+31 tools across four modes: 15 plan tools, 4 preflight tools, 7 sheep tools, 5 dreamroll tools.
 
 ## Numbers
 
-- 395 tests across 30 test files
+- 411 tests across 31 test files
 - 4 modes (plan, preflight, sheep, dreamroll)
 - 13 plan outputs (10 always + 3 conditional)
 - 3 preflight scores (security, health, readiness)
 - 6 agent personalities (3 sheep, 3 dreamroll judges)
-- 10 dreamroll parameter pools with 100+ total values
+- 14 dreamroll Style Genome dimensions with 180+ total values
+- 30 style archetypes, each with a CSS signature
+- 25 Google Font typography pairings
+- 40 oblique strategy constraints
 
 ## Project Structure
 
@@ -144,7 +147,7 @@ poking/
     plan/              # 12 generators + scaffolder + memory config
     preflight/         # Security, health, readiness scanners + runner
     sheep/             # Auto-config, hunter, personas, stats, content gen
-    dreamroll/         # Params, generator, judges, evolution, reporter, state
+    dreamroll/         # 14-dim params, genome, generator, judges, evolution, reporter, state
     shared/            # Scanner utilities, types, format
     mcp/
       server.ts        # MCP server (all four modes)
@@ -153,7 +156,7 @@ poking/
         preflight-tools.ts
         sheep-tools.ts
         dreamroll-tools.ts
-  tests/               # 395 tests across 30 files
+  tests/               # 411 tests across 31 files
   README.md
   LICENSE
 ```

@@ -3,6 +3,7 @@
 
 import type { DreamrollConfig, DreamrollState, SeedParameters, Variation } from './types.js';
 import { rollParams, type ParamWeights } from './params.js';
+import { genomeToPrompt } from './genome.js';
 import { judgeVariation, type JudgeCaller } from './judges.js';
 import { createState, loadState, addVariation, saveState, completeRun, stopRun } from './state.js';
 import { maybeEvolve, shouldInjectChaos } from './evolution.js';
@@ -20,35 +21,11 @@ export function rollSeedParameters(state?: DreamrollState): SeedParameters {
 }
 
 /**
- * Builds the generation prompt for Claude from seed parameters.
- * Covers all 10 parameter dimensions plus the product brief.
+ * Builds the generation prompt for Claude from a Style Genome.
+ * Delegates to genome.ts for the full 14-dimension instruction set.
  */
-export function buildGenerationPrompt(seed: SeedParameters, brief: string): string {
-  return [
-    'Generate a standalone HTML landing page variation with inline CSS only.',
-    '',
-    `Product brief: ${brief}`,
-    '',
-    'Design Parameters (roll all 10):',
-    `- Style: ${seed.genre}`,
-    `- Palette: ${seed.colorPalette}`,
-    `- Typography: ${seed.typography}`,
-    `- Layout: ${seed.layoutArchetype}`,
-    `- Density: ${seed.density}`,
-    `- Mood: ${seed.mood}`,
-    `- Era: ${seed.era}`,
-    `- Animation: ${seed.animation}`,
-    `- Imagery: ${seed.imagery}`,
-    `- Wildcard constraint: ${seed.wildcard}`,
-    '',
-    'Output requirements:',
-    '- Single standalone HTML file, no external dependencies',
-    '- All CSS inline in <style> tag',
-    '- Valid HTML5, opens in any browser',
-    '- HTML comment at the top documenting all 10 parameters',
-    '- Real content for the product (not lorem ipsum)',
-    '- Clear CTA above the fold',
-  ].join('\n');
+export function buildGenerationPrompt(seed: SeedParameters, brief: string, variationNumber = 0, outputPath = ''): string {
+  return genomeToPrompt(seed, brief, variationNumber, outputPath);
 }
 
 export interface GeneratorOptions {

@@ -25,20 +25,24 @@ function countByField(gems, field) {
     return counts;
 }
 /**
- * Parameter fields tracked by evolution. Maps SeedParameters field name
+ * All 14 parameter dimensions tracked by evolution. Maps SeedParameters field name
  * to human-readable label used in pattern messages.
  */
 const TRACKED_FIELDS = [
     ['genre', 'Style'],
-    ['colorPalette', 'Palette'],
+    ['colorPalette', 'Harmony'],
     ['typography', 'Typography'],
+    ['typeScale', 'TypeScale'],
     ['layoutArchetype', 'Layout'],
     ['density', 'Density'],
     ['mood', 'Mood'],
     ['era', 'Era'],
     ['animation', 'Animation'],
     ['imagery', 'Imagery'],
-    ['wildcard', 'Wildcard'],
+    ['borderRadius', 'BorderRadius'],
+    ['shadows', 'Shadows'],
+    ['ctaStyle', 'CtaStyle'],
+    ['wildcard', 'Constraint'],
 ];
 /**
  * Analyzes gems to find patterns in high-scoring variations.
@@ -93,12 +97,16 @@ const FIELD_TO_WEIGHT_KEY = {
     genre: 'style',
     colorPalette: 'palette',
     typography: 'typography',
+    typeScale: 'typeScale',
     layoutArchetype: 'layout',
     density: 'density',
     mood: 'mood',
     era: 'era',
     animation: 'animation',
     imagery: 'imagery',
+    borderRadius: 'borderRadius',
+    shadows: 'shadows',
+    ctaStyle: 'ctaStyle',
     wildcard: 'wildcard',
 };
 function applyAdjustments(state, adjustments) {

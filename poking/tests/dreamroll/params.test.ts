@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import {
-  STYLE_POOL, PALETTE_POOL, TYPOGRAPHY_POOL, LAYOUT_POOL, DENSITY_POOL,
-  MOOD_POOL, ERA_POOL, ANIMATION_POOL, IMAGERY_POOL, WILDCARD_POOL,
+  STYLE_POOL, PALETTE_POOL, TYPOGRAPHY_POOL, TYPE_SCALE_POOL, LAYOUT_POOL,
+  DENSITY_POOL, MOOD_POOL, ERA_POOL, ANIMATION_POOL, IMAGERY_POOL,
+  BORDER_RADIUS_POOL, SHADOW_POOL, CTA_STYLE_POOL, WILDCARD_POOL,
   rollParams, weightedPick, getAllPools,
 } from '../../src/dreamroll/params.js';
 
 describe('parameter pools', () => {
-  it('all 10 pools have at least 5 values', () => {
+  it('all 14 pools have at least 5 values', () => {
     const pools = getAllPools();
-    expect(Object.keys(pools)).toHaveLength(10);
+    expect(Object.keys(pools)).toHaveLength(14);
     for (const [name, pool] of Object.entries(pools)) {
       expect(pool.length, `pool ${name} should have >= 5 values`).toBeGreaterThanOrEqual(5);
     }
@@ -24,16 +25,20 @@ describe('parameter pools', () => {
     }
   });
 
-  it('exposes all individual pools as exports', () => {
+  it('exposes all 14 individual pools as exports', () => {
     expect(STYLE_POOL.length).toBeGreaterThan(0);
     expect(PALETTE_POOL.length).toBeGreaterThan(0);
     expect(TYPOGRAPHY_POOL.length).toBeGreaterThan(0);
+    expect(TYPE_SCALE_POOL.length).toBeGreaterThan(0);
     expect(LAYOUT_POOL.length).toBeGreaterThan(0);
     expect(DENSITY_POOL.length).toBeGreaterThan(0);
     expect(MOOD_POOL.length).toBeGreaterThan(0);
     expect(ERA_POOL.length).toBeGreaterThan(0);
     expect(ANIMATION_POOL.length).toBeGreaterThan(0);
     expect(IMAGERY_POOL.length).toBeGreaterThan(0);
+    expect(BORDER_RADIUS_POOL.length).toBeGreaterThan(0);
+    expect(SHADOW_POOL.length).toBeGreaterThan(0);
+    expect(CTA_STYLE_POOL.length).toBeGreaterThan(0);
     expect(WILDCARD_POOL.length).toBeGreaterThan(0);
   });
 
@@ -44,39 +49,56 @@ describe('parameter pools', () => {
   it('style includes spec signature values', () => {
     expect(STYLE_POOL).toContain('glassmorphism');
     expect(STYLE_POOL).toContain('neo-brutalism');
-    expect(STYLE_POOL).toContain('minimalist-swiss');
+    expect(STYLE_POOL).toContain('swiss-international');
+    expect(STYLE_POOL).toContain('art-deco');
+    expect(STYLE_POOL).toContain('synthwave');
+    expect(STYLE_POOL).toContain('cyberpunk');
+  });
+
+  it('has 30 style archetypes per spec', () => {
+    expect(STYLE_POOL.length).toBe(30);
   });
 });
 
 describe('rollParams', () => {
-  it('produces a complete SeedParameters with all fields', () => {
+  it('produces a complete StyleGenome with all 14 dimensions', () => {
     const seed = rollParams();
     expect(seed.genre).toBeTruthy();
     expect(seed.colorPalette).toBeTruthy();
+    expect(seed.harmonyBaseHue).toBeGreaterThanOrEqual(0);
+    expect(seed.harmonyBaseHue).toBeLessThan(360);
     expect(seed.typography).toBeTruthy();
+    expect(seed.typeScale).toBeTruthy();
     expect(seed.layoutArchetype).toBeTruthy();
     expect(seed.density).toBeTruthy();
     expect(seed.mood).toBeTruthy();
     expect(seed.era).toBeTruthy();
     expect(seed.animation).toBeTruthy();
     expect(seed.imagery).toBeTruthy();
+    expect(seed.borderRadius).toBeTruthy();
+    expect(seed.shadows).toBeTruthy();
+    expect(seed.ctaStyle).toBeTruthy();
     expect(seed.wildcard).toBeTruthy();
     expect(seed.temperature).toBeGreaterThanOrEqual(0.7);
     expect(seed.temperature).toBeLessThanOrEqual(1.3);
   });
 
-  it('every rolled value is from its pool', () => {
+  it('every rolled value is from its pool (all 14 dimensions)', () => {
     for (let i = 0; i < 50; i++) {
       const seed = rollParams();
       expect(STYLE_POOL).toContain(seed.genre);
       expect(PALETTE_POOL).toContain(seed.colorPalette);
       expect(TYPOGRAPHY_POOL).toContain(seed.typography);
+      expect(TYPE_SCALE_POOL).toContain(seed.typeScale!);
       expect(LAYOUT_POOL).toContain(seed.layoutArchetype);
       expect(DENSITY_POOL).toContain(seed.density);
       expect(MOOD_POOL).toContain(seed.mood);
       expect(ERA_POOL).toContain(seed.era);
       expect(ANIMATION_POOL).toContain(seed.animation);
       expect(IMAGERY_POOL).toContain(seed.imagery);
+      expect(BORDER_RADIUS_POOL).toContain(seed.borderRadius!);
+      expect(SHADOW_POOL).toContain(seed.shadows!);
+      expect(CTA_STYLE_POOL).toContain(seed.ctaStyle!);
       expect(WILDCARD_POOL).toContain(seed.wildcard);
     }
   });
@@ -110,16 +132,16 @@ describe('weightedPick', () => {
 
   it('respects weights but still allows all options', () => {
     const counts: Record<string, number> = {};
-    // With weight 20 for glassmorphism and weight 1 for other 13 styles,
-    // glassmorphism probability = 20/(20+13) = 60.6%
-    const weights = { glassmorphism: 20 };
+    // With 30 styles in the pool and weight 50 for glassmorphism vs 1 for others,
+    // glassmorphism probability = 50/(50+29) = 63.3%
+    const weights = { glassmorphism: 50 };
     for (let i = 0; i < 1000; i++) {
       const v = weightedPick(STYLE_POOL, weights);
       counts[v] = (counts[v] ?? 0) + 1;
     }
-    // Weighted value should dominate (expect ~600, allow wide margin)
+    // Weighted value should dominate (expect ~630, allow wide margin)
     expect(counts['glassmorphism']).toBeGreaterThan(450);
-    // But others should still be picked (expect ~400)
+    // But others should still be picked (expect ~370)
     const otherCount = Object.entries(counts)
       .filter(([k]) => k !== 'glassmorphism')
       .reduce((s, [, c]) => s + c, 0);
@@ -134,24 +156,25 @@ describe('weightedPick', () => {
 
 describe('rollParams with weights', () => {
   it('favors weighted values', () => {
-    const weights = { style: { 'glassmorphism': 20 } };
+    // With 30 styles in pool, weight 50 vs 1 = ~63% probability
+    const weights = { style: { 'glassmorphism': 50 } };
     const counts: Record<string, number> = {};
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 500; i++) {
       const seed = rollParams(weights);
       counts[seed.genre] = (counts[seed.genre] ?? 0) + 1;
     }
-    expect(counts['glassmorphism']).toBeGreaterThan(100);
+    expect(counts['glassmorphism']).toBeGreaterThan(200);
   });
 
   it('chaos mode ignores weights', () => {
     const weights = { style: { 'glassmorphism': 1000 } };
     const counts: Record<string, number> = {};
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 500; i++) {
       const seed = rollParams(weights, true); // chaos = true
       counts[seed.genre] = (counts[seed.genre] ?? 0) + 1;
     }
-    // In chaos mode, glassmorphism should be picked proportionally (1/14)
-    // Much less than it would be with huge weight
+    // In chaos mode with 30 styles, glassmorphism should be picked ~1/30 = 16/500
+    // Much less than the weighted case (~315)
     expect(counts['glassmorphism']).toBeLessThan(100);
   });
 });

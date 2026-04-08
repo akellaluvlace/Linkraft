@@ -4,14 +4,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { loadState, saveState, createState, stopRun } from '../../dreamroll/state.js';
 import { getMorningReport, rollSeedParameters } from '../../dreamroll/generator.js';
+import { genomeToPrompt, genomeSummary } from '../../dreamroll/genome.js';
 import { getJudgeEvaluationPrompts, calculateVerdict } from '../../dreamroll/judges.js';
 import { maybeEvolve } from '../../dreamroll/evolution.js';
-import type { DreamrollConfig } from '../../dreamroll/types.js';
+import type { DreamrollConfig, Variation } from '../../dreamroll/types.js';
 
 const projectRootSchema = { projectRoot: z.string().describe('Project root directory') };
 
 /**
- * Reads project context from package.json and README for the brief.
+ * Reads project context for the brief.
  */
 function detectBrief(projectRoot: string, overrideBrief?: string): string {
   if (overrideBrief) return overrideBrief;
@@ -28,126 +29,196 @@ function detectBrief(projectRoot: string, overrideBrief?: string): string {
 }
 
 export function registerDreamrollTools(server: McpServer): void {
+  // ==========================================================================
+  // dreamroll_start
+  // Multi-purpose: initializes session, records previous variation if scores
+  // are passed, returns next variation parameters + judge prompts.
+  // The skill calls this in a loop until stopRequested.
+  // ==========================================================================
   server.tool(
     'dreamroll_start',
-    'Starts or resumes a Dreamroll session. Initializes .dreamroll/ state and returns config + first variation parameters. Safe to call on resume — detects existing running state and continues.',
+    'Starts/resumes a Dreamroll session AND advances the loop. First call inits state. Subsequent calls record the previous variation (if completed scores are passed) and return the next variation\'s genome + judge prompts. Returns a stop message when the stop flag is set.',
     {
       projectRoot: z.string().describe('Project root directory'),
-      brief: z.string().optional().describe('Product brief for generated copy. Auto-detected from package.json if omitted.'),
+      brief: z.string().optional().describe('Product brief for generated copy. Auto-detected from package.json on first call.'),
+      pluginRoot: z.string().optional().describe('Linkraft plugin root (where agents/dreamroll-*.md live). Required to return judge prompts inline.'),
+      completed: z.object({
+        variationId: z.number(),
+        filePath: z.string(),
+        scores: z.array(z.object({
+          judge: z.enum(['brutus', 'venus', 'mercury']),
+          score: z.number().min(1).max(10),
+          comment: z.string(),
+        })),
+      }).optional().describe('Previous variation result. Pass on every call after the first to record scores and trigger evolution.'),
     },
-    async ({ projectRoot, brief }) => {
-      // Check for resumable session
-      const existing = loadState(projectRoot);
-      if (existing && (existing.status === 'running' || existing.status === 'paused')) {
-        existing.stopRequested = false;
-        saveState(projectRoot, existing);
-        return {
-          content: [{
-            type: 'text' as const,
-            text: [
-              'Dreamroll RESUMED.',
-              `Project: ${projectRoot}`,
-              `Brief: ${existing.config.brief ?? '(none)'}`,
-              `Last variation: ${existing.currentVariation}`,
-              `Gems so far: ${existing.gems.length}`,
-              '',
-              'Call dreamroll_next to get the next variation parameters.',
-            ].join('\n'),
-          }],
+    async ({ projectRoot, brief, pluginRoot, completed }) => {
+      // 1. Load or create state
+      let state = loadState(projectRoot);
+      let initialized = false;
+      if (!state || state.status === 'completed' || state.status === 'stopped') {
+        const resolvedBrief = detectBrief(projectRoot, brief);
+        const config: DreamrollConfig = {
+          basePage: '',
+          targetVariations: null, // never-stop
+          budgetHours: 24,
+          projectRoot,
+          brief: resolvedBrief,
         };
+        state = createState(config);
+        const variationsDir = path.join(projectRoot, '.dreamroll', 'variations');
+        if (!fs.existsSync(variationsDir)) fs.mkdirSync(variationsDir, { recursive: true });
+        saveState(projectRoot, state);
+        initialized = true;
+      } else {
+        state.stopRequested = false;
       }
 
-      // Fresh session
-      const resolvedBrief = detectBrief(projectRoot, brief);
-      const config: DreamrollConfig = {
-        basePage: '',
-        targetVariations: null, // never-stop
-        budgetHours: 24,
-        projectRoot,
-        brief: resolvedBrief,
+      // 2. Honor stop flag from previous session
+      if (state.stopRequested) {
+        stopRun(projectRoot, state);
+        return { content: [{ type: 'text' as const, text: 'Stop requested. Run marked stopped. Call dreamroll_report for the morning report.' }] };
+      }
+
+      // 3. Record previous variation if scores were passed
+      let recordedSummary = '';
+      if (completed) {
+        const verdict = calculateVerdict(completed.scores);
+        let variation = state.variations.find(v => v.id === completed.variationId);
+        if (variation) {
+          variation.verdict = verdict;
+          variation.filesPath = completed.filePath;
+        } else {
+          variation = {
+            id: completed.variationId,
+            seed: rollSeedParameters(state), // placeholder if missing
+            verdict,
+            screenshotPath: null,
+            filesPath: completed.filePath,
+            createdAt: new Date().toISOString(),
+          };
+          state.variations.push(variation);
+        }
+        state.currentVariation = Math.max(state.currentVariation, completed.variationId);
+        if (verdict.verdict === 'gem' && !state.gems.includes(completed.variationId)) {
+          state.gems.push(completed.variationId);
+        }
+        const adjustments = maybeEvolve(state);
+        if (adjustments.length > 0) state.evolutionAdjustments.push(...adjustments);
+        saveState(projectRoot, state);
+
+        recordedSummary = [
+          `Recorded variation ${completed.variationId}: avg ${verdict.averageScore}/10 — ${verdict.verdict.toUpperCase()}${verdict.hasInstantKeep ? ' (INSTANT KEEP)' : ''}.`,
+          adjustments.length > 0 ? `Evolution kicked in (${adjustments.length} pattern adjustments applied).` : '',
+        ].filter(l => l !== '').join('\n');
+      }
+
+      // 4. Roll the next variation
+      const nextId = state.currentVariation + 1;
+      const seed = rollSeedParameters(state);
+
+      // Pre-record the seed so dreamroll_record_verdict (or the next start call)
+      // has the correct genome to attach to the variation
+      const placeholder: Variation = {
+        id: nextId,
+        seed,
+        verdict: null,
+        screenshotPath: null,
+        filesPath: null,
+        createdAt: new Date().toISOString(),
       };
-      const state = createState(config);
-
-      // Ensure variations dir exists
-      const variationsDir = path.join(projectRoot, '.dreamroll', 'variations');
-      if (!fs.existsSync(variationsDir)) fs.mkdirSync(variationsDir, { recursive: true });
-
+      // Replace any existing placeholder for this id
+      const existingIdx = state.variations.findIndex(v => v.id === nextId);
+      if (existingIdx >= 0) state.variations[existingIdx] = placeholder;
+      else state.variations.push(placeholder);
+      state.currentVariation = nextId;
       saveState(projectRoot, state);
 
-      return {
-        content: [{
-          type: 'text' as const,
-          text: [
-            'Dreamroll INITIALIZED.',
-            `Project: ${projectRoot}`,
-            `Brief: ${resolvedBrief}`,
-            '',
-            'Files:',
-            '  .dreamroll/state.json               live state',
-            '  .dreamroll/variations/              generated HTML files',
-            '',
-            'Call dreamroll_next to get the first variation parameters.',
-          ].join('\n'),
-        }],
-      };
+      const outputPath = path.join(projectRoot, '.dreamroll', 'variations', `variation_${String(nextId).padStart(3, '0')}.html`);
+      const generationPrompt = genomeToPrompt(seed, state.config.brief ?? 'A product', nextId, outputPath);
+
+      // 5. Build judge prompts (if pluginRoot supplied)
+      let judgeBlock = '';
+      if (pluginRoot) {
+        const agentsDir = path.join(pluginRoot, 'agents');
+        const prompts = getJudgeEvaluationPrompts(agentsDir, `${outputPath} — ${genomeSummary(seed)}`);
+        if (prompts.length > 0) {
+          const blocks = ['', '════════ JUDGES ════════', 'After writing the HTML, score it as each judge below. Use exactly:', 'Judge: [name]', 'Score: [1-10]', 'Comment: [1-2 sentences in character]', '', 'Then call dreamroll_start again with `completed: { variationId, filePath, scores }` to record scores and get the next variation.', ''];
+          for (const p of prompts) {
+            blocks.push(`-- ${p.judge.toUpperCase()} --`);
+            blocks.push(p.prompt);
+            blocks.push('');
+          }
+          judgeBlock = blocks.join('\n');
+        }
+      }
+
+      const header = initialized
+        ? `Dreamroll INITIALIZED.\nProject: ${projectRoot}\nBrief: ${state.config.brief ?? '(none)'}`
+        : `Dreamroll RESUMED at variation ${nextId}.`;
+
+      const text = [
+        header,
+        recordedSummary,
+        '',
+        '════════ NEXT VARIATION ════════',
+        generationPrompt,
+        judgeBlock,
+      ].filter(l => l !== '').join('\n');
+
+      return { content: [{ type: 'text' as const, text }] };
     },
   );
 
+  // ==========================================================================
+  // dreamroll_status
+  // ==========================================================================
   server.tool(
-    'dreamroll_next',
-    'Returns the next variation to generate: number, rolled parameters, brief, output path. Respects stop flag and evolution weights. Skill calls this in a loop until stopped.',
+    'dreamroll_status',
+    'Shows the current Dreamroll run status: variations generated, gems found, top score, current evolution weights.',
     projectRootSchema,
     async ({ projectRoot }) => {
       const state = loadState(projectRoot);
       if (!state) {
-        return { content: [{ type: 'text' as const, text: 'No Dreamroll session. Call dreamroll_start first.' }] };
+        return { content: [{ type: 'text' as const, text: 'No Dreamroll run in progress. Call dreamroll_start to begin.' }] };
       }
 
-      // Honor stop flag
-      if (state.stopRequested) {
-        stopRun(projectRoot, state);
-        return { content: [{ type: 'text' as const, text: 'Stop requested. Run marked stopped. Call dreamroll_report for summary.' }] };
-      }
+      const topScore = state.variations
+        .filter(v => v.verdict)
+        .reduce((max, v) => Math.max(max, v.verdict?.averageScore ?? 0), 0);
 
-      const nextId = state.currentVariation + 1;
-      const seed = rollSeedParameters(state);
-      const outputPath = path.join(projectRoot, '.dreamroll', 'variations', `variation_${String(nextId).padStart(3, '0')}.html`);
+      const weightSummary: string[] = [];
+      if (state.paramWeights) {
+        for (const [dim, vals] of Object.entries(state.paramWeights)) {
+          const top = Object.entries(vals).sort((a, b) => b[1] - a[1]).slice(0, 2);
+          if (top.length > 0) {
+            weightSummary.push(`  ${dim}: ${top.map(([k, w]) => `${k}=${w}`).join(', ')}`);
+          }
+        }
+      }
 
       const lines = [
-        `VARIATION ${nextId}`,
-        `Output: ${outputPath}`,
-        '',
-        'Brief:',
-        `  ${state.config.brief ?? '(no brief)'}`,
-        '',
-        'Design Parameters (all 10 rolled):',
-        `  Style:       ${seed.genre}`,
-        `  Palette:     ${seed.colorPalette}`,
-        `  Typography:  ${seed.typography}`,
-        `  Layout:      ${seed.layoutArchetype}`,
-        `  Density:     ${seed.density}`,
-        `  Mood:        ${seed.mood}`,
-        `  Era:         ${seed.era}`,
-        `  Animation:   ${seed.animation}`,
-        `  Imagery:     ${seed.imagery}`,
-        `  Wildcard:    ${seed.wildcard}`,
-        '',
-        'Next steps:',
-        '1. Generate a standalone HTML landing page matching these 10 parameters',
-        '2. Inline all CSS, no external dependencies',
-        '3. HTML comment at top documenting params + scores',
-        '4. Write file to the output path above',
-        '5. Call dreamroll_judge with the variation description to evaluate',
-        '6. Call dreamroll_record_verdict with the scores',
-        '7. Call dreamroll_next again for the next variation',
+        `Status: ${state.status}${state.stopRequested ? ' (stop requested)' : ''}`,
+        `Variations: ${state.currentVariation}`,
+        `Gems: ${state.gems.length}`,
+        `Top score: ${topScore}/10`,
+        `Elapsed: ${Math.round(state.elapsedMs / 60000)}m`,
+        `Brief: ${state.config.brief ?? '(none)'}`,
       ];
+      if (weightSummary.length > 0) {
+        lines.push('', 'Current weights (top 2 per dimension):');
+        lines.push(...weightSummary);
+      }
       return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
     },
   );
 
+  // ==========================================================================
+  // dreamroll_stop
+  // ==========================================================================
   server.tool(
     'dreamroll_stop',
-    'Sets the stop flag. The next dreamroll_next call will halt the run. Graceful stop; current variation completes if in progress.',
+    'Sets the stop flag. The next dreamroll_start call halts the loop. Graceful: current variation completes if in progress.',
     projectRootSchema,
     async ({ projectRoot }) => {
       const state = loadState(projectRoot);
@@ -156,35 +227,16 @@ export function registerDreamrollTools(server: McpServer): void {
       }
       state.stopRequested = true;
       saveState(projectRoot, state);
-      return { content: [{ type: 'text' as const, text: 'Stop flag set. Dreamroll will halt at next variation boundary.' }] };
+      return { content: [{ type: 'text' as const, text: 'Stop flag set. Dreamroll halts at next variation boundary.' }] };
     },
   );
 
-  server.tool(
-    'dreamroll_status',
-    'Shows the current Dreamroll run status: progress, gems found, current variation, evolution adjustments.',
-    projectRootSchema,
-    async ({ projectRoot }) => {
-      const state = loadState(projectRoot);
-      if (!state) {
-        return { content: [{ type: 'text' as const, text: 'No Dreamroll run in progress.' }] };
-      }
-
-      const lines = [
-        `Status: ${state.status}${state.stopRequested ? ' (stop requested)' : ''}`,
-        `Variations generated: ${state.currentVariation}`,
-        `Gems found: ${state.gems.length}`,
-        `Elapsed: ${Math.round(state.elapsedMs / 60000)}m`,
-        `Evolution adjustments: ${state.evolutionAdjustments.length}`,
-        `Brief: ${state.config.brief ?? '(none)'}`,
-      ];
-      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
-    },
-  );
-
+  // ==========================================================================
+  // dreamroll_gems
+  // ==========================================================================
   server.tool(
     'dreamroll_gems',
-    'Lists all gems (high-scoring variations) from the current or last Dreamroll run.',
+    'Lists all gems (avg >= 7 or any single 10) with full genome and scores.',
     projectRootSchema,
     async ({ projectRoot }) => {
       const state = loadState(projectRoot);
@@ -197,123 +249,36 @@ export function registerDreamrollTools(server: McpServer): void {
         return { content: [{ type: 'text' as const, text: 'No gems found yet.' }] };
       }
 
-      const lines = gems.map(g => {
-        const scores = g.verdict?.scores.map(s => `${s.judge}: ${s.score}`).join(', ') ?? 'no scores';
-        return `v${g.id} (avg ${g.verdict?.averageScore ?? 0}/10) [${scores}] style=${g.seed.genre} palette=${g.seed.colorPalette} wildcard=${g.seed.wildcard}`;
-      });
-      return { content: [{ type: 'text' as const, text: `${gems.length} gem(s):\n${lines.join('\n')}` }] };
-    },
-  );
-
-  server.tool(
-    'dreamroll_judge',
-    'Returns judge evaluation prompts for a design variation. Claude evaluates these in-context using the judge personalities (BRUTUS, VENUS, MERCURY). No separate API key needed.',
-    {
-      variationDescription: z.string().describe('Description of the variation to judge (file path, design parameters, HTML excerpt)'),
-      pluginRoot: z.string().describe('Linkraft plugin root directory (where agents/ live)'),
-    },
-    async ({ variationDescription, pluginRoot }) => {
-      const agentsDir = path.join(pluginRoot, 'agents');
-      const prompts = getJudgeEvaluationPrompts(agentsDir, variationDescription);
-
-      if (prompts.length === 0) {
-        return { content: [{ type: 'text' as const, text: 'Judge prompts not found. Check that agents/dreamroll-*.md files exist.' }] };
+      const lines: string[] = [`${gems.length} gem(s):`, ''];
+      for (const g of gems) {
+        const scores = g.verdict?.scores.map(s => `${s.judge}=${s.score}`).join(' ') ?? 'no scores';
+        lines.push(`v${String(g.id).padStart(3, '0')}  avg ${g.verdict?.averageScore ?? 0}/10  (${scores})`);
+        lines.push(`  ${genomeSummary(g.seed)}`);
+        lines.push('');
       }
-
-      const instructions = [
-        'Evaluate this variation as each judge. For each judge below, respond with:',
-        'Judge: [name]',
-        'Score: [1-10]',
-        'Comment: [1-2 sentence verdict in character]',
-        '',
-        'After all three, call dreamroll_record_verdict with the scores.',
-        'Gem threshold: avg >= 7 or any single 10.',
-        '',
-        '---',
-        '',
-      ];
-
-      for (const p of prompts) {
-        instructions.push(`## ${p.judge.toUpperCase()}`);
-        instructions.push(p.prompt);
-        instructions.push('');
-      }
-
-      return { content: [{ type: 'text' as const, text: instructions.join('\n') }] };
-    },
-  );
-
-  server.tool(
-    'dreamroll_record_verdict',
-    'Records judge scores for a variation. Called after Claude evaluates using dreamroll_judge. Saves the variation to state and updates gems list.',
-    {
-      projectRoot: z.string().describe('Project root directory'),
-      variationId: z.number().describe('Variation number'),
-      filePath: z.string().describe('Path to the generated HTML file'),
-      scores: z.array(z.object({
-        judge: z.enum(['brutus', 'venus', 'mercury']),
-        score: z.number().min(1).max(10),
-        comment: z.string(),
-      })).describe('Judge scores'),
-    },
-    async ({ projectRoot, variationId, filePath, scores }) => {
-      const state = loadState(projectRoot);
-      if (!state) {
-        return { content: [{ type: 'text' as const, text: 'No Dreamroll state found.' }] };
-      }
-
-      const verdict = calculateVerdict(scores);
-
-      // Upsert the variation
-      let variation = state.variations.find(v => v.id === variationId);
-      if (variation) {
-        variation.verdict = verdict;
-        variation.filesPath = filePath;
-      } else {
-        // New variation being recorded — roll a placeholder seed from the file if possible
-        variation = {
-          id: variationId,
-          seed: rollSeedParameters(state), // placeholder; real seed was rolled at dreamroll_next
-          verdict,
-          screenshotPath: null,
-          filesPath: filePath,
-          createdAt: new Date().toISOString(),
-        };
-        state.variations.push(variation);
-      }
-
-      state.currentVariation = Math.max(state.currentVariation, variationId);
-      if (verdict.verdict === 'gem' && !state.gems.includes(variationId)) {
-        state.gems.push(variationId);
-      }
-
-      // Evolution check
-      const adjustments = maybeEvolve(state);
-      if (adjustments.length > 0) {
-        state.evolutionAdjustments.push(...adjustments);
-      }
-
-      saveState(projectRoot, state);
-
-      const lines: string[] = scores.map(s => `${s.judge.toUpperCase()}: ${s.score}/10 - "${s.comment}"`);
-      lines.push('', `Average: ${verdict.averageScore}/10`, `Verdict: ${verdict.verdict.toUpperCase()}`);
-      if (verdict.hasInstantKeep) lines.push('(INSTANT KEEP: a judge gave 10)');
-      if (adjustments.length > 0) {
-        lines.push('', `Evolution kicked in (${adjustments.length} adjustments)`);
-      }
-      lines.push('', 'Call dreamroll_next for the next variation.');
-
       return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
     },
   );
 
+  // ==========================================================================
+  // dreamroll_report
+  // ==========================================================================
   server.tool(
     'dreamroll_report',
-    'Generates the morning report: top gems, patterns, wildcard discoveries, full statistics.',
+    'Generates the morning report: top 5 gems with full genomes, evolution patterns, recommendation. Writes to .dreamroll/report.md.',
     projectRootSchema,
     async ({ projectRoot }) => {
-      const report = getMorningReport(projectRoot);
-      return { content: [{ type: 'text' as const, text: report }] };
+      const reportText = getMorningReport(projectRoot);
+      // Persist to .dreamroll/report.md
+      const reportPath = path.join(projectRoot, '.dreamroll', 'report.md');
+      try {
+        const dir = path.dirname(reportPath);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(reportPath, reportText, 'utf-8');
+      } catch {
+        // Best effort; still return the text
+      }
+      return { content: [{ type: 'text' as const, text: `Written to ${reportPath}\n\n${reportText}` }] };
     },
   );
 }

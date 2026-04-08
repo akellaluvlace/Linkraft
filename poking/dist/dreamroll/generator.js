@@ -7,6 +7,7 @@ exports.buildGenerationPrompt = buildGenerationPrompt;
 exports.runDreamroll = runDreamroll;
 exports.getMorningReport = getMorningReport;
 const params_js_1 = require("./params.js");
+const genome_js_1 = require("./genome.js");
 const judges_js_1 = require("./judges.js");
 const state_js_1 = require("./state.js");
 const evolution_js_1 = require("./evolution.js");
@@ -22,35 +23,11 @@ function rollSeedParameters(state) {
     return (0, params_js_1.rollParams)(weights, chaos);
 }
 /**
- * Builds the generation prompt for Claude from seed parameters.
- * Covers all 10 parameter dimensions plus the product brief.
+ * Builds the generation prompt for Claude from a Style Genome.
+ * Delegates to genome.ts for the full 14-dimension instruction set.
  */
-function buildGenerationPrompt(seed, brief) {
-    return [
-        'Generate a standalone HTML landing page variation with inline CSS only.',
-        '',
-        `Product brief: ${brief}`,
-        '',
-        'Design Parameters (roll all 10):',
-        `- Style: ${seed.genre}`,
-        `- Palette: ${seed.colorPalette}`,
-        `- Typography: ${seed.typography}`,
-        `- Layout: ${seed.layoutArchetype}`,
-        `- Density: ${seed.density}`,
-        `- Mood: ${seed.mood}`,
-        `- Era: ${seed.era}`,
-        `- Animation: ${seed.animation}`,
-        `- Imagery: ${seed.imagery}`,
-        `- Wildcard constraint: ${seed.wildcard}`,
-        '',
-        'Output requirements:',
-        '- Single standalone HTML file, no external dependencies',
-        '- All CSS inline in <style> tag',
-        '- Valid HTML5, opens in any browser',
-        '- HTML comment at the top documenting all 10 parameters',
-        '- Real content for the product (not lorem ipsum)',
-        '- Clear CTA above the fold',
-    ].join('\n');
+function buildGenerationPrompt(seed, brief, variationNumber = 0, outputPath = '') {
+    return (0, genome_js_1.genomeToPrompt)(seed, brief, variationNumber, outputPath);
 }
 /**
  * Runs the Dreamroll generation loop (headless mode with optional judge caller).

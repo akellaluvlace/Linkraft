@@ -114,17 +114,17 @@ describe('generateReport', () => {
 });
 
 describe('formatReport', () => {
-  it('includes DREAMROLL COMPLETE header', () => {
+  it('includes DREAMROLL MORNING REPORT header', () => {
     const report = generateReport(makeState());
     const formatted = formatReport(report);
-    expect(formatted).toContain('DREAMROLL COMPLETE');
+    expect(formatted).toContain('DREAMROLL MORNING REPORT');
   });
 
   it('includes gem count and stats', () => {
     const report = generateReport(makeState());
     const formatted = formatReport(report);
-    expect(formatted).toContain('Gems saved: 3');
-    expect(formatted).toContain('Discarded: 3');
+    expect(formatted).toContain('3 gems');
+    expect(formatted).toContain('3 weak');
   });
 
   it('includes top gems with scores', () => {
@@ -137,9 +137,16 @@ describe('formatReport', () => {
     expect(formatted).toContain('MERCURY');
   });
 
-  it('includes screenshot paths', () => {
+  it('includes self-evaluation disclaimer', () => {
     const report = generateReport(makeState());
     const formatted = formatReport(report);
-    expect(formatted).toContain('.dreamroll/gems/');
+    expect(formatted).toContain('Self-evaluated');
+  });
+
+  it('includes Open in Browser footer', () => {
+    const report = generateReport(makeState());
+    const formatted = formatReport(report);
+    expect(formatted).toContain('OPEN IN BROWSER');
+    expect(formatted).toContain('.dreamroll/variations/');
   });
 });

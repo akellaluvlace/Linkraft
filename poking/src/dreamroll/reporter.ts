@@ -61,32 +61,31 @@ export function generateReport(state: DreamrollState): MorningReport {
  */
 export function formatReport(report: MorningReport): string {
   const lines: string[] = [
-    'DREAMROLL COMPLETE',
+    'DREAMROLL MORNING REPORT',
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
     '',
     `Duration: ${report.duration}`,
-    `Variations generated: ${report.totalVariations}`,
-    `Gems saved: ${report.gemCount}`,
-    `Iterated improvements: ${report.iteratedCount}`,
-    `Discarded: ${report.discardedCount}`,
+    `Variations: ${report.totalVariations} total | ${report.gemCount} gems | ${report.iteratedCount} decent | ${report.discardedCount} weak`,
+    '',
+    'Self-evaluated (Claude scored its own output — scores may have optimism bias)',
     '',
   ];
 
   if (report.topGems.length > 0) {
-    lines.push('TOP GEMS:');
+    lines.push('TOP GEMS (ranked by average score):');
     lines.push('');
     for (let i = 0; i < report.topGems.length; i++) {
       const gem = report.topGems[i]!;
-      lines.push(`#${i + 1} - v${String(gem.variationId).padStart(3, '0')}  Score: ${gem.averageScore}/10`);
-      lines.push(`     Style: ${gem.seed.genre} | Palette: ${gem.seed.colorPalette} | Typography: ${gem.seed.typography}`);
+      const baseHue = gem.seed.harmonyBaseHue ?? 0;
+      lines.push(`#${i + 1} — variation_${String(gem.variationId).padStart(3, '0')}.html  (avg ${gem.averageScore}/10)`);
+      lines.push(`     Style: ${gem.seed.genre} | Harmony: ${gem.seed.colorPalette} (base ${baseHue}°)`);
+      lines.push(`     Typography: ${gem.seed.typography} | Scale: ${gem.seed.typeScale ?? '—'}`);
       lines.push(`     Layout: ${gem.seed.layoutArchetype} | Density: ${gem.seed.density} | Mood: ${gem.seed.mood}`);
-      if (gem.seed.era) lines.push(`     Era: ${gem.seed.era} | Animation: ${gem.seed.animation ?? 'none'} | Imagery: ${gem.seed.imagery ?? 'none'}`);
-      lines.push(`     Wildcard: ${gem.seed.wildcard}`);
+      lines.push(`     Era: ${gem.seed.era} | Animation: ${gem.seed.animation} | Imagery: ${gem.seed.imagery}`);
+      lines.push(`     Radius: ${gem.seed.borderRadius ?? '—'} | Shadows: ${gem.seed.shadows ?? '—'} | CTA: ${gem.seed.ctaStyle ?? '—'}`);
+      lines.push(`     Constraint: ${gem.seed.wildcard}`);
       for (const s of gem.scores) {
-        lines.push(`     ${s.judge.toUpperCase()}: ${s.score} ("${s.comment}")`);
-      }
-      if (gem.screenshotPath) {
-        lines.push(`     Screenshot: ${gem.screenshotPath}`);
+        lines.push(`     ${s.judge.toUpperCase()} (${s.score}): "${s.comment}"`);
       }
       lines.push('');
     }
@@ -107,6 +106,15 @@ export function formatReport(report: MorningReport): string {
     }
     lines.push('');
   }
+
+  lines.push('OPEN IN BROWSER:');
+  lines.push('  All variations are standalone HTML files in .dreamroll/variations/');
+  lines.push('  Open any file directly to view it.');
+  if (report.topGems.length > 0) {
+    const top = report.topGems[0]!;
+    lines.push(`  Recommended start: variation_${String(top.variationId).padStart(3, '0')}.html (avg ${top.averageScore}/10)`);
+  }
+  lines.push('');
 
   return lines.join('\n');
 }

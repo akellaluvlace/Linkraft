@@ -7,10 +7,10 @@ import { type JudgeCaller } from './judges.js';
  */
 export declare function rollSeedParameters(state?: DreamrollState): SeedParameters;
 /**
- * Builds the generation prompt for Claude from seed parameters.
- * Covers all 10 parameter dimensions plus the product brief.
+ * Builds the generation prompt for Claude from a Style Genome.
+ * Delegates to genome.ts for the full 14-dimension instruction set.
  */
-export declare function buildGenerationPrompt(seed: SeedParameters, brief: string): string;
+export declare function buildGenerationPrompt(seed: SeedParameters, brief: string, variationNumber?: number, outputPath?: string): string;
 export interface GeneratorOptions {
     config: DreamrollConfig;
     agentsDir: string;
