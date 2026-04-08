@@ -1,126 +1,152 @@
 # Linkraft
 
-Open-source toolkit that connects Claude Code to any service via MCP servers.
+Autonomous QA and project analysis for Claude Code.
 
-- **10 Pre-built Packs**: Telegram, Discord, Twitter/X, LinkedIn, Instagram, Gmail, Notion, Slack, Google Calendar, Google Sheets
-- **128 Tools** across all packs, fully tested
-- **Generator CLI**: point at any OpenAPI/Swagger spec and get a working MCP server
-
-## Quick Start
-
-### Use a pre-built pack
-
-```bash
-# Clone the repo
-git clone https://github.com/akellaluvlace/Linkraft.git
-cd Linkraft
-
-# Install dependencies
-npm install
-
-# Build everything
-npm run build
-
-# Set up a pack (example: Telegram)
-export TELEGRAM_BOT_TOKEN="your-token-from-botfather"
-
-# Add to Claude Code MCP settings
+```
+/linkraft plan        before you build (research, CLAUDE.md, architecture)
+/linkraft preflight   before you ship (security, health, readiness in 60 sec)
+/linkraft sheep       after you build (autonomous QA, overnight bug hunting)
 ```
 
-Add this to your `.mcp.json`:
-```json
-{
-  "mcpServers": {
-    "linkraft-telegram": {
-      "command": "node",
-      "args": ["path/to/Linkraft/packs/telegram/dist/server.js"],
-      "env": {
-        "TELEGRAM_BOT_TOKEN": "your-token"
-      }
-    }
-  }
-}
+## Install
+
+```
+/plugin marketplace add akellaluvlace/Linkraft
+/plugin install linkraft
+/reload-plugins
 ```
 
-### Generate a pack from an API spec
+Requirements: Claude Code, Claude Pro/Max/Team/Enterprise, Node.js 18+
 
-```bash
-# Generate from OpenAPI spec
-npx linkraft generate https://petstore.swagger.io/v2/swagger.json --name petstore
+## /linkraft plan
 
-# Generate from local file
-npx linkraft generate ./my-api.yaml --name my-api --auth api-key
+Scans your project and generates up to 13 planning documents.
 
-# Validate a pack
-npx linkraft validate ./packs/telegram
-
-# Test a pack
-npx linkraft test ./packs/telegram
+```
+/linkraft plan               Full flow (all outputs)
+/linkraft plan claude-md     Generate CLAUDE.md from existing code
+/linkraft plan stack         Tech stack analysis
+/linkraft plan competitors   Competitive analysis (uses web search)
+/linkraft plan architecture  System architecture review
+/linkraft plan risks         Risk matrix
+/linkraft plan deps          Task dependency graph
 ```
 
-## Available Packs
+Outputs written to `.plan/`: stack, features, schema, API map, design tokens, competitors, architecture, executive summary, risk matrix, dependency graph, plus conditional monetization and ASO.
 
-| Pack | Tools | Auth | Description |
-|------|-------|------|-------------|
-| [Telegram](packs/telegram) | 18 | Bot Token | Messages, groups, keyboards, webhooks |
-| [Discord](packs/discord) | 22 | Bot Token | Messages, channels, guilds, members |
-| [Twitter/X](packs/twitter-x) | 17 | OAuth 2.0 PKCE | Tweets, users, likes, bookmarks |
-| [LinkedIn](packs/linkedin) | 9 | OAuth 2.0 | Posts, profiles, organizations |
-| [Instagram](packs/instagram) | 10 | OAuth 2.0 | Media, comments, insights |
-| [Gmail](packs/gmail) | 11 | Google OAuth | Send, read, label, threads |
-| [Notion](packs/notion) | 10 | Bearer Token | Pages, databases, blocks |
-| [Slack](packs/slack) | 14 | OAuth 2.0 | Messages, channels, reactions |
-| [Google Calendar](packs/google-calendar) | 9 | Google OAuth | Events, calendars, quick add |
-| [Google Sheets](packs/google-sheets) | 8 | Google OAuth | Read, write, append, manage |
+CLAUDE.md is the key output: tech stack, commands, directory structure, coding standards, hard constraints, architecture notes, environment variables, areas to avoid.
 
-Each pack has its own README, SETUP.md, and SKILL.md. See the individual pack directories for details.
+## /linkraft preflight
+
+60-second read-only codebase health check. Three scores.
+
+```
+/linkraft preflight           Full scan
+/linkraft preflight security  Security only (0-10)
+/linkraft preflight health    Health only (0-100)
+/linkraft preflight ready     Ship readiness only (0-100%)
+```
+
+Security: hardcoded secrets, missing auth, rate limiting, fail-open patterns, XSS, injection vectors, env leaks, RLS.
+Health: console.logs, TypeScript any, test coverage, file complexity, TODOs, empty catches.
+Readiness: error handling, loading states, 404, auth, deploy config, env docs, favicon, OG tags, robots.txt.
+
+## /linkraft sheep
+
+Autonomous QA agent. Zero config. Reads your codebase, generates its own test plan, fixes what's safe, reverts if build breaks, logs what needs human review.
+
+```
+/linkraft sheep               Full autonomous run
+/linkraft sheep plan          Generate QA plan only (review before running)
+/linkraft sheep status        Check progress mid-run
+/linkraft sheep report        Generate session report
+```
+
+The cast:
+- **SheepCalledShip**: the agent. Finds bugs. Documents the journey.
+- **deezeebalz99**: code reviewer. Reddit mod energy. Suggests rewriting in Rust.
+- **Martha**: beta tester. Sweet elderly lady. Tests with one finger. Finds real UX problems.
+
+Proven: 122 bugs found across 4 runs, 94 auto-fixed, 0 tests broken.
+
+## The Chain
+
+```
+/linkraft plan        understand the project
+        |
+/linkraft preflight   see what's wrong (60 sec)
+        |
+/linkraft sheep       fix what's wrong (autonomous)
+```
+
+Each mode feeds the next. Plan generates the CLAUDE.md that sheep reads. Preflight's report tells sheep which areas to prioritize.
+
+## Zero-Friction Doctrine
+
+Every feature works with zero config on first run. No API keys. No MCPs required. If something is unavailable, Linkraft degrades gracefully with a clear message and a useful fallback.
+
+## MCP Tools
+
+26 tools across three modes: 15 plan tools, 4 preflight tools, 7 sheep tools.
+
+## Numbers
+
+- 379 tests across 29 test files
+- 3 modes (plan, preflight, sheep)
+- 13 plan outputs (10 always + 3 conditional)
+- 3 preflight scores (security, health, readiness)
+- 3 agent personalities
 
 ## Project Structure
 
 ```
-Linkraft/
-  core/           # Shared modules (auth, HTTP, rate limiting, config)
-  generator/      # CLI tool to generate MCP servers from API specs
-  packs/          # Pre-built integration packs
-    telegram/
-    discord/
-    twitter-x/
-    linkedin/
-    instagram/
-    gmail/
-    notion/
-    slack/
-    google-calendar/
-    google-sheets/
-  marketplace.json  # Pack registry
+poking/
+  .claude-plugin/
+    plugin.json
+  skills/
+    plan/SKILL.md
+    preflight/SKILL.md
+    sheep/SKILL.md
+  commands/
+    linkraft.md
+    plan.md
+    preflight.md
+    sheep.md
+  src/
+    plan/              # 12 generators + scaffolder + memory config
+    preflight/         # Security, health, readiness scanners + runner
+    sheep/             # Auto-config, hunter, personas, stats, content gen
+    shared/            # Scanner utilities, types, format
+    mcp/
+      server.ts        # MCP server (plan + preflight + sheep tools)
+      tools/
+        plan-tools.ts
+        preflight-tools.ts
+        sheep-tools.ts
+  tests/               # 379 tests across 29 files
+  README.md
+  LICENSE
 ```
 
 ## Development
 
 ```bash
+# Clone
+git clone https://github.com/akellaluvlace/Linkraft.git
+cd Linkraft/poking
+
 # Install
 npm install
 
-# Build all
-npm run build
+# Build
+npx tsc
 
-# Test all (284 tests)
-npm test
+# Test
+npx vitest run
 
-# Lint
-npm run lint
-
-# Format
-npm run format
+# Build MCP server
+npx tsc && node dist/mcp/server.js
 ```
-
-## Tech Stack
-
-- TypeScript (strict mode), Node.js >= 18
-- `@modelcontextprotocol/sdk` for MCP servers
-- OAuth 2.0 (PKCE) for auth flows
-- stdio transport (local) + Streamable HTTP (remote)
-- Vitest for testing
 
 ## License
 
@@ -128,4 +154,4 @@ MIT
 
 ## Author
 
-[Akella inMotion](https://www.akellainmotion.com/legacy) (Nikita), Dublin
+**Akella inMotion** (Nikita), Dublin

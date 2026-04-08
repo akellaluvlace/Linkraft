@@ -1,85 +1,82 @@
 # Contributing to Linkraft
 
-Contributions welcome! Here's how to add a new pack or improve an existing one.
+Contributions welcome. Here's how Linkraft works and how to add to it.
 
-## Adding a New Pack
+## Architecture
 
-1. **Create the directory structure**
+Linkraft is a Claude Code plugin with three modes. Each mode has:
+- A skill file (`skills/{mode}/SKILL.md`) that teaches Claude how to use it
+- A command file (`commands/{mode}.md`) that defines the slash command
+- MCP tools (`src/mcp/tools/{mode}-tools.ts`) that expose functionality
+- Source code (`src/{mode}/`) with the actual logic
+- Tests (`tests/{mode}/`) covering all generators and scanners
 
-   ```bash
-   mkdir -p packs/my-service/{src/{tools,auth},.claude-plugin,skills/my-service,tests}
-   ```
+The MCP server (`src/mcp/server.ts`) registers all tools from all three modes.
 
-2. **Follow the pack template**
+## Adding a Plan Generator
 
-   Every pack needs:
-   - `src/server.ts` - MCP server entry point
-   - `src/tools/*.ts` - Tool definitions (one file per resource group)
-   - `src/auth/*.ts` - Auth handler (extends core auth modules)
-   - `package.json` - Dependencies and scripts
-   - `tsconfig.json` - TypeScript config (extend `../../tsconfig.base.json`)
-   - `config.example.json` - Example configuration
-   - `.mcp.json` - MCP server registration
-   - `.claude-plugin/plugin.json` - Plugin metadata
-   - `skills/my-service/SKILL.md` - Tool documentation for LLM context
-   - `README.md` - User-facing documentation
-   - `SETUP.md` - Step-by-step auth setup guide
-   - `tests/health.test.ts` - Auth validation tests
-   - `tests/tools.test.ts` - Tool handler tests
+Plan mode has 12 generators. To add a new one:
 
-3. **Use existing packs as reference**
+1. Create `src/plan/your-gen.ts` following the pattern in existing generators
+2. Export two functions:
+   - `generateYourContext(projectRoot: string): string` (returns context + template)
+   - `writeYourOutput(projectRoot: string, content: string): string` (writes to .plan/)
+3. Add MCP tools in `src/mcp/tools/plan-tools.ts` (two tools: generate context, write output)
+4. Update `skills/plan/SKILL.md` with the new step in the generation order
+5. Write tests in `tests/plan/your-gen.test.ts`
+6. Run `npx vitest run` and confirm zero regressions
 
-   - Bot token auth: see `packs/telegram/` or `packs/discord/`
-   - OAuth 2.0: see `packs/twitter-x/` or `packs/gmail/`
-   - Bearer token: see `packs/notion/`
+## Adding Preflight Checks
+
+Preflight has three scanners: security, health, readiness. To add checks:
+
+1. Open `src/preflight/{scanner}-scanner.ts`
+2. Add your check function following the existing pattern
+3. Add it to the scanner's main function
+4. Write tests in `tests/preflight/`
+5. Verify the scoring still makes sense (security 0-10, health 0-100, readiness 0-100%)
+
+## Improving Sheep
+
+Sheep's fix/log rules are in `skills/sheep/SKILL.md`. To add new bug detection patterns:
+
+1. Add the pattern to the skill file's "what to look for" section
+2. Classify it as FIX (safe to auto-fix) or LOG (needs human)
+3. If adding code-level scanning: update `src/shared/scanner.ts`
 
 ## Coding Standards
 
 - TypeScript strict mode, no `any` types
-- All tool names: `{resource}_{action}` in snake_case
+- No `console.log` in production code
+- No em dashes in docs or comments. Use colons, commas, or restructure.
+- All MCP tool names: `{mode}_{action}` in snake_case
 - Every Zod schema field must have `.describe()`
-- No `console.log` in production code (use `process.stderr.write`)
-- All API calls go through the shared `HttpClient` from `@linkraft/core`
-- Every pack must have tests
-
-## Writing Style
-
-- No em dashes in docs. Use colons, commas, or restructure.
-- Concise, direct language
-- Code examples over prose
-- Every SETUP.md must have numbered steps
+- All tests must pass before committing
 
 ## Git Workflow
 
 1. Fork the repo
-2. Create a feature branch: `git checkout -b pack/my-service`
-3. Make your changes
-4. Run tests: `npm test`
-5. Run lint: `npm run lint`
-6. Commit with a descriptive message
-7. Push and open a PR
-
-## Commit Messages
-
-Use conventional commits:
-- `feat(pack): add my-service pack`
-- `fix(core): handle rate limit edge case`
-- `test(telegram): add webhook tool tests`
-- `docs: update README with new pack`
+2. Create a feature branch: `git checkout -b feat/your-feature`
+3. Make changes
+4. Run tests: `cd poking && npx vitest run`
+5. Commit with conventional message: `feat(plan): add new generator`
+6. Push and open a PR
 
 ## Running Tests
 
 ```bash
+cd poking
+
 # All tests
-npm test
+npx vitest run
 
 # Watch mode
-npm run test:watch
+npx vitest
 
-# Single pack
-cd packs/telegram && npm test
+# Single file
+npx vitest run tests/plan/your-gen.test.ts
 ```
 
-## Questions?
+## Questions
 
-Open an issue at [github.com/akellaluvlace/Linkraft/issues](https://github.com/akellaluvlace/Linkraft/issues).
+Open an issue at github.com/akellaluvlace/Linkraft/issues
