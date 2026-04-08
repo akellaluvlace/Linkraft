@@ -23,7 +23,7 @@ function registerSheepTools(server) {
         return { content: [{ type: 'text', text: summary }] };
     });
     server.tool('sheep_init', 'Initializes or resumes a Sheep QA session. Creates .sheep/ with QA plan, stats, story, human-review. Resumes automatically if a running session exists.', { projectRoot: zod_1.z.string().describe('Project root directory') }, async ({ projectRoot }) => {
-        const { config, stats, resumed, preflightUsed } = (0, hunter_js_1.initSession)(projectRoot);
+        const { config, stats, resumed, preflightUsed, recoveredFromCorruption } = (0, hunter_js_1.initSession)(projectRoot);
         const status = resumed ? 'RESUMED' : 'INITIALIZED';
         return {
             content: [{
@@ -36,6 +36,7 @@ function registerSheepTools(server) {
                         `Build: ${config.buildCommand ?? 'not detected'}`,
                         `Test: ${config.testCommand ?? 'not detected'}`,
                         resumed ? `Resuming from cycle ${stats.cycleCount}` : '',
+                        recoveredFromCorruption ? 'Previous session state corrupted. Old stats moved to stats.json.corrupted. Starting fresh.' : '',
                         preflightUsed ? 'Preflight report found: using findings to prioritize QA plan.' : '',
                         '',
                         'Files:',

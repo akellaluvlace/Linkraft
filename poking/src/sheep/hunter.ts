@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { SheepConfig, SheepStats, CycleResult, BugReport } from './types.js';
 import { autoConfig, generateQAPlan, identifyHighRiskAreas } from './auto-config.js';
-import { createStats, loadStats, saveStats, completeSession } from './stats.js';
+import { createStats, loadStats, loadStatsOrRecover, saveStats, completeSession } from './stats.js';
 import { generateDeezeebalzRoast, generateMarthaMessage, generateSheepMonologue } from './personas.js';
 import { initStory, appendCycle, appendSummary } from './story-writer.js';
 import { generateContentPack, formatContentPack } from './content-gen.js';
@@ -26,18 +26,22 @@ export function initSession(projectRoot: string): {
   stats: SheepStats;
   resumed: boolean;
   preflightUsed: boolean;
+  recoveredFromCorruption: boolean;
 } {
-  // Check for resumable session
-  const existing = loadStats(projectRoot);
+  // Check for resumable session, gracefully recovering from crash-during-write
+  const { stats: existing, corrupted } = loadStatsOrRecover(projectRoot);
   if (existing && existing.status === 'running') {
     const config = autoConfig(projectRoot);
     const qaPlan = generateQAPlan(config);
-    return { config, qaPlan, stats: existing, resumed: true, preflightUsed: false };
+    return { config, qaPlan, stats: existing, resumed: true, preflightUsed: false, recoveredFromCorruption: false };
   }
 
   const config = autoConfig(projectRoot);
   const hasPreflightReport = fs.existsSync(path.join(projectRoot, '.preflight', 'report.json'));
-  const qaPlan = generateQAPlan(config);
+  let qaPlan = generateQAPlan(config);
+  if (corrupted) {
+    qaPlan = `> NOTE: Previous session state corrupted, starting fresh. Old stats saved as stats.json.corrupted.\n\n${qaPlan}`;
+  }
   const projectName = path.basename(projectRoot);
 
   const sheepDir = path.join(projectRoot, SHEEP_DIR);
@@ -55,7 +59,7 @@ export function initSession(projectRoot: string): {
     'utf-8',
   );
 
-  return { config, qaPlan, stats, resumed: false, preflightUsed: hasPreflightReport };
+  return { config, qaPlan, stats, resumed: false, preflightUsed: hasPreflightReport, recoveredFromCorruption: corrupted };
 }
 
 /**

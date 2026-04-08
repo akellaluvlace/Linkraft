@@ -36,6 +36,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createStats = createStats;
 exports.loadStats = loadStats;
+exports.loadStatsOrRecover = loadStatsOrRecover;
 exports.saveStats = saveStats;
 exports.completeSession = completeSession;
 exports.canResume = canResume;
@@ -77,6 +78,8 @@ function createStats(projectName) {
 }
 /**
  * Loads stats from disk. Returns null if not found.
+ * Mid-session callers should use this — corruption is left in place
+ * so the issue surfaces instead of being silently overwritten.
  */
 function loadStats(projectRoot) {
     const filePath = getStatsPath(projectRoot);
@@ -88,6 +91,42 @@ function loadStats(projectRoot) {
     }
     catch {
         return null;
+    }
+}
+/**
+ * Loads stats with corruption recovery. Used at session init only.
+ *
+ * If stats.json exists but is corrupted (invalid JSON, truncated write,
+ * etc.), renames it to stats.json.corrupted and returns corrupted=true.
+ * This lets the overnight restart loop survive crash-during-write without
+ * permanently breaking: the next init starts a fresh session and preserves
+ * the corrupted file as a trace for debugging.
+ */
+function loadStatsOrRecover(projectRoot) {
+    const filePath = getStatsPath(projectRoot);
+    if (!fs.existsSync(filePath))
+        return { stats: null, corrupted: false };
+    try {
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        return { stats: JSON.parse(raw), corrupted: false };
+    }
+    catch {
+        // Rename the corrupted file so a trace remains and the next run starts clean
+        const corruptedPath = filePath + '.corrupted';
+        try {
+            // If a previous corrupted file exists, overwrite it
+            if (fs.existsSync(corruptedPath))
+                fs.unlinkSync(corruptedPath);
+            fs.renameSync(filePath, corruptedPath);
+        }
+        catch {
+            // Best effort: if rename fails, delete the bad file so next init is clean
+            try {
+                fs.unlinkSync(filePath);
+            }
+            catch { }
+        }
+        return { stats: null, corrupted: true };
     }
 }
 /**

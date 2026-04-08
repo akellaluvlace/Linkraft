@@ -38,6 +38,73 @@ describe('initSession', () => {
     expect(session2.resumed).toBe(true);
   });
 
+  it('recovers from corrupted stats.json by starting fresh', () => {
+    // Simulate a crash-during-write: stats.json contains truncated JSON
+    const sheepDir = path.join(tmpDir, '.sheep');
+    fs.mkdirSync(sheepDir, { recursive: true });
+    fs.writeFileSync(path.join(sheepDir, 'stats.json'), '{"project":"test","cycleCount":5,"stat', 'utf-8');
+
+    const session = initSession(tmpDir);
+
+    // Should start fresh, not throw
+    expect(session.recoveredFromCorruption).toBe(true);
+    expect(session.resumed).toBe(false);
+    expect(session.stats.cycleCount).toBe(0);
+
+    // Corrupted file should be moved aside
+    expect(fs.existsSync(path.join(sheepDir, 'stats.json.corrupted'))).toBe(true);
+    // New stats.json should be valid
+    expect(fs.existsSync(path.join(sheepDir, 'stats.json'))).toBe(true);
+    const fresh = JSON.parse(fs.readFileSync(path.join(sheepDir, 'stats.json'), 'utf-8'));
+    expect(fresh.cycleCount).toBe(0);
+
+    // QA plan should include the recovery notice
+    const qaPlan = fs.readFileSync(path.join(sheepDir, 'QA_PLAN.md'), 'utf-8');
+    expect(qaPlan).toContain('corrupted');
+  });
+
+  it('overnight loop survives mid-session corruption', () => {
+    // Simulate: session runs, crashes mid-write, restart loop kicks in
+    initSession(tmpDir);
+    recordCycleResult(tmpDir, {
+      area: 'Test',
+      target: 'X',
+      filesScanned: [],
+      bugsFound: [],
+      bugsFixed: [],
+      bugsLogged: [],
+      buildPassed: true,
+      testsPassed: true,
+      testCount: 0,
+      commitHash: null,
+    });
+
+    // Corrupt stats.json (simulates crash during saveStats)
+    const statsPath = path.join(tmpDir, '.sheep', 'stats.json');
+    fs.writeFileSync(statsPath, '{"project":"test","cycleCount":1', 'utf-8');
+
+    // Restart loop fires initSession again
+    const recovered = initSession(tmpDir);
+    expect(recovered.recoveredFromCorruption).toBe(true);
+    expect(recovered.stats.cycleCount).toBe(0);
+
+    // New cycle should work without errors
+    expect(() => {
+      recordCycleResult(tmpDir, {
+        area: 'Test',
+        target: 'Y',
+        filesScanned: [],
+        bugsFound: [],
+        bugsFixed: [],
+        bugsLogged: [],
+        buildPassed: true,
+        testsPassed: true,
+        testCount: 0,
+        commitHash: null,
+      });
+    }).not.toThrow();
+  });
+
   it('resumes from cycle 3 after 2 recorded cycles', () => {
     // Start session
     initSession(tmpDir);

@@ -9,6 +9,7 @@ export declare function initSession(projectRoot: string): {
     stats: SheepStats;
     resumed: boolean;
     preflightUsed: boolean;
+    recoveredFromCorruption: boolean;
 };
 /**
  * Gets the next area to test based on current cycle count.

@@ -32,7 +32,7 @@ export function registerSheepTools(server: McpServer): void {
     'Initializes or resumes a Sheep QA session. Creates .sheep/ with QA plan, stats, story, human-review. Resumes automatically if a running session exists.',
     { projectRoot: z.string().describe('Project root directory') },
     async ({ projectRoot }) => {
-      const { config, stats, resumed, preflightUsed } = initSession(projectRoot);
+      const { config, stats, resumed, preflightUsed, recoveredFromCorruption } = initSession(projectRoot);
       const status = resumed ? 'RESUMED' : 'INITIALIZED';
       return {
         content: [{
@@ -45,6 +45,7 @@ export function registerSheepTools(server: McpServer): void {
             `Build: ${config.buildCommand ?? 'not detected'}`,
             `Test: ${config.testCommand ?? 'not detected'}`,
             resumed ? `Resuming from cycle ${stats.cycleCount}` : '',
+            recoveredFromCorruption ? 'Previous session state corrupted. Old stats moved to stats.json.corrupted. Starting fresh.' : '',
             preflightUsed ? 'Preflight report found: using findings to prioritize QA plan.' : '',
             '',
             'Files:',
