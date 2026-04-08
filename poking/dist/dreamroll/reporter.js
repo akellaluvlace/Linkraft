@@ -73,7 +73,11 @@ function formatReport(report) {
         for (let i = 0; i < report.topGems.length; i++) {
             const gem = report.topGems[i];
             lines.push(`#${i + 1} - v${String(gem.variationId).padStart(3, '0')}  Score: ${gem.averageScore}/10`);
-            lines.push(`     Layout: ${gem.seed.layoutArchetype} | Genre: ${gem.seed.genre} | Mood: ${gem.seed.mood}`);
+            lines.push(`     Style: ${gem.seed.genre} | Palette: ${gem.seed.colorPalette} | Typography: ${gem.seed.typography}`);
+            lines.push(`     Layout: ${gem.seed.layoutArchetype} | Density: ${gem.seed.density} | Mood: ${gem.seed.mood}`);
+            if (gem.seed.era)
+                lines.push(`     Era: ${gem.seed.era} | Animation: ${gem.seed.animation ?? 'none'} | Imagery: ${gem.seed.imagery ?? 'none'}`);
+            lines.push(`     Wildcard: ${gem.seed.wildcard}`);
             for (const s of gem.scores) {
                 lines.push(`     ${s.judge.toUpperCase()}: ${s.score} ("${s.comment}")`);
             }

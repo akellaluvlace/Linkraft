@@ -3,10 +3,10 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { registerSheepTools } from './tools/sheep-tools.js';
 import { registerPlanTools } from './tools/plan-tools.js';
 import { registerPreflightTools } from './tools/preflight-tools.js';
+import { registerDreamrollTools } from './tools/dreamroll-tools.js';
 
-// v1.0 launch: plan, preflight, sheep only.
-// Poke, forge, vault, dreamroll, launchpad tools are deferred.
-// Source code stays in src/. Re-register when ready to ship.
+// v1.0 launch: plan, preflight, sheep, dreamroll.
+// Poke, forge, vault, launchpad tools remain deferred.
 
 async function main(): Promise<void> {
   const server = new McpServer({
@@ -17,6 +17,7 @@ async function main(): Promise<void> {
   registerPlanTools(server);
   registerPreflightTools(server);
   registerSheepTools(server);
+  registerDreamrollTools(server);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

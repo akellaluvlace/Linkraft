@@ -1,0 +1,157 @@
+import { describe, it, expect } from 'vitest';
+import {
+  STYLE_POOL, PALETTE_POOL, TYPOGRAPHY_POOL, LAYOUT_POOL, DENSITY_POOL,
+  MOOD_POOL, ERA_POOL, ANIMATION_POOL, IMAGERY_POOL, WILDCARD_POOL,
+  rollParams, weightedPick, getAllPools,
+} from '../../src/dreamroll/params.js';
+
+describe('parameter pools', () => {
+  it('all 10 pools have at least 5 values', () => {
+    const pools = getAllPools();
+    expect(Object.keys(pools)).toHaveLength(10);
+    for (const [name, pool] of Object.entries(pools)) {
+      expect(pool.length, `pool ${name} should have >= 5 values`).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it('no pool contains empty or falsy values', () => {
+    const pools = getAllPools();
+    for (const [name, pool] of Object.entries(pools)) {
+      for (const value of pool) {
+        expect(value, `pool ${name} should not have empty values`).toBeTruthy();
+        expect(typeof value).toBe('string');
+      }
+    }
+  });
+
+  it('exposes all individual pools as exports', () => {
+    expect(STYLE_POOL.length).toBeGreaterThan(0);
+    expect(PALETTE_POOL.length).toBeGreaterThan(0);
+    expect(TYPOGRAPHY_POOL.length).toBeGreaterThan(0);
+    expect(LAYOUT_POOL.length).toBeGreaterThan(0);
+    expect(DENSITY_POOL.length).toBeGreaterThan(0);
+    expect(MOOD_POOL.length).toBeGreaterThan(0);
+    expect(ERA_POOL.length).toBeGreaterThan(0);
+    expect(ANIMATION_POOL.length).toBeGreaterThan(0);
+    expect(IMAGERY_POOL.length).toBeGreaterThan(0);
+    expect(WILDCARD_POOL.length).toBeGreaterThan(0);
+  });
+
+  it('density has the 5 spec values', () => {
+    expect(DENSITY_POOL).toEqual(['ultra-minimal', 'sparse', 'balanced', 'information-rich', 'dense']);
+  });
+
+  it('style includes spec signature values', () => {
+    expect(STYLE_POOL).toContain('glassmorphism');
+    expect(STYLE_POOL).toContain('neo-brutalism');
+    expect(STYLE_POOL).toContain('minimalist-swiss');
+  });
+});
+
+describe('rollParams', () => {
+  it('produces a complete SeedParameters with all fields', () => {
+    const seed = rollParams();
+    expect(seed.genre).toBeTruthy();
+    expect(seed.colorPalette).toBeTruthy();
+    expect(seed.typography).toBeTruthy();
+    expect(seed.layoutArchetype).toBeTruthy();
+    expect(seed.density).toBeTruthy();
+    expect(seed.mood).toBeTruthy();
+    expect(seed.era).toBeTruthy();
+    expect(seed.animation).toBeTruthy();
+    expect(seed.imagery).toBeTruthy();
+    expect(seed.wildcard).toBeTruthy();
+    expect(seed.temperature).toBeGreaterThanOrEqual(0.7);
+    expect(seed.temperature).toBeLessThanOrEqual(1.3);
+  });
+
+  it('every rolled value is from its pool', () => {
+    for (let i = 0; i < 50; i++) {
+      const seed = rollParams();
+      expect(STYLE_POOL).toContain(seed.genre);
+      expect(PALETTE_POOL).toContain(seed.colorPalette);
+      expect(TYPOGRAPHY_POOL).toContain(seed.typography);
+      expect(LAYOUT_POOL).toContain(seed.layoutArchetype);
+      expect(DENSITY_POOL).toContain(seed.density);
+      expect(MOOD_POOL).toContain(seed.mood);
+      expect(ERA_POOL).toContain(seed.era);
+      expect(ANIMATION_POOL).toContain(seed.animation);
+      expect(IMAGERY_POOL).toContain(seed.imagery);
+      expect(WILDCARD_POOL).toContain(seed.wildcard);
+    }
+  });
+
+  it('never picks empty or undefined', () => {
+    for (let i = 0; i < 50; i++) {
+      const seed = rollParams();
+      for (const value of Object.values(seed)) {
+        expect(value).not.toBeUndefined();
+        expect(value).not.toBeNull();
+        expect(value).not.toBe('');
+      }
+    }
+  });
+
+  it('produces varied output over many rolls', () => {
+    const genres = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      genres.add(rollParams().genre);
+    }
+    // With 14 values and 100 rolls, we should hit most of them
+    expect(genres.size).toBeGreaterThan(5);
+  });
+});
+
+describe('weightedPick', () => {
+  it('picks from pool when no weights provided', () => {
+    const result = weightedPick(STYLE_POOL);
+    expect(STYLE_POOL).toContain(result);
+  });
+
+  it('respects weights but still allows all options', () => {
+    const counts: Record<string, number> = {};
+    // With weight 20 for glassmorphism and weight 1 for other 13 styles,
+    // glassmorphism probability = 20/(20+13) = 60.6%
+    const weights = { glassmorphism: 20 };
+    for (let i = 0; i < 1000; i++) {
+      const v = weightedPick(STYLE_POOL, weights);
+      counts[v] = (counts[v] ?? 0) + 1;
+    }
+    // Weighted value should dominate (expect ~600, allow wide margin)
+    expect(counts['glassmorphism']).toBeGreaterThan(450);
+    // But others should still be picked (expect ~400)
+    const otherCount = Object.entries(counts)
+      .filter(([k]) => k !== 'glassmorphism')
+      .reduce((s, [, c]) => s + c, 0);
+    expect(otherCount).toBeGreaterThan(100);
+  });
+
+  it('returns from pool with empty weights object', () => {
+    const result = weightedPick(STYLE_POOL, {});
+    expect(STYLE_POOL).toContain(result);
+  });
+});
+
+describe('rollParams with weights', () => {
+  it('favors weighted values', () => {
+    const weights = { style: { 'glassmorphism': 20 } };
+    const counts: Record<string, number> = {};
+    for (let i = 0; i < 200; i++) {
+      const seed = rollParams(weights);
+      counts[seed.genre] = (counts[seed.genre] ?? 0) + 1;
+    }
+    expect(counts['glassmorphism']).toBeGreaterThan(100);
+  });
+
+  it('chaos mode ignores weights', () => {
+    const weights = { style: { 'glassmorphism': 1000 } };
+    const counts: Record<string, number> = {};
+    for (let i = 0; i < 200; i++) {
+      const seed = rollParams(weights, true); // chaos = true
+      counts[seed.genre] = (counts[seed.genre] ?? 0) + 1;
+    }
+    // In chaos mode, glassmorphism should be picked proportionally (1/14)
+    // Much less than it would be with huge weight
+    expect(counts['glassmorphism']).toBeLessThan(100);
+  });
+});

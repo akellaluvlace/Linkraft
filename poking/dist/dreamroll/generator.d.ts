@@ -2,12 +2,15 @@ import type { DreamrollConfig, DreamrollState, SeedParameters, Variation } from 
 import { type JudgeCaller } from './judges.js';
 /**
  * Generates random seed parameters for a variation.
+ * If state has accumulated param weights, uses weighted selection.
+ * Chaos rounds (20%) always use fully random.
  */
-export declare function rollSeedParameters(): SeedParameters;
+export declare function rollSeedParameters(state?: DreamrollState): SeedParameters;
 /**
  * Builds the generation prompt for Claude from seed parameters.
+ * Covers all 10 parameter dimensions plus the product brief.
  */
-export declare function buildGenerationPrompt(seed: SeedParameters, basePageContent: string): string;
+export declare function buildGenerationPrompt(seed: SeedParameters, brief: string): string;
 export interface GeneratorOptions {
     config: DreamrollConfig;
     agentsDir: string;
@@ -16,8 +19,12 @@ export interface GeneratorOptions {
     shouldStop?: () => boolean;
 }
 /**
- * Runs the Dreamroll generation loop.
+ * Runs the Dreamroll generation loop (headless mode with optional judge caller).
  * Resumable: checks for existing state and continues from last variation.
+ *
+ * Never-stop mode: if config.targetVariations is null, runs until stop flag,
+ * external stop callback, or time budget. Designed to run under a restart
+ * loop that relaunches after context fills.
  */
 export declare function runDreamroll(options: GeneratorOptions): Promise<DreamrollState>;
 /**

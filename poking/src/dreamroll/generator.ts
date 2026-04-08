@@ -2,64 +2,52 @@
 // Orchestrates seed rolling, variation creation, judging, and evolution.
 
 import type { DreamrollConfig, DreamrollState, SeedParameters, Variation } from './types.js';
-import { getRandomWildcard } from './wildcards.js';
+import { rollParams, type ParamWeights } from './params.js';
 import { judgeVariation, type JudgeCaller } from './judges.js';
 import { createState, loadState, addVariation, saveState, completeRun, stopRun } from './state.js';
-import { maybeEvolve } from './evolution.js';
+import { maybeEvolve, shouldInjectChaos } from './evolution.js';
 import { generateReport, formatReport } from './reporter.js';
-
-const LAYOUT_ARCHETYPES = ['split', 'centered', 'asymmetric', 'editorial', 'cards', 'zigzag', 'single-column', 'sidebar'];
-const GENRES = ['brutalism', 'glass', 'retro', 'organic', 'swiss', 'maximalist', 'minimal', 'editorial', 'futuristic'];
-const MOODS = ['playful', 'serious', 'luxury', 'friendly', 'technical', 'rebellious', 'calm', 'urgent'];
-const DENSITIES: Array<'airy' | 'balanced' | 'dense'> = ['airy', 'balanced', 'dense'];
-const COLOR_PALETTES = ['warm-earth', 'cool-ocean', 'neon-night', 'monochrome', 'pastel-dream', 'high-contrast', 'muted-vintage', 'jewel-tones'];
-const TYPOGRAPHY_PAIRINGS = ['serif-sans', 'mono-sans', 'display-body', 'geometric-humanist', 'slab-grotesque', 'handwritten-clean'];
-
-function randomFrom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)]!;
-}
 
 /**
  * Generates random seed parameters for a variation.
+ * If state has accumulated param weights, uses weighted selection.
+ * Chaos rounds (20%) always use fully random.
  */
-export function rollSeedParameters(): SeedParameters {
-  const wildcard = getRandomWildcard();
-  return {
-    colorPalette: randomFrom(COLOR_PALETTES),
-    typography: randomFrom(TYPOGRAPHY_PAIRINGS),
-    layoutArchetype: randomFrom(LAYOUT_ARCHETYPES),
-    genre: randomFrom(GENRES),
-    density: randomFrom(DENSITIES),
-    mood: randomFrom(MOODS),
-    temperature: Math.round((0.7 + Math.random() * 0.6) * 100) / 100,
-    wildcard: wildcard.prompt,
-  };
+export function rollSeedParameters(state?: DreamrollState): SeedParameters {
+  const chaos = shouldInjectChaos(state?.currentVariation ?? 0);
+  const weights = state?.paramWeights as ParamWeights | undefined;
+  return rollParams(weights, chaos);
 }
 
 /**
  * Builds the generation prompt for Claude from seed parameters.
+ * Covers all 10 parameter dimensions plus the product brief.
  */
-export function buildGenerationPrompt(seed: SeedParameters, basePageContent: string): string {
+export function buildGenerationPrompt(seed: SeedParameters, brief: string): string {
   return [
-    `Create a visually distinct variation of this landing page.`,
-    ``,
-    `Design Parameters:`,
-    `- Color palette: ${seed.colorPalette}`,
+    'Generate a standalone HTML landing page variation with inline CSS only.',
+    '',
+    `Product brief: ${brief}`,
+    '',
+    'Design Parameters (roll all 10):',
+    `- Style: ${seed.genre}`,
+    `- Palette: ${seed.colorPalette}`,
     `- Typography: ${seed.typography}`,
     `- Layout: ${seed.layoutArchetype}`,
-    `- Genre: ${seed.genre}`,
     `- Density: ${seed.density}`,
     `- Mood: ${seed.mood}`,
-    ``,
-    `Creative Wildcard: ${seed.wildcard}`,
-    ``,
-    `Keep the same content and functionality. Change everything visual:`,
-    `colors, typography, spacing, layout, component styles, shadows, borders.`,
-    ``,
-    `Base page:`,
-    '```',
-    basePageContent,
-    '```',
+    `- Era: ${seed.era}`,
+    `- Animation: ${seed.animation}`,
+    `- Imagery: ${seed.imagery}`,
+    `- Wildcard constraint: ${seed.wildcard}`,
+    '',
+    'Output requirements:',
+    '- Single standalone HTML file, no external dependencies',
+    '- All CSS inline in <style> tag',
+    '- Valid HTML5, opens in any browser',
+    '- HTML comment at the top documenting all 10 parameters',
+    '- Real content for the product (not lorem ipsum)',
+    '- Clear CTA above the fold',
   ].join('\n');
 }
 
@@ -72,8 +60,12 @@ export interface GeneratorOptions {
 }
 
 /**
- * Runs the Dreamroll generation loop.
+ * Runs the Dreamroll generation loop (headless mode with optional judge caller).
  * Resumable: checks for existing state and continues from last variation.
+ *
+ * Never-stop mode: if config.targetVariations is null, runs until stop flag,
+ * external stop callback, or time budget. Designed to run under a restart
+ * loop that relaunches after context fills.
  */
 export async function runDreamroll(options: GeneratorOptions): Promise<DreamrollState> {
   const { config, agentsDir, judgeCaller, onVariation, shouldStop } = options;
@@ -87,28 +79,29 @@ export async function runDreamroll(options: GeneratorOptions): Promise<Dreamroll
 
   const startTime = Date.now() - state.elapsedMs;
   const budgetMs = config.budgetHours * 3_600_000;
+  const targetCap = config.targetVariations; // null => never-stop
 
-  for (let i = state.currentVariation + 1; i <= config.targetVariations; i++) {
-    // Check time budget
+  let i = state.currentVariation + 1;
+  while (true) {
+    // Stop conditions
+    if (targetCap !== null && i > targetCap) break;
     const elapsed = Date.now() - startTime;
     if (elapsed >= budgetMs) {
       state.elapsedMs = elapsed;
       completeRun(config.projectRoot, state);
       break;
     }
-
-    // Check external stop signal
-    if (shouldStop?.()) {
+    if (shouldStop?.() || state.stopRequested) {
       state.elapsedMs = Date.now() - startTime;
       stopRun(config.projectRoot, state);
       break;
     }
 
-    // Roll seed parameters (chaos or evolved)
-    const seed = rollSeedParameters();
+    // Roll seed parameters (chaos or evolved based on state)
+    const seed = rollSeedParameters(state);
 
     // Judge the variation
-    const description = buildGenerationPrompt(seed, `[Variation ${i} with ${seed.genre} style]`);
+    const description = buildGenerationPrompt(seed, config.brief ?? `Variation ${i}`);
     const verdict = await judgeVariation(description, agentsDir, judgeCaller);
 
     const variation: Variation = {
@@ -131,11 +124,13 @@ export async function runDreamroll(options: GeneratorOptions): Promise<Dreamroll
       state.evolutionAdjustments.push(...adjustments);
       saveState(config.projectRoot, state);
     }
+
+    i++;
   }
 
   // Final state
   state.elapsedMs = Date.now() - startTime;
-  if (state.currentVariation >= config.targetVariations) {
+  if (targetCap !== null && state.currentVariation >= targetCap) {
     completeRun(config.projectRoot, state);
   }
 

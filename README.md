@@ -1,11 +1,12 @@
 # Linkraft
 
-Autonomous QA and project analysis for Claude Code.
+Autonomous QA, project analysis, and overnight design generation for Claude Code.
 
 ```
 /linkraft plan        before you build (research, CLAUDE.md, architecture)
 /linkraft preflight   before you ship (security, health, readiness in 60 sec)
 /linkraft sheep       after you build (autonomous QA, overnight bug hunting)
+/linkraft dreamroll   design overnight (HTML variations, judged by 3 personas)
 ```
 
 ## Install
@@ -69,6 +70,28 @@ The cast:
 
 Proven: 122 bugs found across 4 runs, 94 auto-fixed, 0 tests broken.
 
+## /linkraft dreamroll
+
+Overnight autonomous design generator. Rolls 10 random parameters per variation (style, palette, typography, layout, density, mood, era, animation, imagery, wildcard), generates standalone HTML landing pages, scores each with three judges, evolves toward gems. Never stops until you say so.
+
+```
+/linkraft dreamroll               Start or resume (runs until stopped)
+/linkraft dreamroll --brief "..."  Start with an explicit product brief
+/linkraft dreamroll status        Show progress
+/linkraft dreamroll stop          Graceful stop at next variation
+/linkraft dreamroll gems          List all gems
+/linkraft dreamroll report        Morning report with top 5 gems
+```
+
+The judges:
+- **BRUTUS** (clarity, 1-10): ruthless minimalist. Can you understand it in 3 seconds?
+- **VENUS** (aesthetics, 1-10): obsessive aesthete. Is every pixel considered?
+- **MERCURY** (conversion, 1-10): conversion machine. Would this page make money?
+
+Gem threshold: avg >= 7 or any single 10. Every 5 variations, evolution detects patterns in gems and biases future rolls toward winning parameter combinations. Mandatory chaos keeps the generator from getting stuck.
+
+Zero external dependencies. No Playwright. No screenshots. No API keys. Just HTML files on disk you open in a browser.
+
 ## The Chain
 
 ```
@@ -77,9 +100,11 @@ Proven: 122 bugs found across 4 runs, 94 auto-fixed, 0 tests broken.
 /linkraft preflight   see what's wrong (60 sec)
         |
 /linkraft sheep       fix what's wrong (autonomous)
+        |
+/linkraft dreamroll   explore design variations overnight
 ```
 
-Each mode feeds the next. Plan generates the CLAUDE.md that sheep reads. Preflight's report tells sheep which areas to prioritize.
+Each mode feeds the next. Plan generates the CLAUDE.md that sheep reads. Preflight's report tells sheep which areas to prioritize. Dreamroll runs independently after you have something to design.
 
 ## Zero-Friction Doctrine
 
@@ -87,15 +112,16 @@ Every feature works with zero config on first run. No API keys. No MCPs required
 
 ## MCP Tools
 
-26 tools across three modes: 15 plan tools, 4 preflight tools, 7 sheep tools.
+34 tools across four modes: 15 plan tools, 4 preflight tools, 7 sheep tools, 8 dreamroll tools.
 
 ## Numbers
 
-- 379 tests across 29 test files
-- 3 modes (plan, preflight, sheep)
+- 395 tests across 30 test files
+- 4 modes (plan, preflight, sheep, dreamroll)
 - 13 plan outputs (10 always + 3 conditional)
 - 3 preflight scores (security, health, readiness)
-- 3 agent personalities
+- 6 agent personalities (3 sheep, 3 dreamroll judges)
+- 10 dreamroll parameter pools with 100+ total values
 
 ## Project Structure
 
@@ -107,23 +133,27 @@ poking/
     plan/SKILL.md
     preflight/SKILL.md
     sheep/SKILL.md
+    dreamroll/SKILL.md
   commands/
     linkraft.md
     plan.md
     preflight.md
     sheep.md
+    dreamroll.md
   src/
     plan/              # 12 generators + scaffolder + memory config
     preflight/         # Security, health, readiness scanners + runner
     sheep/             # Auto-config, hunter, personas, stats, content gen
+    dreamroll/         # Params, generator, judges, evolution, reporter, state
     shared/            # Scanner utilities, types, format
     mcp/
-      server.ts        # MCP server (plan + preflight + sheep tools)
+      server.ts        # MCP server (all four modes)
       tools/
         plan-tools.ts
         preflight-tools.ts
         sheep-tools.ts
-  tests/               # 379 tests across 29 files
+        dreamroll-tools.ts
+  tests/               # 395 tests across 30 files
   README.md
   LICENSE
 ```

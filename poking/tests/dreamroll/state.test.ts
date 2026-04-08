@@ -28,6 +28,7 @@ const testConfig: DreamrollConfig = {
   targetVariations: 50,
   budgetHours: 8,
   projectRoot: '',
+  brief: 'test brief',
 };
 
 function configWithRoot(): DreamrollConfig {
@@ -83,7 +84,19 @@ describe('addVariation', () => {
 
     const variation: Variation = {
       id: 1,
-      seed: { colorPalette: 'warm', typography: 'serif-sans', layoutArchetype: 'split', genre: 'brutalism', density: 'airy', mood: 'serious', temperature: 0.8, wildcard: 'test' },
+      seed: {
+        colorPalette: 'warm',
+        typography: 'serif-sans',
+        layoutArchetype: 'split',
+        genre: 'brutalism',
+        density: 'balanced',
+        mood: 'serious',
+        era: '2020s-modern',
+        animation: 'none',
+        imagery: 'geometric-shapes',
+        temperature: 0.8,
+        wildcard: 'one-font-only',
+      },
       verdict: { scores: [{ judge: 'brutus', score: 8, comment: 'Good' }], averageScore: 8, verdict: 'gem', hasInstantKeep: false },
       screenshotPath: null,
       filesPath: null,

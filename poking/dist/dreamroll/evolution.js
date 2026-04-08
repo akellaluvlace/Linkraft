@@ -1,104 +1,142 @@
 "use strict";
 // Dreamroll Evolution: analyzes gems and adjusts generation parameters.
-// Runs every N variations to explore promising directions while maintaining chaos.
+// Runs every 5 variations to explore promising directions while maintaining chaos.
+// Mandatory chaos: at least 2 of every 5 variations ignore weights (40% floor).
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.detectPatterns = detectPatterns;
 exports.generateAdjustments = generateAdjustments;
+exports.applyAdjustments = applyAdjustments;
 exports.shouldInjectChaos = shouldInjectChaos;
 exports.maybeEvolve = maybeEvolve;
-const CHAOS_RATIO = 0.2; // 20% of variations must be fully random
+const CHAOS_RATIO = 0.4; // 2 of every 5 variations are mandatory chaos
+const DOMINANCE_THRESHOLD = 0.3;
+const DEFAULT_INTERVAL = 5;
+/**
+ * Counts occurrences of each value for a given seed field in gem variations.
+ */
+function countByField(gems, field) {
+    const counts = {};
+    for (const v of gems) {
+        const val = v.seed[field];
+        if (typeof val !== 'string')
+            continue;
+        counts[val] = (counts[val] ?? 0) + 1;
+    }
+    return counts;
+}
+/**
+ * Parameter fields tracked by evolution. Maps SeedParameters field name
+ * to human-readable label used in pattern messages.
+ */
+const TRACKED_FIELDS = [
+    ['genre', 'Style'],
+    ['colorPalette', 'Palette'],
+    ['typography', 'Typography'],
+    ['layoutArchetype', 'Layout'],
+    ['density', 'Density'],
+    ['mood', 'Mood'],
+    ['era', 'Era'],
+    ['animation', 'Animation'],
+    ['imagery', 'Imagery'],
+    ['wildcard', 'Wildcard'],
+];
 /**
  * Analyzes gems to find patterns in high-scoring variations.
+ * A pattern is a parameter value that appears in >= 30% of gems.
  */
 function detectPatterns(state) {
     const patterns = [];
     const gemVariations = state.variations.filter(v => state.gems.includes(v.id));
     if (gemVariations.length < 2)
         return patterns;
-    // Count occurrences of each seed parameter value in gems
-    const layoutCounts = {};
-    const genreCounts = {};
-    const moodCounts = {};
-    const densityCounts = {};
-    for (const v of gemVariations) {
-        layoutCounts[v.seed.layoutArchetype] = (layoutCounts[v.seed.layoutArchetype] ?? 0) + 1;
-        genreCounts[v.seed.genre] = (genreCounts[v.seed.genre] ?? 0) + 1;
-        moodCounts[v.seed.mood] = (moodCounts[v.seed.mood] ?? 0) + 1;
-        densityCounts[v.seed.density] = (densityCounts[v.seed.density] ?? 0) + 1;
-    }
-    // Find dominant patterns (>= 30% of gems)
-    const threshold = gemVariations.length * 0.3;
-    for (const [layout, count] of Object.entries(layoutCounts)) {
-        if (count >= threshold) {
-            patterns.push(`Layout "${layout}" appears in ${count}/${gemVariations.length} gems`);
-        }
-    }
-    for (const [genre, count] of Object.entries(genreCounts)) {
-        if (count >= threshold) {
-            patterns.push(`Genre "${genre}" appears in ${count}/${gemVariations.length} gems`);
-        }
-    }
-    for (const [mood, count] of Object.entries(moodCounts)) {
-        if (count >= threshold) {
-            patterns.push(`Mood "${mood}" appears in ${count}/${gemVariations.length} gems`);
-        }
-    }
-    for (const [density, count] of Object.entries(densityCounts)) {
-        if (count >= threshold) {
-            patterns.push(`Density "${density}" appears in ${count}/${gemVariations.length} gems`);
+    const threshold = gemVariations.length * DOMINANCE_THRESHOLD;
+    for (const [field, label] of TRACKED_FIELDS) {
+        const counts = countByField(gemVariations.map(v => ({ seed: v.seed })), field);
+        for (const [value, count] of Object.entries(counts)) {
+            if (count >= threshold) {
+                patterns.push(`${label} "${value}" appears in ${count}/${gemVariations.length} gems`);
+            }
         }
     }
     return patterns;
 }
 /**
  * Generates evolution adjustments based on detected patterns.
+ * Each adjustment records which parameter direction the roller should favor.
  */
 function generateAdjustments(state, patterns) {
     const adjustments = [];
     for (const pattern of patterns) {
-        const layoutMatch = /Layout "([^"]+)" appears/.exec(pattern);
-        if (layoutMatch?.[1]) {
-            adjustments.push({
-                parameter: 'layoutArchetype',
-                direction: `favor "${layoutMatch[1]}"`,
-                reason: pattern,
-                appliedAt: state.currentVariation,
-            });
-        }
-        const genreMatch = /Genre "([^"]+)" appears/.exec(pattern);
-        if (genreMatch?.[1]) {
-            adjustments.push({
-                parameter: 'genre',
-                direction: `favor "${genreMatch[1]}"`,
-                reason: pattern,
-                appliedAt: state.currentVariation,
-            });
-        }
-        const moodMatch = /Mood "([^"]+)" appears/.exec(pattern);
-        if (moodMatch?.[1]) {
-            adjustments.push({
-                parameter: 'mood',
-                direction: `favor "${moodMatch[1]}"`,
-                reason: pattern,
-                appliedAt: state.currentVariation,
-            });
-        }
+        const match = /^(\w+) "([^"]+)" appears/.exec(pattern);
+        if (!match)
+            continue;
+        const label = match[1];
+        const value = match[2];
+        // Map label back to field name
+        const field = TRACKED_FIELDS.find(([_, l]) => l === label)?.[0];
+        if (!field)
+            continue;
+        adjustments.push({
+            parameter: field,
+            direction: `favor "${value}"`,
+            reason: pattern,
+            appliedAt: state.currentVariation,
+        });
     }
     return adjustments;
 }
 /**
- * Determines if the current variation should use fully random parameters
- * (chaos injection) or evolved parameters.
+ * Applies adjustments to state.paramWeights so the next roll favors the winners.
+ * Field name in adjustment maps to weight key (e.g., 'genre' -> 'style').
  */
-function shouldInjectChaos(_variationNumber) {
-    // At least 20% of variations are fully random
+const FIELD_TO_WEIGHT_KEY = {
+    genre: 'style',
+    colorPalette: 'palette',
+    typography: 'typography',
+    layoutArchetype: 'layout',
+    density: 'density',
+    mood: 'mood',
+    era: 'era',
+    animation: 'animation',
+    imagery: 'imagery',
+    wildcard: 'wildcard',
+};
+function applyAdjustments(state, adjustments) {
+    if (!state.paramWeights)
+        state.paramWeights = {};
+    for (const adj of adjustments) {
+        const weightKey = FIELD_TO_WEIGHT_KEY[adj.parameter];
+        if (!weightKey)
+            continue;
+        const valueMatch = /favor "([^"]+)"/.exec(adj.direction);
+        if (!valueMatch?.[1])
+            continue;
+        const value = valueMatch[1];
+        if (!state.paramWeights[weightKey])
+            state.paramWeights[weightKey] = {};
+        state.paramWeights[weightKey][value] = (state.paramWeights[weightKey][value] ?? 1) + 1;
+    }
+}
+/**
+ * Determines if the current variation should use fully random parameters
+ * (chaos injection) or evolved weighted parameters.
+ *
+ * Mandatory chaos: variations 4 and 5 of every 5-cycle are pure random.
+ * Variations 1-3 use evolved weights if available.
+ */
+function shouldInjectChaos(variationNumber) {
+    // Variations 4-5 of every 5 cycle (positions 4, 5, 9, 10, 14, 15...) are chaos
+    const pos = variationNumber % 5;
+    if (pos === 4 || pos === 0)
+        return true; // positions 4 and 5 (5%5=0)
     return Math.random() < CHAOS_RATIO;
 }
 /**
  * Runs evolution analysis at the specified interval.
  * Returns adjustments if it's time to evolve, empty array otherwise.
+ * Default interval: 5 variations per spec.
  */
-function maybeEvolve(state, interval = 10) {
+function maybeEvolve(state, interval = DEFAULT_INTERVAL) {
     if (state.currentVariation === 0 || state.currentVariation % interval !== 0) {
         return [];
     }
@@ -106,6 +144,8 @@ function maybeEvolve(state, interval = 10) {
     if (patterns.length === 0)
         return [];
     const adjustments = generateAdjustments(state, patterns);
+    if (adjustments.length > 0)
+        applyAdjustments(state, adjustments);
     return adjustments;
 }
 //# sourceMappingURL=evolution.js.map

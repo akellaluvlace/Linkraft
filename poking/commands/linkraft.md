@@ -1,11 +1,11 @@
 ---
 name: linkraft
-description: Claude Code plugin for project analysis, preflight checks, and autonomous QA.
+description: Claude Code plugin for project analysis, preflight checks, autonomous QA, and overnight design generation.
 ---
 
 # /linkraft
 
-Three modes for your development lifecycle.
+Four modes for your development lifecycle.
 
 ## Modes
 
@@ -18,10 +18,14 @@ Before you ship. 60-second read-only scan: security (0-10), health (0-100), ship
 ### /linkraft sheep
 After you build. Auto-configuring QA agent that hunts bugs, fixes what's safe, commits, writes a narrative report, and generates social content.
 
+### /linkraft dreamroll
+Overnight design generator. Rolls 10 random parameters per variation, generates standalone HTML landing pages, scores each with 3 judges (BRUTUS, VENUS, MERCURY), evolves toward gems. Runs until stopped.
+
 ## The Chain
 
 ```
 /linkraft plan               # understand the project
-/linkraft preflight           # see what's wrong (60 sec)
+/linkraft preflight          # see what's wrong (60 sec)
 /linkraft sheep              # fix what's wrong (autonomous)
+/linkraft dreamroll          # generate design variations overnight
 ```

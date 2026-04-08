@@ -2,18 +2,21 @@ import { describe, it, expect } from 'vitest';
 import { detectPatterns, shouldInjectChaos, maybeEvolve } from '../../src/dreamroll/evolution.js';
 import type { DreamrollState, Variation } from '../../src/dreamroll/types.js';
 
-function makeVariation(id: number, layout: string, genre: string, mood: string, isGem: boolean): Variation {
+function makeVariation(id: number, layout: string, genre: string, mood: string, isGem: boolean, extras: Partial<{ era: string; animation: string; imagery: string; wildcard: string; colorPalette: string; typography: string; density: string }> = {}): Variation {
   return {
     id,
     seed: {
-      colorPalette: 'warm',
-      typography: 'serif-sans',
+      colorPalette: extras.colorPalette ?? `palette-${id}`,
+      typography: extras.typography ?? `type-${id}`,
       layoutArchetype: layout,
       genre,
-      density: 'balanced',
+      density: extras.density ?? `density-${id}`,
       mood,
+      era: extras.era ?? `era-${id}`,
+      animation: extras.animation ?? `anim-${id}`,
+      imagery: extras.imagery ?? `img-${id}`,
       temperature: 0.8,
-      wildcard: 'test',
+      wildcard: extras.wildcard ?? `wild-${id}`,
     },
     verdict: {
       scores: [
@@ -44,6 +47,9 @@ function makeState(variations: Variation[], gems: number[]): DreamrollState {
     status: 'running',
   };
 }
+
+// The evolution tests that previously used `maybeEvolve(state, 10)` assumed
+// interval=10. Since the spec now uses 5 by default, tests pass explicit intervals.
 
 describe('detectPatterns', () => {
   it('detects dominant layout pattern in gems', () => {

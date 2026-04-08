@@ -12,8 +12,11 @@ function makeGem(id: number, avgScore: number): Variation {
       genre: 'brutalism',
       density: 'balanced',
       mood: 'serious',
+      era: '2020s-modern',
+      animation: 'none',
+      imagery: 'geometric-shapes',
       temperature: 0.8,
-      wildcard: 'Design as Art Deco',
+      wildcard: 'all-sharp-corners',
     },
     verdict: {
       scores: [
@@ -39,10 +42,13 @@ function makeDiscard(id: number): Variation {
       typography: 'mono-sans',
       layoutArchetype: 'centered',
       genre: 'glass',
-      density: 'airy',
+      density: 'sparse',
       mood: 'playful',
+      era: '1990s-grunge',
+      animation: 'none',
+      imagery: 'no-images-pure-type',
       temperature: 1.1,
-      wildcard: 'No rectangles',
+      wildcard: 'no-borders',
     },
     verdict: {
       scores: [
