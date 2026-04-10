@@ -7,6 +7,7 @@ import { getMorningReport, rollSeedParameters } from '../../dreamroll/generator.
 import { genomeToPrompt, genomeSummary } from '../../dreamroll/genome.js';
 import { getJudgeEvaluationPrompts, calculateVerdict, applyStyleAdherenceDeduction } from '../../dreamroll/judges.js';
 import { maybeEvolve } from '../../dreamroll/evolution.js';
+import { writeOvernightScript, overnightInstructions } from '../../shared/overnight.js';
 import type { DreamrollConfig, Variation } from '../../dreamroll/types.js';
 
 const projectRootSchema = { projectRoot: z.string().describe('Project root directory') };
@@ -300,6 +301,25 @@ export function registerDreamrollTools(server: McpServer): void {
         // Best effort; still return the text
       }
       return { content: [{ type: 'text' as const, text: `Written to ${reportPath}\n\n${reportText}` }] };
+    },
+  );
+
+  // ==========================================================================
+  // dreamroll_overnight
+  // ==========================================================================
+  server.tool(
+    'dreamroll_overnight',
+    'Generates an OS-appropriate restart loop script (.ps1 on Windows, .sh on Mac/Linux) that keeps relaunching claude -p "/linkraft dreamroll" so the run continues across context-fill boundaries. Writes to .dreamroll/dreamroll-loop.{ps1,sh} and returns run instructions.',
+    projectRootSchema,
+    async ({ projectRoot }) => {
+      const script = writeOvernightScript(projectRoot, 'dreamroll');
+      const instructions = overnightInstructions(script, 'dreamroll');
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `${instructions}\n\n--- SCRIPT CONTENTS ---\n${script.content}`,
+        }],
+      };
     },
   );
 }

@@ -163,15 +163,19 @@ Call `dreamroll_gems`. List all gems with full genomes.
 ### /linkraft dreamroll report
 Call `dreamroll_report`. Generate the morning report. Writes `.dreamroll/report.md`.
 
+### /linkraft dreamroll overnight
+Call `dreamroll_overnight`. Generates an OS-appropriate restart loop script into `.dreamroll/dreamroll-loop.ps1` (Windows) or `.dreamroll/dreamroll-loop.sh` (Mac/Linux) and prints run instructions. The user runs that script in a separate terminal and it keeps relaunching `claude -p "/linkraft dreamroll"` across every context-fill boundary until ctrl+c. This is as close to "dreamroll restarts itself" as Claude Code allows — a session can't outlive its context window, so the relaunch has to happen externally. The skill should present the instructions as-is after calling the tool.
+
 ## MCP Tools
 
-5 user-facing tools (per spec):
+6 user-facing tools:
 
 - `dreamroll_start` — multi-purpose: init, record-previous, return-next genome + judge prompts
 - `dreamroll_status` — current state with top weights
 - `dreamroll_stop` — set stop flag
 - `dreamroll_gems` — list gems with full genomes
 - `dreamroll_report` — generate morning report (writes .dreamroll/report.md)
+- `dreamroll_overnight` — generate OS restart loop script so the run survives context-fill boundaries
 
 The single `dreamroll_start` tool drives the entire generation loop. The skill calls it repeatedly, passing the previous variation's scores via the `completed` parameter on each call after the first.
 
@@ -204,9 +208,19 @@ Anti-bias measure: if average creeps above 8.0 across all variations, the system
 
 ## The Overnight Loop
 
+Claude Code sessions can't outlive their context window — when it fills, the session ends. Something external has to relaunch Claude to keep dreamroll running all night. Dreamroll ships a generator for that:
+
+```
+/linkraft dreamroll overnight
+```
+
+That calls `dreamroll_overnight`, which writes an OS-appropriate script to `.dreamroll/dreamroll-loop.ps1` (Windows) or `.dreamroll/dreamroll-loop.sh` (Mac/Linux) and prints exact run instructions. The user runs the script in a separate terminal and it keeps relaunching `claude -p "/linkraft dreamroll"` across every context-fill boundary until they ctrl+c. Each new session reads `.dreamroll/state.json` and continues from the next variation.
+
+Example generated Windows script:
+
 ```powershell
 while ($true) {
-  claude -p "/linkraft dreamroll --brief 'your product description'" --plugin-dir C:\path\to\linkraft\poking --allowedTools 'Bash(*)' 'Read(*)' 'Write(*)' 'Edit(*)' 'Glob(*)' 'Grep(*)'
+  claude -p "/linkraft dreamroll" --allowedTools 'Bash(*)' 'Read(*)' 'Write(*)' 'Edit(*)' 'Glob(*)' 'Grep(*)'
   Start-Sleep -Seconds 10
 }
 ```

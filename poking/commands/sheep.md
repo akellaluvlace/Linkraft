@@ -26,3 +26,6 @@ Continue a previous session from .sheep/stats.json.
 
 ### /linkraft sheep content
 Generate social media content from the session results.
+
+### /linkraft sheep overnight
+Generate an OS-appropriate restart loop script (.ps1 on Windows, .sh on Mac/Linux) into `.sheep/` so the QA run can survive context-fill boundaries. Prints exact run instructions for a separate terminal.

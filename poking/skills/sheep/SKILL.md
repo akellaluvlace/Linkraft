@@ -89,10 +89,17 @@ If the session is interrupted (context window fills, crash, user stops):
 - `sheep_init` resumes from the last completed cycle
 - No work is repeated
 
-This enables overnight operation:
+### /linkraft sheep overnight
+
+Overnight operation: Claude Code sessions end when context fills, so something external must relaunch Claude to keep sheep running. Sheep ships a generator for that.
+
+When the user says `/linkraft sheep overnight`, call `sheep_overnight`. The tool writes an OS-appropriate script to `.sheep/sheep-loop.ps1` (Windows) or `.sheep/sheep-loop.sh` (Mac/Linux) and prints exact run instructions. The user runs the script in a separate terminal and it keeps relaunching `claude -p "/linkraft sheep"` across every context-fill boundary until they ctrl+c. Each new session reads `.sheep/stats.json` and resumes from the last completed cycle — no work is repeated.
+
+Example generated Unix script:
 ```bash
+#!/usr/bin/env bash
 while true; do
-  claude -p "/linkraft sheep" --dangerously-skip-permissions
+  claude -p "/linkraft sheep" --allowedTools 'Bash(*)' 'Read(*)' 'Write(*)' 'Edit(*)' 'Glob(*)' 'Grep(*)'
   sleep 10
 done
 ```
@@ -112,6 +119,7 @@ done
 - `sheep_complete`: finalize session, generate content pack
 - `sheep_status`: live stats
 - `sheep_report`: full report with file locations
+- `sheep_overnight`: generate OS restart loop script so the run survives context-fill boundaries
 
 ## Output Files
 

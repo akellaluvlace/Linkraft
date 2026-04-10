@@ -42,6 +42,7 @@ const generator_js_1 = require("../../dreamroll/generator.js");
 const genome_js_1 = require("../../dreamroll/genome.js");
 const judges_js_1 = require("../../dreamroll/judges.js");
 const evolution_js_1 = require("../../dreamroll/evolution.js");
+const overnight_js_1 = require("../../shared/overnight.js");
 const projectRootSchema = { projectRoot: zod_1.z.string().describe('Project root directory') };
 /**
  * Reads project context for the brief.
@@ -297,6 +298,19 @@ function registerDreamrollTools(server) {
             // Best effort; still return the text
         }
         return { content: [{ type: 'text', text: `Written to ${reportPath}\n\n${reportText}` }] };
+    });
+    // ==========================================================================
+    // dreamroll_overnight
+    // ==========================================================================
+    server.tool('dreamroll_overnight', 'Generates an OS-appropriate restart loop script (.ps1 on Windows, .sh on Mac/Linux) that keeps relaunching claude -p "/linkraft dreamroll" so the run continues across context-fill boundaries. Writes to .dreamroll/dreamroll-loop.{ps1,sh} and returns run instructions.', projectRootSchema, async ({ projectRoot }) => {
+        const script = (0, overnight_js_1.writeOvernightScript)(projectRoot, 'dreamroll');
+        const instructions = (0, overnight_js_1.overnightInstructions)(script, 'dreamroll');
+        return {
+            content: [{
+                    type: 'text',
+                    text: `${instructions}\n\n--- SCRIPT CONTENTS ---\n${script.content}`,
+                }],
+        };
     });
 }
 //# sourceMappingURL=dreamroll-tools.js.map

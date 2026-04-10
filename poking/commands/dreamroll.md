@@ -26,3 +26,6 @@ List all gems (variations with avg score >= 7 or any 10).
 
 ### /linkraft dreamroll report
 Generate the morning report: top 5 gems, patterns, wildcard discoveries.
+
+### /linkraft dreamroll overnight
+Generate an OS-appropriate restart loop script (.ps1 on Windows, .sh on Mac/Linux) into `.dreamroll/` so the run can survive context-fill boundaries. Prints exact run instructions for a separate terminal.

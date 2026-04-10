@@ -112,11 +112,22 @@ Every feature works with zero config on first run. No API keys. No MCPs required
 
 ## MCP Tools
 
-31 tools across four modes: 15 plan tools, 4 preflight tools, 7 sheep tools, 5 dreamroll tools.
+33 tools across four modes: 15 plan tools, 4 preflight tools, 8 sheep tools, 6 dreamroll tools.
+
+## Running Overnight
+
+Claude Code sessions can't outlive their context window, so sheep and dreamroll both ship an `overnight` subcommand that generates an OS-appropriate restart loop script you run in a separate terminal:
+
+```
+/linkraft dreamroll overnight   # writes .dreamroll/dreamroll-loop.{ps1,sh}
+/linkraft sheep overnight       # writes .sheep/sheep-loop.{ps1,sh}
+```
+
+The script relaunches Claude every time the context fills. Each new session resumes from the mode's state.json and continues where it left off. Stop with Ctrl+C.
 
 ## Numbers
 
-- 411 tests across 31 test files
+- 445 tests across 34 test files
 - 4 modes (plan, preflight, sheep, dreamroll)
 - 13 plan outputs (10 always + 3 conditional)
 - 3 preflight scores (security, health, readiness)

@@ -5,6 +5,7 @@ const zod_1 = require("zod");
 const auto_config_js_1 = require("../../sheep/auto-config.js");
 const hunter_js_1 = require("../../sheep/hunter.js");
 const stats_js_1 = require("../../sheep/stats.js");
+const overnight_js_1 = require("../../shared/overnight.js");
 function registerSheepTools(server) {
     server.tool('sheep_scan', 'Auto-detects project stack, build/test commands, and generates a QA plan. Zero config.', { projectRoot: zod_1.z.string().describe('Project root directory') }, async ({ projectRoot }) => {
         const config = (0, auto_config_js_1.autoConfig)(projectRoot);
@@ -166,6 +167,16 @@ function registerSheepTools(server) {
             stats.status === 'completed' ? '  .sheep/content-pack.md   content' : '',
         ].filter(l => l !== '');
         return { content: [{ type: 'text', text: extras.join('\n') }] };
+    });
+    server.tool('sheep_overnight', 'Generates an OS-appropriate restart loop script (.ps1 on Windows, .sh on Mac/Linux) that keeps relaunching claude -p "/linkraft sheep" so the QA run continues across context-fill boundaries. Writes to .sheep/sheep-loop.{ps1,sh} and returns run instructions.', { projectRoot: zod_1.z.string().describe('Project root directory') }, async ({ projectRoot }) => {
+        const script = (0, overnight_js_1.writeOvernightScript)(projectRoot, 'sheep');
+        const instructions = (0, overnight_js_1.overnightInstructions)(script, 'sheep');
+        return {
+            content: [{
+                    type: 'text',
+                    text: `${instructions}\n\n--- SCRIPT CONTENTS ---\n${script.content}`,
+                }],
+        };
     });
 }
 //# sourceMappingURL=sheep-tools.js.map

@@ -3,6 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { autoConfig, generateQAPlan } from '../../sheep/auto-config.js';
 import { initSession, getNextArea, recordCycleResult, completeHunt, getReport } from '../../sheep/hunter.js';
 import { loadStats } from '../../sheep/stats.js';
+import { writeOvernightScript, overnightInstructions } from '../../shared/overnight.js';
 
 export function registerSheepTools(server: McpServer): void {
   server.tool(
@@ -205,6 +206,22 @@ export function registerSheepTools(server: McpServer): void {
         stats.status === 'completed' ? '  .sheep/content-pack.md   content' : '',
       ].filter(l => l !== '');
       return { content: [{ type: 'text' as const, text: extras.join('\n') }] };
+    },
+  );
+
+  server.tool(
+    'sheep_overnight',
+    'Generates an OS-appropriate restart loop script (.ps1 on Windows, .sh on Mac/Linux) that keeps relaunching claude -p "/linkraft sheep" so the QA run continues across context-fill boundaries. Writes to .sheep/sheep-loop.{ps1,sh} and returns run instructions.',
+    { projectRoot: z.string().describe('Project root directory') },
+    async ({ projectRoot }) => {
+      const script = writeOvernightScript(projectRoot, 'sheep');
+      const instructions = overnightInstructions(script, 'sheep');
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `${instructions}\n\n--- SCRIPT CONTENTS ---\n${script.content}`,
+        }],
+      };
     },
   );
 }
