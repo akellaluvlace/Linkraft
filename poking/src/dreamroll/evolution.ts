@@ -4,7 +4,13 @@
 
 import type { DreamrollState, EvolutionAdjustment } from './types.js';
 
-const CHAOS_RATIO = 0.4; // 2 of every 5 variations are mandatory chaos
+/** Random chaos ratio for the first CHAOS_RAMP_AT variations. */
+const CHAOS_RATIO_EARLY = 0.4;
+/** Random chaos ratio after the ramp point — evolution has had time to learn, now
+ *  we push back against convergence. */
+const CHAOS_RATIO_LATE = 0.6;
+/** After this many variations the mandatory-chaos count goes from 2/5 to 3/5. */
+export const CHAOS_RAMP_AT = 15;
 const DOMINANCE_THRESHOLD = 0.3;
 const DEFAULT_INTERVAL = 5;
 
@@ -146,14 +152,28 @@ export function applyAdjustments(state: DreamrollState, adjustments: EvolutionAd
  * Determines if the current variation should use fully random parameters
  * (chaos injection) or evolved weighted parameters.
  *
- * Mandatory chaos: variations 4 and 5 of every 5-cycle are pure random.
- * Variations 1-3 use evolved weights if available.
+ * Early runs (variation <= CHAOS_RAMP_AT):
+ *   - 2/5 mandatory chaos: positions 4 and 5 of every 5-cycle are pure random.
+ *   - Remaining positions use CHAOS_RATIO_EARLY (40%) stochastic chaos.
+ *
+ * Late runs (variation > CHAOS_RAMP_AT):
+ *   - 3/5 mandatory chaos: positions 3, 4, and 5 are pure random.
+ *   - Remaining positions use CHAOS_RATIO_LATE (60%) stochastic chaos.
+ *
+ * The ramp is the second half of the anti-convergence toolkit: once evolution
+ * has had 15 variations to learn, we deliberately push back so the run doesn't
+ * collapse onto the early favorites.
  */
 export function shouldInjectChaos(variationNumber: number): boolean {
-  // Variations 4-5 of every 5 cycle (positions 4, 5, 9, 10, 14, 15...) are chaos
   const pos = variationNumber % 5;
-  if (pos === 4 || pos === 0) return true; // positions 4 and 5 (5%5=0)
-  return Math.random() < CHAOS_RATIO;
+  if (variationNumber > CHAOS_RAMP_AT) {
+    // 3/5 mandatory chaos: positions 3, 4, 5 (5%5=0)
+    if (pos === 3 || pos === 4 || pos === 0) return true;
+    return Math.random() < CHAOS_RATIO_LATE;
+  }
+  // 2/5 mandatory chaos: positions 4, 5 (5%5=0)
+  if (pos === 4 || pos === 0) return true;
+  return Math.random() < CHAOS_RATIO_EARLY;
 }
 
 /**

@@ -889,17 +889,28 @@ function rollMutation(weights?: Record<string, number>, chaos = false): string {
 }
 
 /**
- * Rolls all 15 parameter dimensions, returning a complete StyleGenome.
+ * Rolls all 17 parameter dimensions, returning a complete StyleGenome.
  * If weights are provided, uses weighted selection.
  * If chaos is true, ignores weights (mandatory chaos rounds).
+ * If excludeStyles is non-empty, those archetypes are removed from the style
+ * pool before the pick — used by the diversity guardrails to enforce the
+ * style exclusion window.
  *
  * Mashup rolls a secondary archetype (distinct from the primary).
  * Franken rolls a secondary AND tertiary (both distinct from each other and primary).
  * Material-swap rolls a physical material from MATERIALS.
  */
-export function rollParams(weights?: ParamWeights & { mutation?: Record<string, number> }, chaos = false): SeedParameters {
+export function rollParams(
+  weights?: ParamWeights & { mutation?: Record<string, number> },
+  chaos = false,
+  excludeStyles: readonly string[] = [],
+): SeedParameters {
   const w = chaos ? undefined : weights;
-  const primary = weightedPick(STYLE_POOL, w?.style);
+  const stylePool = excludeStyles.length > 0
+    ? STYLE_POOL.filter(s => !excludeStyles.includes(s))
+    : STYLE_POOL;
+  const effectiveStylePool = stylePool.length > 0 ? stylePool : STYLE_POOL;
+  const primary = weightedPick(effectiveStylePool, w?.style);
 
   // Roll the mutation (15th dimension)
   const mutation = rollMutation(w?.mutation, chaos);

@@ -147,6 +147,24 @@ export interface DreamrollState {
    * rollSeedParameters consume from this queue before doing a fresh roll.
    */
   pendingChildren?: SeedParameters[];
+  /**
+   * "style|harmony|mutation" trios that have already been rolled. The next roll
+   * rejects duplicates. Prevents convergence — once a trio is used, it cannot
+   * reappear for the entire run (regardless of how strong its evolution weights
+   * get).
+   */
+  usedCombinations?: string[];
+  /**
+   * FIFO of the last N style archetype IDs that were rolled. Used to enforce the
+   * style exclusion window: a style cannot reappear while it is in this list.
+   */
+  recentStyles?: string[];
+  /**
+   * Variation number of the most recent diversity reset. Used to ensure the v20
+   * / v40 / v60 reset fires exactly once per boundary even when
+   * rollSeedParameters is called multiple times for the same currentVariation.
+   */
+  lastDiversityReset?: number;
 }
 
 export interface WildcardMutation {

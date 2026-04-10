@@ -43,7 +43,13 @@ export type StyleGenome = SeedParameters;
  *   9. HTML comment header template
  *  10. Constraint (third repetition) + failure warning
  */
-export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumber: number, outputPath: string): string {
+export function genomeToPrompt(
+  genome: StyleGenome,
+  brief: string,
+  variationNumber: number,
+  outputPath: string,
+  recentStyles: readonly string[] = [],
+): string {
   const styleSignature = getStyleSignature(genome.genre);
   const archetype = getStyleArchetype(genome.genre);
   const harmony = getHarmonyScheme(genome.colorPalette);
@@ -119,10 +125,33 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
     }
   }
 
+  // Diversity directive: surface recent styles so the generator physically cannot
+  // regress toward them. Omitted when no recent history exists yet.
+  const diversityBlock: string[] = [];
+  if (recentStyles.length > 0) {
+    diversityBlock.push(
+      '════════════════════════════════════════════════════════════════════════',
+      'DIVERSITY DIRECTIVE (read this first)',
+      '════════════════════════════════════════════════════════════════════════',
+      '',
+      `Previous variations used these styles: ${recentStyles.join(', ')}.`,
+      '',
+      'This variation MUST look completely different from all of them. Specifically:',
+      '  - Different color temperature (if they were warm, go cool; if dark, go light).',
+      '  - Different layout structure (if they used a grid, go editorial or single-column).',
+      '  - Different typography mood (if they used geometric sans, go serif or mono).',
+      '',
+      'If your output could be mistaken for any of the listed styles at a glance, you have',
+      'failed the diversity brief regardless of how well it executes the assigned archetype.',
+      '',
+    );
+  }
+
   const lines: string[] = [
     `Generate a complete standalone HTML landing page for variation #${String(variationNumber).padStart(3, '0')}.`,
     `Output path: ${outputPath}`,
     '',
+    ...diversityBlock,
     ...mutationBanner,
     '════════════════════════════════════════════════════════════════════════',
     isMutation

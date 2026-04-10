@@ -10,25 +10,54 @@ import { maybeEvolve, shouldInjectChaos } from './evolution.js';
 import { generateReport, formatReport } from './reporter.js';
 import { computeUserPreferenceWeights, mergeWeights } from './feedback.js';
 import { popPendingChild } from './breeding.js';
+import {
+  maybeDiversityReset,
+  getExcludedStyles,
+  isCombinationUsed,
+  recordCombination,
+  trackStyleHistory,
+  MAX_DIVERSITY_REROLLS,
+} from './diversity.js';
 
 /**
  * Generates the next seed parameters for a variation.
  *
  * Priority order:
- *   1. If state has pending children from /linkraft dreamroll breed, pop one off the queue.
- *   2. Otherwise roll fresh, merging user feedback weights on top of evolution weights.
- *   3. Chaos rounds ignore weights entirely.
+ *   1. If state has pending children from /linkraft dreamroll breed, pop one
+ *      off the queue. Bred children bypass all diversity guardrails — the user
+ *      asked for them explicitly.
+ *   2. Diversity reset: every 20 variations wipe paramWeights to 1.0.
+ *   3. Otherwise roll fresh, merging user feedback weights on top of evolution
+ *      weights and honoring the style exclusion window.
+ *   4. Chaos rounds ignore weights entirely.
+ *   5. Reject the roll if its style|harmony|mutation trio has already been used;
+ *      reroll up to MAX_DIVERSITY_REROLLS times.
  */
 export function rollSeedParameters(state?: DreamrollState): SeedParameters {
   if (state) {
     const child = popPendingChild(state);
     if (child) return child;
   }
+
+  if (state) maybeDiversityReset(state);
+
   const chaos = shouldInjectChaos(state?.currentVariation ?? 0);
   const evolutionWeights = state?.paramWeights as ParamWeights | undefined;
   const userWeights = state ? computeUserPreferenceWeights(state) : undefined;
   const merged = mergeWeights(evolutionWeights, userWeights);
-  return rollParams(merged, chaos);
+  const excludedStyles = state ? getExcludedStyles(state) : [];
+
+  let seed = rollParams(merged, chaos, excludedStyles);
+  if (state) {
+    let attempts = 0;
+    while (isCombinationUsed(state, seed) && attempts < MAX_DIVERSITY_REROLLS) {
+      seed = rollParams(merged, chaos, excludedStyles);
+      attempts++;
+    }
+    recordCombination(state, seed);
+    trackStyleHistory(state, seed);
+  }
+  return seed;
 }
 
 /**

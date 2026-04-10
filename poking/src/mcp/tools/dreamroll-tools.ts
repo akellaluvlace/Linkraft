@@ -163,7 +163,13 @@ export function registerDreamrollTools(server: McpServer): void {
       saveState(projectRoot, state);
 
       const outputPath = path.join(projectRoot, '.dreamroll', 'variations', genomeFilename(nextId, seed));
-      const generationPrompt = genomeToPrompt(seed, state.config.brief ?? 'A product', nextId, outputPath);
+      // The diversity directive is built from the 5 most recent PREVIOUS styles.
+      // rollSeedParameters has already appended the current seed's style, so we
+      // exclude it here — the generator should be told "avoid the history", not
+      // "avoid yourself".
+      const fullHistory = state.recentStyles ?? [];
+      const recentStyles = fullHistory.slice(0, -1);
+      const generationPrompt = genomeToPrompt(seed, state.config.brief ?? 'A product', nextId, outputPath, recentStyles);
 
       // 5. Build judge prompts (if pluginRoot supplied)
       let judgeBlock = '';
