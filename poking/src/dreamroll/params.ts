@@ -775,6 +775,60 @@ export const WILDCARD_POOL = [
 ];
 
 // ============================================================================
+// Dimension 16: COPY ANGLE (10 options)
+// Frames the headline / subheadline / CTA copy. Same brief, different angle.
+// ============================================================================
+
+export interface CopyAngleSpec {
+  id: string;
+  /** One-line guidance the prompt builder embeds. */
+  guidance: string;
+}
+
+export const COPY_ANGLE_SPECS: CopyAngleSpec[] = [
+  { id: 'pain-point-first',   guidance: 'Lead with the problem the user has TODAY. Headline names the pain. Sub explains the cost. CTA promises relief.' },
+  { id: 'outcome-first',      guidance: 'Lead with what life looks like AFTER. Headline paints the destination. Sub describes the new normal. CTA is the door.' },
+  { id: 'social-proof-first', guidance: 'Lead with WHO is already using it. Headline name-drops or quantifies users. Sub backs it up. CTA invites the reader to join the crowd.' },
+  { id: 'contrarian',         guidance: 'Lead by challenging an assumption everyone in the market holds. Headline picks the fight. Sub explains the better way. CTA is the new path.' },
+  { id: 'story',              guidance: 'Narrative arc from problem to solution. Headline opens with a vignette. Sub continues the story. CTA is the next chapter.' },
+  { id: 'data-driven',        guidance: 'Lead with one specific stat or number that does the persuading. Headline IS the number. Sub contextualizes it. CTA acts on the implication.' },
+  { id: 'question',           guidance: 'Open with a provocative question the reader cannot answer comfortably. Sub answers it for them. CTA acts on the answer.' },
+  { id: 'comparison',         guidance: 'Frame as "unlike X, we do Y". Headline draws the contrast. Sub spells out the difference. CTA is the obvious choice.' },
+  { id: 'minimal',            guidance: 'As few words as possible. Headline under 5 words. Sub under 12. CTA is one word. The design carries the load.' },
+  { id: 'bold-claim',         guidance: 'Make ONE audacious promise. Headline is the promise. Sub backs it with one reason. CTA is the way to claim it.' },
+];
+
+export const COPY_ANGLE_POOL: string[] = COPY_ANGLE_SPECS.map(c => c.id);
+
+export function getCopyAngle(id: string): CopyAngleSpec | undefined {
+  return COPY_ANGLE_SPECS.find(c => c.id === id);
+}
+
+// ============================================================================
+// Dimension 17: SECTION VARIATION (3 options)
+// Controls how much page sections deviate from the base genome.
+// Creates internal rhythm rather than one flat tone throughout.
+// ============================================================================
+
+export interface SectionVariationSpec {
+  id: string;
+  /** Prompt instructions for the generator. */
+  instructions: string;
+}
+
+export const SECTION_VARIATION_SPECS: SectionVariationSpec[] = [
+  { id: 'uniform',  instructions: 'Every section follows the base genome exactly. Density, layout, and rhythm are constant from nav to footer.' },
+  { id: 'subtle',   instructions: 'Pick 1-2 sections that shift density or layout slightly from the base genome. The shift should be felt, not announced. Most of the page reads as one piece.' },
+  { id: 'dramatic', instructions: 'Each section rolls its own sub-density and sub-layout. Hero is the primary genome. Features uses a denser layout. Testimonials uses a different layout pattern. How-it-works can be sparser. The page should feel like a magazine spread where each spread breathes differently. All sub-rolls still respect the style archetype, color harmony, and typography.' },
+];
+
+export const SECTION_VARIATION_POOL: string[] = SECTION_VARIATION_SPECS.map(s => s.id);
+
+export function getSectionVariation(id: string): SectionVariationSpec | undefined {
+  return SECTION_VARIATION_SPECS.find(s => s.id === id);
+}
+
+// ============================================================================
 // Per-parameter weight map for evolution.
 // Higher weight = more likely to be picked.
 // ============================================================================
@@ -794,6 +848,8 @@ export interface ParamWeights {
   shadows?: Record<string, number>;
   ctaStyle?: Record<string, number>;
   wildcard?: Record<string, number>;
+  copyAngle?: Record<string, number>;
+  sectionVariation?: Record<string, number>;
 }
 
 function randomFrom<T>(arr: readonly T[]): T {
@@ -887,12 +943,14 @@ export function rollParams(weights?: ParamWeights & { mutation?: Record<string, 
     mutationSecondary,
     mutationTertiary,
     mutationMaterial,
+    copyAngle: weightedPick(COPY_ANGLE_POOL, w?.copyAngle),
+    sectionVariation: weightedPick(SECTION_VARIATION_POOL, w?.sectionVariation),
     temperature: Math.round((0.7 + Math.random() * 0.6) * 100) / 100,
   };
 }
 
 /**
- * Returns all 15 pools for tests and documentation.
+ * Returns all 17 pools for tests and documentation.
  */
 export function getAllPools(): Record<string, readonly string[]> {
   return {
@@ -911,5 +969,7 @@ export function getAllPools(): Record<string, readonly string[]> {
     ctaStyle: CTA_STYLE_POOL,
     wildcard: WILDCARD_POOL,
     mutation: MUTATION_POOL,
+    copyAngle: COPY_ANGLE_POOL,
+    sectionVariation: SECTION_VARIATION_POOL,
   };
 }

@@ -11,7 +11,7 @@ export interface DreamrollConfig {
 }
 
 /**
- * Style Genome: 14 parameter dimensions per dreamroll-build-spec.
+ * Style Genome: 17 parameter dimensions.
  *
  * Each variation is defined by a vector of values rolled from these pools.
  * The combination IS the design's DNA. See params.ts for pool definitions
@@ -65,6 +65,21 @@ export interface SeedParameters {
   mutationTertiary?: string;
   /** Physical material rolled for material-swap mode. */
   mutationMaterial?: string;
+  /**
+   * Dimension 16 — COPY ANGLE: how the headline/sub/CTA copy is framed.
+   * pain-point-first | outcome-first | social-proof-first | contrarian | story |
+   * data-driven | question | comparison | minimal | bold-claim.
+   * The product brief stays the same; only the framing changes. This makes every
+   * variation simultaneously test design and messaging.
+   */
+  copyAngle?: string;
+  /**
+   * Dimension 17 — SECTION VARIATION: how much each page section deviates from
+   * the base genome. uniform = all sections follow base; subtle = 1-2 sections
+   * shift density or layout slightly; dramatic = each section rolls its own
+   * sub-parameter. Creates internal rhythm within a single page.
+   */
+  sectionVariation?: string;
   /** Generation temperature, kept for backward compat. */
   temperature: number;
 }
@@ -100,6 +115,13 @@ export interface EvolutionAdjustment {
   appliedAt: number;
 }
 
+export interface UserPreferences {
+  /** Variation IDs the user marked with /linkraft dreamroll like N. */
+  liked: number[];
+  /** Variation IDs the user marked with /linkraft dreamroll hate N. */
+  hated: number[];
+}
+
 export interface DreamrollState {
   config: DreamrollConfig;
   currentVariation: number;
@@ -114,6 +136,17 @@ export interface DreamrollState {
   paramWeights?: Record<string, Record<string, number>>;
   /** When true, the next dreamroll_next call stops and marks the run stopped. */
   stopRequested?: boolean;
+  /**
+   * User-driven feedback. Liked genome dimensions get a 3x weight multiplier;
+   * hated genome dimensions get 0.25x. These compose with evolution weights at
+   * roll time and override judge-detected patterns.
+   */
+  userPreferences?: UserPreferences;
+  /**
+   * Pre-rolled child genomes from /linkraft dreamroll breed. The next N calls to
+   * rollSeedParameters consume from this queue before doing a fresh roll.
+   */
+  pendingChildren?: SeedParameters[];
 }
 
 export interface WildcardMutation {

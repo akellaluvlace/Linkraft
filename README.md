@@ -82,16 +82,19 @@ Proven: 122 bugs found across 4 runs, 94 auto-fixed, 0 tests broken.
 
 ## /linkraft dreamroll
 
-Overnight autonomous design generator using a 15-dimension Style Genome: style archetype (30 options each with a CSS signature and anti-patterns), color harmony (7 algorithmic + 5 curated, with random base hue), typography pairing (25 Google Font pairs), type scale, layout, density, mood, era, animation, imagery, border radius, shadow system, CTA style, oblique constraint, and **style mutation** (pure / mashup / invert / era-clash / material-swap / maximum / minimum / franken). The mutation dimension controls HOW the archetype is applied — pure is faithful, mashup fuses two archetypes, franken fuses three, maximum pushes every property to 200%, and so on. Generates standalone HTML landing pages, scores each with three judges, auto-deducts BRUTUS when required CSS is missing (pure mode only), evolves toward gems. Never stops until you say so.
+Overnight autonomous design generator using a 17-dimension Style Genome: style archetype (30 options each with a CSS signature and anti-patterns), color harmony (7 algorithmic + 5 curated, with random base hue), typography pairing (25 Google Font pairs), type scale, layout, density, mood, era, animation, imagery, border radius, shadow system, CTA style, oblique constraint, **style mutation** (pure / mashup / invert / era-clash / material-swap / maximum / minimum / franken), **copy angle** (10 options for headline framing), and **section variation** (uniform / subtle / dramatic — internal rhythm within a single page). Every variation tests design AND messaging simultaneously. Generates standalone HTML landing pages, scores each with three judges, auto-deducts BRUTUS when required CSS is missing (pure mode only), evolves toward gems. Never stops until you say so.
 
 ```
-/linkraft dreamroll               Start or resume (runs until stopped)
-/linkraft dreamroll --brief "..."  Start with an explicit product brief
-/linkraft dreamroll status        Show progress
-/linkraft dreamroll stop          Graceful stop at next variation
-/linkraft dreamroll gems          List all gems
-/linkraft dreamroll report        Morning report with top 5 gems
-/linkraft dreamroll overnight     Generate restart loop script (runs all night)
+/linkraft dreamroll                  Start or resume (runs until stopped)
+/linkraft dreamroll --brief "..."    Start with an explicit product brief
+/linkraft dreamroll status           Show progress
+/linkraft dreamroll stop             Graceful stop at next variation
+/linkraft dreamroll gems             List all gems
+/linkraft dreamroll report           Morning report with top 5 gems
+/linkraft dreamroll overnight        Generate restart loop script (runs all night)
+/linkraft dreamroll like [N]         Mark variation N as a favorite (3x weight)
+/linkraft dreamroll hate [N]         Mark variation N as bad (0.25x weight)
+/linkraft dreamroll breed [A] [B]    Cross two gems into 3 children
 ```
 
 The judges:
@@ -100,6 +103,12 @@ The judges:
 - **MERCURY** (conversion, 1-10): conversion machine. Would this page make money?
 
 Gem threshold: avg >= 7 or any single 10. Every 5 variations, evolution detects patterns in gems and biases future rolls toward winning parameter combinations. Mandatory chaos keeps the generator from getting stuck.
+
+**User feedback overrides judges.** `/linkraft dreamroll like 14` multiplies every dimension value in that genome by 3x. `/linkraft dreamroll hate 7` multiplies by 0.25x. The system learns YOUR taste, not just what the judges think looks good. Multipliers stack across multiple liked/hated variations.
+
+**Breeding.** `/linkraft dreamroll breed 14 6` crosses two gem genomes by alternating dimensions and rolling a fresh mutation per child. Three children get queued and consumed by the next 3 variations in the loop. This is genuine genetic selection on top of weighted random.
+
+**Filenames encode the genome.** Files are named `{NNN}_{style}_{palette}_{mutation}.html` (e.g., `001_cyberpunk_neon-on-dark_pure.html`). You can scan `.dreamroll/variations/` and know what each one is without opening it.
 
 Zero external dependencies. No Playwright. No screenshots. No API keys. Just HTML files on disk you open in a browser.
 
@@ -123,7 +132,7 @@ Every feature works with zero config on first run. No API keys. No MCPs required
 
 ## MCP Tools
 
-42 tools across four modes: 24 plan tools (16 Path A + 8 Path B), 4 preflight tools, 8 sheep tools, 6 dreamroll tools.
+45 tools across four modes: 24 plan tools (16 Path A + 8 Path B), 4 preflight tools, 8 sheep tools, 9 dreamroll tools (the 6 originals plus `dreamroll_like`, `dreamroll_hate`, `dreamroll_breed`).
 
 ## Running Overnight
 
@@ -145,17 +154,19 @@ Bonus: during a normal run, sheep and dreamroll automatically surface a reminder
 
 ## Numbers
 
-- 579 tests across 39 test files
+- 623 tests across 42 test files
 - 4 modes (plan, preflight, sheep, dreamroll)
 - 2 plan paths (A: scan existing code, B: generate from a rough idea .md + scaffold)
 - 14 plan outputs in Path A, 15 + scaffold in Path B
 - 3 preflight scores (security, health, readiness)
 - 6 agent personalities (3 sheep, 3 dreamroll judges)
-- 15 dreamroll Style Genome dimensions (180+ values total)
+- 17 dreamroll Style Genome dimensions (200+ values total)
 - 30 style archetypes, each with a CSS signature + required CSS declarations
 - 25 Google Font typography pairings
 - 40 oblique strategy constraints
 - 8 style mutations (pure / mashup / invert / era-clash / material-swap / maximum / minimum / franken)
+- 10 copy angles (pain-point-first / outcome-first / social-proof-first / contrarian / story / data-driven / question / comparison / minimal / bold-claim)
+- 3 section variation modes (uniform / subtle / dramatic) for internal page rhythm
 
 ## Project Structure
 
@@ -178,7 +189,7 @@ poking/
     plan/              # 16 generators (Path A scan + Path B from-idea + scaffolder)
     preflight/         # Security, health, readiness scanners + runner
     sheep/             # Auto-config, hunter, personas, stats, content gen
-    dreamroll/         # 15-dim params, genome, generator, judges, evolution, reporter, state
+    dreamroll/         # 17-dim params, genome, generator, judges, evolution, reporter, state, feedback, breeding
     shared/            # Scanner utilities, types, format
     mcp/
       server.ts        # MCP server (all four modes)
@@ -187,7 +198,7 @@ poking/
         preflight-tools.ts
         sheep-tools.ts
         dreamroll-tools.ts
-  tests/               # 579 tests across 39 files
+  tests/               # 623 tests across 42 files
   README.md
   LICENSE
 ```

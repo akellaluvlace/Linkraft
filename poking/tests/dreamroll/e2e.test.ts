@@ -144,7 +144,8 @@ describe('dreamroll e2e: full skill-driven loop', () => {
     expect(report).toContain('DREAMROLL MORNING REPORT');
     expect(report).toContain('1 gems');
     expect(report).toContain('1 weak');
-    expect(report).toContain('variation_001.html');
+    // Filenames now encode genome: NNN_{style}_{palette}_{mutation}.html
+    expect(report).toMatch(/^#1 — 001_/m);
   });
 
   it('resumes after simulated session restart', () => {

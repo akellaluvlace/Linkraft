@@ -2,6 +2,7 @@
 
 import type { DreamrollState, MorningReport, GemSummary } from './types.js';
 import { detectPatterns } from './evolution.js';
+import { genomeFilename } from './genome.js';
 
 /**
  * Formats milliseconds as a human-readable duration string.
@@ -77,7 +78,7 @@ export function formatReport(report: MorningReport): string {
     for (let i = 0; i < report.topGems.length; i++) {
       const gem = report.topGems[i]!;
       const baseHue = gem.seed.harmonyBaseHue ?? 0;
-      lines.push(`#${i + 1} — variation_${String(gem.variationId).padStart(3, '0')}.html  (avg ${gem.averageScore}/10)`);
+      lines.push(`#${i + 1} — ${genomeFilename(gem.variationId, gem.seed)}  (avg ${gem.averageScore}/10)`);
       lines.push(`     Style: ${gem.seed.genre} | Harmony: ${gem.seed.colorPalette} (base ${baseHue}°)`);
       lines.push(`     Typography: ${gem.seed.typography} | Scale: ${gem.seed.typeScale ?? '—'}`);
       lines.push(`     Layout: ${gem.seed.layoutArchetype} | Density: ${gem.seed.density} | Mood: ${gem.seed.mood}`);
@@ -109,10 +110,10 @@ export function formatReport(report: MorningReport): string {
 
   lines.push('OPEN IN BROWSER:');
   lines.push('  All variations are standalone HTML files in .dreamroll/variations/');
-  lines.push('  Open any file directly to view it.');
+  lines.push('  Filenames encode genome: {NNN}_{style}_{palette}_{mutation}.html');
   if (report.topGems.length > 0) {
     const top = report.topGems[0]!;
-    lines.push(`  Recommended start: variation_${String(top.variationId).padStart(3, '0')}.html (avg ${top.averageScore}/10)`);
+    lines.push(`  Recommended start: ${genomeFilename(top.variationId, top.seed)} (avg ${top.averageScore}/10)`);
   }
   lines.push('');
 

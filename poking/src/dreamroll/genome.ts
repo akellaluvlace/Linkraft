@@ -14,6 +14,8 @@ import {
   getTypographyPairing,
   getTypeScale,
   getMutation,
+  getCopyAngle,
+  getSectionVariation,
   BORDER_RADIUS_SPECS,
   SHADOW_SPECS,
   CTA_STYLE_SPECS,
@@ -55,6 +57,10 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
   const mutationId = genome.mutation ?? 'pure';
   const mutationSpec = getMutation(mutationId);
   const isMutation = mutationId !== 'pure';
+  const copyAngleId = genome.copyAngle ?? 'outcome-first';
+  const copyAngleSpec = getCopyAngle(copyAngleId);
+  const sectionVariationId = genome.sectionVariation ?? 'uniform';
+  const sectionVariationSpec = getSectionVariation(sectionVariationId);
 
   const fontsLink = typography
     ? `https://fonts.googleapis.com/css2?${typography.googleFontsParam}&display=swap`
@@ -176,13 +182,28 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
       ]
     ),
     '════════════════════════════════════════════════════════════════════════',
+    `COPY ANGLE: ${copyAngleId}`,
+    '════════════════════════════════════════════════════════════════════════',
+    '',
+    copyAngleSpec?.guidance ?? 'Use clear, direct copy that matches the product brief.',
+    '',
+    'The product brief content stays the same — only the framing of the headline,',
+    'subheadline, and CTA changes. Apply this angle consistently across all sections.',
+    '',
+    '════════════════════════════════════════════════════════════════════════',
+    `SECTION RHYTHM: ${sectionVariationId}`,
+    '════════════════════════════════════════════════════════════════════════',
+    '',
+    sectionVariationSpec?.instructions ?? 'Every section follows the base genome.',
+    '',
+    '════════════════════════════════════════════════════════════════════════',
     'PRODUCT BRIEF',
     '════════════════════════════════════════════════════════════════════════',
     '',
     brief,
     '',
     '════════════════════════════════════════════════════════════════════════',
-    'FULL GENOME (15 dimensions — all must visibly influence the design)',
+    'FULL GENOME (17 dimensions — all must visibly influence the design)',
     '════════════════════════════════════════════════════════════════════════',
     '',
     `  1.  Style archetype:  ${genome.genre}  ← the dominating concern above`,
@@ -202,6 +223,8 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
     `  13. CTA style:        ${genome.ctaStyle ?? '(default)'}${cta ? ` — ${cta.css}` : ''}`,
     `  14. Oblique constraint: ${genome.wildcard}  ← MUST be applied`,
     `  15. Style mutation:   ${mutationId}${mutationSpec ? ` — ${mutationSpec.summary}` : ''}`,
+    `  16. Copy angle:       ${copyAngleId}${copyAngleSpec ? ' — see COPY ANGLE block' : ''}`,
+    `  17. Section rhythm:   ${sectionVariationId}${sectionVariationSpec ? ' — see SECTION RHYTHM block' : ''}`,
     '',
     constraintBlock,
     '',
@@ -301,11 +324,40 @@ export function serializeGenomeAsComment(genome: StyleGenome, variationNumber: n
     `    cta:        ${genome.ctaStyle ?? '(default)'}`,
     `    constraint: ${genome.wildcard}`,
     ...mutationLines,
+    `    copyAngle:  ${genome.copyAngle ?? '(default)'}`,
+    `    section:    ${genome.sectionVariation ?? '(default)'}`,
     '',
     '  SCORES: (filled in after judging)',
     '-->',
   ];
   return lines.join('\n');
+}
+
+/**
+ * Sanitizes a genome dimension value into a filename-safe slug.
+ */
+function slug(input: string | undefined): string {
+  if (!input) return 'na';
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'na';
+}
+
+/**
+ * Builds the variation filename including the key genome identifiers, so users
+ * can scan filenames in .dreamroll/variations/ and know what each one is
+ * without opening it.
+ *
+ * Format: {NNN}_{style}_{palette}_{mutation}.html
+ * Example: 001_cyberpunk_neon-on-dark_pure.html
+ */
+export function genomeFilename(variationNumber: number, genome: StyleGenome): string {
+  const num = String(variationNumber).padStart(3, '0');
+  const style = slug(genome.genre);
+  const palette = slug(genome.colorPalette);
+  const mutation = slug(genome.mutation ?? 'pure');
+  return `${num}_${style}_${palette}_${mutation}.html`;
 }
 
 /**
@@ -327,6 +379,10 @@ export function genomeSummary(genome: StyleGenome): string {
     if (genome.mutationTertiary) m += `(+${genome.mutationTertiary})`;
     if (genome.mutationMaterial) m += `(${genome.mutationMaterial})`;
     parts.push(m);
+  }
+  if (genome.copyAngle) parts.push(`copy=${genome.copyAngle}`);
+  if (genome.sectionVariation && genome.sectionVariation !== 'uniform') {
+    parts.push(`section=${genome.sectionVariation}`);
   }
   return parts.join(' | ');
 }

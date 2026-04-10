@@ -8,16 +8,27 @@ import { judgeVariation, type JudgeCaller } from './judges.js';
 import { createState, loadState, addVariation, saveState, completeRun, stopRun } from './state.js';
 import { maybeEvolve, shouldInjectChaos } from './evolution.js';
 import { generateReport, formatReport } from './reporter.js';
+import { computeUserPreferenceWeights, mergeWeights } from './feedback.js';
+import { popPendingChild } from './breeding.js';
 
 /**
- * Generates random seed parameters for a variation.
- * If state has accumulated param weights, uses weighted selection.
- * Chaos rounds (20%) always use fully random.
+ * Generates the next seed parameters for a variation.
+ *
+ * Priority order:
+ *   1. If state has pending children from /linkraft dreamroll breed, pop one off the queue.
+ *   2. Otherwise roll fresh, merging user feedback weights on top of evolution weights.
+ *   3. Chaos rounds ignore weights entirely.
  */
 export function rollSeedParameters(state?: DreamrollState): SeedParameters {
+  if (state) {
+    const child = popPendingChild(state);
+    if (child) return child;
+  }
   const chaos = shouldInjectChaos(state?.currentVariation ?? 0);
-  const weights = state?.paramWeights as ParamWeights | undefined;
-  return rollParams(weights, chaos);
+  const evolutionWeights = state?.paramWeights as ParamWeights | undefined;
+  const userWeights = state ? computeUserPreferenceWeights(state) : undefined;
+  const merged = mergeWeights(evolutionWeights, userWeights);
+  return rollParams(merged, chaos);
 }
 
 /**

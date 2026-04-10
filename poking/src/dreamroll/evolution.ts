@@ -25,8 +25,9 @@ function countByField(
 }
 
 /**
- * All 14 parameter dimensions tracked by evolution. Maps SeedParameters field name
- * to human-readable label used in pattern messages.
+ * All 16 parameter dimensions tracked by evolution. Maps SeedParameters field name
+ * to human-readable label used in pattern messages. (Mutation is excluded —
+ * its weights are computed differently in params.ts.)
  */
 const TRACKED_FIELDS: Array<[string, string]> = [
   ['genre', 'Style'],
@@ -43,6 +44,8 @@ const TRACKED_FIELDS: Array<[string, string]> = [
   ['shadows', 'Shadows'],
   ['ctaStyle', 'CtaStyle'],
   ['wildcard', 'Constraint'],
+  ['copyAngle', 'CopyAngle'],
+  ['sectionVariation', 'SectionVariation'],
 ];
 
 /**
@@ -122,6 +125,8 @@ const FIELD_TO_WEIGHT_KEY: Record<string, string> = {
   shadows: 'shadows',
   ctaStyle: 'ctaStyle',
   wildcard: 'wildcard',
+  copyAngle: 'copyAngle',
+  sectionVariation: 'sectionVariation',
 };
 
 export function applyAdjustments(state: DreamrollState, adjustments: EvolutionAdjustment[]): void {

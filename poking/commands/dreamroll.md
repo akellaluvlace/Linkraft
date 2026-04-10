@@ -29,3 +29,12 @@ Generate the morning report: top 5 gems, patterns, wildcard discoveries.
 
 ### /linkraft dreamroll overnight
 Generate an OS-appropriate restart loop script (.ps1 on Windows, .sh on Mac/Linux) into `.dreamroll/` so the run can survive context-fill boundaries. Prints exact run instructions for a separate terminal.
+
+### /linkraft dreamroll like [variationId]
+Mark a variation as a favorite. Every dimension value in the liked genome gets a 3x weight multiplier on top of evolution weights, so future rolls bias toward what you actually want. Calls `dreamroll_like`.
+
+### /linkraft dreamroll hate [variationId]
+Mark a variation as bad. Every dimension value gets a 0.25x multiplier so future rolls steer away from it. Calls `dreamroll_hate`.
+
+### /linkraft dreamroll breed [parentA] [parentB]
+Cross two existing variations into 3 child genomes by alternating dimensions and rolling a fresh mutation per child. Children are queued and consumed by the next 3 variations in the loop. Calls `dreamroll_breed`.

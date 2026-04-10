@@ -8,12 +8,12 @@ import {
 } from '../../src/dreamroll/params.js';
 
 describe('parameter pools', () => {
-  it('all 15 pools have at least 5 values', () => {
+  it('all 17 pools have at least 3 values', () => {
     const pools = getAllPools();
-    expect(Object.keys(pools)).toHaveLength(15);
+    expect(Object.keys(pools)).toHaveLength(17);
     for (const [name, pool] of Object.entries(pools)) {
-      // mutation pool has 8 values; every other pool has >= 5
-      const min = name === 'mutation' ? 5 : 5;
+      // sectionVariation has 3 values; mutation has 8; every other pool has >= 5
+      const min = name === 'sectionVariation' ? 3 : 5;
       expect(pool.length, `pool ${name} should have >= ${min} values`).toBeGreaterThanOrEqual(min);
     }
   });

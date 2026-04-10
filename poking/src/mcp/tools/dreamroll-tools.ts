@@ -4,9 +4,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { loadState, saveState, createState, stopRun } from '../../dreamroll/state.js';
 import { getMorningReport, rollSeedParameters } from '../../dreamroll/generator.js';
-import { genomeToPrompt, genomeSummary } from '../../dreamroll/genome.js';
+import { genomeToPrompt, genomeSummary, genomeFilename } from '../../dreamroll/genome.js';
 import { getJudgeEvaluationPrompts, calculateVerdict, applyStyleAdherenceDeduction } from '../../dreamroll/judges.js';
 import { maybeEvolve } from '../../dreamroll/evolution.js';
+import { likeVariation, hateVariation } from '../../dreamroll/feedback.js';
+import { breedGenomes, queuePendingChildren } from '../../dreamroll/breeding.js';
 import { writeOvernightScript, overnightInstructions } from '../../shared/overnight.js';
 import type { DreamrollConfig, Variation } from '../../dreamroll/types.js';
 
@@ -160,7 +162,7 @@ export function registerDreamrollTools(server: McpServer): void {
       state.currentVariation = nextId;
       saveState(projectRoot, state);
 
-      const outputPath = path.join(projectRoot, '.dreamroll', 'variations', `variation_${String(nextId).padStart(3, '0')}.html`);
+      const outputPath = path.join(projectRoot, '.dreamroll', 'variations', genomeFilename(nextId, seed));
       const generationPrompt = genomeToPrompt(seed, state.config.brief ?? 'A product', nextId, outputPath);
 
       // 5. Build judge prompts (if pluginRoot supplied)
@@ -357,6 +359,121 @@ export function registerDreamrollTools(server: McpServer): void {
           text: `${instructions}\n\n--- SCRIPT CONTENTS ---\n${script.content}`,
         }],
       };
+    },
+  );
+
+  // ==========================================================================
+  // dreamroll_like
+  // User feedback: marks a variation as a favorite. Every dimension value in
+  // the liked genome gets a 3x multiplier on top of evolution weights.
+  // ==========================================================================
+  server.tool(
+    'dreamroll_like',
+    'Marks a variation as a favorite. Every dimension value in the liked genome gets a 3x weight multiplier on top of evolution weights, so future rolls bias toward what the user actually wants. Removes the variation from "hated" if it was there.',
+    {
+      projectRoot: z.string().describe('Project root directory'),
+      variationId: z.number().int().positive().describe('Variation number to like (e.g., 14 for variation_014).'),
+    },
+    async ({ projectRoot, variationId }) => {
+      const state = loadState(projectRoot);
+      if (!state) {
+        return { content: [{ type: 'text' as const, text: 'No Dreamroll state found. Run /linkraft dreamroll first.' }] };
+      }
+      const ok = likeVariation(state, variationId);
+      if (!ok) {
+        const exists = state.variations.find(v => v.id === variationId);
+        const msg = exists
+          ? `Variation ${variationId} is already liked.`
+          : `Variation ${variationId} not found.`;
+        return { content: [{ type: 'text' as const, text: msg }] };
+      }
+      saveState(projectRoot, state);
+      const variation = state.variations.find(v => v.id === variationId)!;
+      const lines = [
+        `Liked variation ${variationId}.`,
+        `Future rolls bias 3x toward: ${genomeSummary(variation.seed)}`,
+        '',
+        `User preferences: ${state.userPreferences?.liked.length ?? 0} liked, ${state.userPreferences?.hated.length ?? 0} hated.`,
+      ];
+      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
+    },
+  );
+
+  // ==========================================================================
+  // dreamroll_hate
+  // User feedback: marks a variation as bad. Every dimension value gets a
+  // 0.25x weight multiplier so the next rolls steer away from it.
+  // ==========================================================================
+  server.tool(
+    'dreamroll_hate',
+    'Marks a variation as bad. Every dimension value in the hated genome gets a 0.25x weight multiplier, so future rolls steer away from it. Removes the variation from "liked" if it was there.',
+    {
+      projectRoot: z.string().describe('Project root directory'),
+      variationId: z.number().int().positive().describe('Variation number to hate.'),
+    },
+    async ({ projectRoot, variationId }) => {
+      const state = loadState(projectRoot);
+      if (!state) {
+        return { content: [{ type: 'text' as const, text: 'No Dreamroll state found.' }] };
+      }
+      const ok = hateVariation(state, variationId);
+      if (!ok) {
+        const exists = state.variations.find(v => v.id === variationId);
+        const msg = exists
+          ? `Variation ${variationId} is already hated.`
+          : `Variation ${variationId} not found.`;
+        return { content: [{ type: 'text' as const, text: msg }] };
+      }
+      saveState(projectRoot, state);
+      const variation = state.variations.find(v => v.id === variationId)!;
+      const lines = [
+        `Hated variation ${variationId}.`,
+        `Future rolls bias 0.25x away from: ${genomeSummary(variation.seed)}`,
+        '',
+        `User preferences: ${state.userPreferences?.liked.length ?? 0} liked, ${state.userPreferences?.hated.length ?? 0} hated.`,
+      ];
+      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
+    },
+  );
+
+  // ==========================================================================
+  // dreamroll_breed
+  // Crosses two existing variations into 3 children that get queued as the
+  // next variations the loop produces.
+  // ==========================================================================
+  server.tool(
+    'dreamroll_breed',
+    'Crosses two existing variations into 3 child genomes by alternating dimensions between the parents and rolling a fresh mutation per child. The children are queued in state and consumed by the next 3 calls to dreamroll_start, so the loop will produce them as the next 3 variations.',
+    {
+      projectRoot: z.string().describe('Project root directory'),
+      parentA: z.number().int().positive().describe('Variation number of the first parent.'),
+      parentB: z.number().int().positive().describe('Variation number of the second parent.'),
+    },
+    async ({ projectRoot, parentA, parentB }) => {
+      const state = loadState(projectRoot);
+      if (!state) {
+        return { content: [{ type: 'text' as const, text: 'No Dreamroll state found.' }] };
+      }
+      const a = state.variations.find(v => v.id === parentA);
+      const b = state.variations.find(v => v.id === parentB);
+      if (!a || !b) {
+        const missing = [!a ? parentA : null, !b ? parentB : null].filter(n => n !== null);
+        return { content: [{ type: 'text' as const, text: `Variation(s) not found: ${missing.join(', ')}` }] };
+      }
+      if (parentA === parentB) {
+        return { content: [{ type: 'text' as const, text: 'Cannot breed a variation with itself.' }] };
+      }
+      const children = breedGenomes(a.seed, b.seed);
+      queuePendingChildren(state, children);
+      saveState(projectRoot, state);
+
+      const lines = [
+        `Bred variation ${parentA} x variation ${parentB} -> ${children.length} children queued.`,
+        'The next 3 dreamroll_start calls will use these instead of fresh random rolls.',
+        '',
+        ...children.map((c, i) => `  child ${i + 1}: ${genomeSummary(c)}`),
+      ];
+      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
     },
   );
 }
