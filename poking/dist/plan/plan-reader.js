@@ -62,6 +62,7 @@ const PLAN_FILES = [
     ['RISK_MATRIX.md', 'riskMatrix'],
     ['EXECUTIVE_SUMMARY.md', 'executiveSummary'],
     ['FEATURES.md', 'features'],
+    ['HARDENING.md', 'hardening'],
 ];
 /**
  * Reads every known .plan/*.md document from the project root.

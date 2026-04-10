@@ -21,21 +21,24 @@ Requirements: Claude Code, Claude Pro/Max/Team/Enterprise, Node.js 18+
 
 ## /linkraft plan
 
-Scans your project and generates up to 13 planning documents.
+Scans your project and generates up to 14 planning documents. The chain is self-reinforcing: research phase (steps 1-12) feeds a synthesis step (13: HARDENING.md with prioritized action items) which feeds the capstone (14: CLAUDE.md). Every future Claude session starts knowing the project AND what to work on.
 
 ```
-/linkraft plan               Full flow (all outputs)
-/linkraft plan claude-md     Generate CLAUDE.md from existing code
+/linkraft plan               Full flow (all 14 steps)
+/linkraft plan claude-md     Generate CLAUDE.md (reads .plan/ if present)
 /linkraft plan stack         Tech stack analysis
 /linkraft plan competitors   Competitive analysis (uses web search)
 /linkraft plan architecture  System architecture review
 /linkraft plan risks         Risk matrix
 /linkraft plan deps          Task dependency graph
+/linkraft plan hardening     Synthesize prioritized action items from .plan/
 ```
 
-Outputs written to `.plan/`: stack, features, schema, API map, design tokens, competitors, architecture, executive summary, risk matrix, dependency graph, plus conditional monetization and ASO.
+Research outputs in `.plan/`: stack, features, schema, API map, design tokens, competitors, architecture, executive summary, risk matrix, dependency graph, plus conditional monetization and ASO.
 
-CLAUDE.md is the key output: tech stack, commands, directory structure, coding standards, hard constraints, architecture notes, environment variables, areas to avoid.
+Synthesis output: `HARDENING.md` — categorizes everything into **must-fix** (blocks launch), **should-fix** (improves quality), **nice-to-have** (polish). Each item is tagged with category, source doc, and effort estimate.
+
+Capstone output: `CLAUDE.md` — tech stack, commands, directory structure, database, API endpoints, design system, architecture notes, hard constraints, and a Known Issues section that surfaces the top 10 items from HARDENING.md (must-fix first).
 
 ## /linkraft preflight
 
@@ -114,7 +117,7 @@ Every feature works with zero config on first run. No API keys. No MCPs required
 
 ## MCP Tools
 
-33 tools across four modes: 15 plan tools, 4 preflight tools, 8 sheep tools, 6 dreamroll tools.
+34 tools across four modes: 16 plan tools, 4 preflight tools, 8 sheep tools, 6 dreamroll tools.
 
 ## Running Overnight
 
@@ -136,9 +139,9 @@ Bonus: during a normal run, sheep and dreamroll automatically surface a reminder
 
 ## Numbers
 
-- 464 tests across 34 test files
+- 540 tests across 36 test files
 - 4 modes (plan, preflight, sheep, dreamroll)
-- 13 plan outputs (10 always + 3 conditional)
+- 14 plan outputs: 10 research + 1 synthesis (HARDENING.md) + 3 conditional + CLAUDE.md (capstone)
 - 3 preflight scores (security, health, readiness)
 - 6 agent personalities (3 sheep, 3 dreamroll judges)
 - 15 dreamroll Style Genome dimensions (180+ values total)

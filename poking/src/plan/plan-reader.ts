@@ -21,6 +21,8 @@ export interface PlanDocs {
   riskMatrix?: string;
   executiveSummary?: string;
   features?: string;
+  /** Step 13: prioritized action items synthesized from all earlier docs. */
+  hardening?: string;
 }
 
 /** Map of .plan filenames to PlanDocs field names. */
@@ -33,6 +35,7 @@ const PLAN_FILES: Array<[string, keyof PlanDocs]> = [
   ['RISK_MATRIX.md', 'riskMatrix'],
   ['EXECUTIVE_SUMMARY.md', 'executiveSummary'],
   ['FEATURES.md', 'features'],
+  ['HARDENING.md', 'hardening'],
 ];
 
 /**

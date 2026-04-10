@@ -27,6 +27,7 @@ import {
   extractCommands,
   type PlanDocs,
 } from './plan-reader.js';
+import { parseHardeningMd, topHardeningItems } from './hardening-gen.js';
 
 /**
  * Scans a project and builds the config needed to generate CLAUDE.md.
@@ -472,8 +473,25 @@ export function generateClaudeMdFromPlan(projectRoot: string, docs: PlanDocs): s
     for (const c of constraints.slice(0, 10)) s.push(`- ${c}`);
   }
 
-  // ── Known Issues (from FEATURES.md gaps section) ───────────────────────
-  if (docs.features) {
+  // ── Known Issues + Priorities ──────────────────────────────────────────
+  // Preferred source: HARDENING.md (step 13 output), top 10 items.
+  // Fallback: FEATURES.md gaps section when HARDENING.md isn't present.
+  const parsed = parseHardeningMd(projectRoot);
+  if (parsed.totalItems > 0) {
+    const top = topHardeningItems(parsed, 10);
+    s.push('', '## Known Issues', '');
+    s.push(`Top priorities from \`.plan/HARDENING.md\` (${parsed.mustFix.length} must-fix, ${parsed.shouldFix.length} should-fix, ${parsed.niceToHave.length} nice-to-have):`);
+    s.push('');
+    for (const item of top) {
+      const badge = item.priority === 'must-fix' ? '**MUST**'
+        : item.priority === 'should-fix' ? '**SHOULD**'
+        : 'nice';
+      s.push(`- ${badge} \`${item.category}\` (${item.effort}): ${item.description}`);
+    }
+    s.push('');
+    s.push('See `.plan/HARDENING.md` for the full prioritized list.');
+  } else if (docs.features) {
+    // Fallback: pull gaps from FEATURES.md when hardening hasn't run yet
     const gaps =
       extractSection(docs.features, 'Gaps') ||
       extractSection(docs.features, 'Missing') ||

@@ -466,4 +466,68 @@ describe('generateAndWriteClaudeMd: path selection', () => {
     const result = generateAndWriteClaudeMd(tmpDir);
     expect(result.source).toBe('plan');
   });
+
+  it('prefers HARDENING.md for Known Issues when present', () => {
+    setupFullPlanDocs();
+    // Write a HARDENING.md with explicit must/should/nice items
+    writePlanDoc('HARDENING.md', `# studyflow — Hardening Proposal
+
+> Generated: 2026-04-10T12:00:00.000Z
+> 3 action items synthesized from .plan/ documents.
+
+## Must Fix (1)
+
+*Blocks launch.*
+
+### 1. Fix the weekly report timezone bug
+
+- **Category:** data
+- **Source:** \`RISK_MATRIX.md\`
+- **Effort:** M
+
+## Should Fix (1)
+
+*Improves quality.*
+
+### 1. Stripe subscription sync is eventually consistent
+
+- **Category:** architecture
+- **Source:** \`ARCHITECTURE.md\`
+- **Effort:** L
+
+## Nice to Have (1)
+
+*Polish.*
+
+### 1. Improve contrast on footer links
+
+- **Category:** ux
+- **Source:** \`RISK_MATRIX.md\`
+- **Effort:** S
+`);
+
+    const md = generateClaudeMdFromPlan(tmpDir, loadPlanDocs(tmpDir));
+    expect(md).toContain('## Known Issues');
+    expect(md).toContain('Top priorities from');
+    expect(md).toContain('HARDENING.md');
+    // Must-fix items get **MUST** badge
+    expect(md).toContain('**MUST**');
+    expect(md).toContain('Fix the weekly report timezone bug');
+    // Should-fix items get **SHOULD** badge
+    expect(md).toContain('**SHOULD**');
+    expect(md).toContain('Stripe subscription sync');
+    // Nice-to-have items get `nice` tag
+    expect(md).toContain('Improve contrast on footer links');
+    // Counts are surfaced
+    expect(md).toMatch(/1 must-fix, 1 should-fix, 1 nice-to-have/);
+  });
+
+  it('falls back to FEATURES.md gaps when HARDENING.md is missing', () => {
+    setupFullPlanDocs();
+    // No HARDENING.md written — features.md is the source
+    const md = generateClaudeMdFromPlan(tmpDir, loadPlanDocs(tmpDir));
+    expect(md).toContain('## Known Issues');
+    expect(md).toContain('No password reset flow'); // from FEATURES.md gaps
+    expect(md).not.toContain('Top priorities from');
+  });
 });

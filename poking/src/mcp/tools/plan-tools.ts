@@ -13,6 +13,7 @@ import { collectRiskMatrixContext, generateRiskMatrixTemplate, writeRiskMatrix }
 import { collectDependencyGraphContext, generateDependencyGraphTemplate, writeDependencyGraph } from '../../plan/dependency-graph-gen.js';
 import { collectMonetizationContext, generateMonetizationTemplate, writeMonetization } from '../../plan/monetization-gen.js';
 import { collectAsoContext, generateAsoTemplate, writeAso } from '../../plan/aso-gen.js';
+import { generateHardeningMd, writeHardeningMd } from '../../plan/hardening-gen.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -71,8 +72,40 @@ export function registerPlanTools(server: McpServer): void {
   );
 
   server.tool(
+    'plan_generate_hardening',
+    'Step 13 of /linkraft plan. Reads all .plan/*.md documents and synthesizes prioritized action items into .plan/HARDENING.md. Categorizes findings into must-fix (security, data loss, correctness), should-fix (architecture weaknesses, incomplete features, UX), and nice-to-have (polish). Each item is tagged with category, source, and effort estimate. Must run AFTER steps 1-12 and BEFORE step 14 (claude-md).',
+    projectRootSchema,
+    async ({ projectRoot }) => {
+      const result = generateHardeningMd(projectRoot);
+      if (!result) {
+        return {
+          content: [{
+            type: 'text' as const,
+            text: 'No .plan/ documents found. Run /linkraft plan first to generate STACK.md, SCHEMA.md, ARCHITECTURE.md, RISK_MATRIX.md, etc.',
+          }],
+        };
+      }
+      const filePath = writeHardeningMd(projectRoot, result.content);
+      const { report } = result;
+      const summary = [
+        `HARDENING.md written to: ${filePath}`,
+        '',
+        `Total action items: ${report.totalItems}`,
+        `  Must Fix:     ${report.mustFix.length}  (blocks launch)`,
+        `  Should Fix:   ${report.shouldFix.length}  (improves quality)`,
+        `  Nice to Have: ${report.niceToHave.length}  (polish)`,
+        '',
+        'Next: run plan_generate_claude_md (step 14) to fold the top items into CLAUDE.md.',
+      ].join('\n');
+      return {
+        content: [{ type: 'text' as const, text: `${summary}\n\n---\n\n${result.content}` }],
+      };
+    },
+  );
+
+  server.tool(
     'plan_generate_claude_md',
-    'Generates CLAUDE.md. Prefers distilling .plan/*.md docs when they exist (post-/linkraft plan); falls back to direct project scan otherwise. If CLAUDE.md already exists, reports diff for merge review.',
+    'Step 14 of /linkraft plan. Generates CLAUDE.md. Prefers distilling .plan/*.md docs when they exist (post-/linkraft plan); falls back to direct project scan otherwise. Surfaces the top items from HARDENING.md in the Known Issues section. If CLAUDE.md already exists, reports diff for merge review.',
     projectRootSchema,
     async ({ projectRoot }) => {
       const result = generateAndWriteClaudeMd(projectRoot);

@@ -7,11 +7,13 @@ description: Before-you-build mode. Scans project, generates CLAUDE.md, competit
 
 ## What This Does
 
-Plan mode scans your project and produces 10-12 documents that give every future Claude session full context from day one.
+Plan mode scans your project and produces up to 14 documents that give every future Claude session full context AND a prioritized action list from day one.
+
+**The chain:** steps 1-12 generate research documents → step 13 distills them into a prioritized hardening proposal → step 14 folds everything (including the hardening priorities) into CLAUDE.md. Each step builds on the last. Every future Claude session starts knowing the project AND what to work on.
 
 ## /linkraft plan — Full Execution Flow
 
-When the user says "/linkraft plan", execute ALL 13 steps below in order. Do not skip steps. Do not ask permission between steps. Run the full pipeline start to finish.
+When the user says "/linkraft plan", execute ALL 14 steps below in order. Do not skip steps. Do not ask permission between steps. Run the full pipeline start to finish.
 
 ### Phase 1: Scan (deterministic, local-only)
 
@@ -78,10 +80,26 @@ This writes `.plan/FEATURES.md`. Read the output to know which conditional outpu
 2. Use web_search for keyword research. Fill in: primary keywords with volume/difficulty/relevance, long-tail keywords, App Store description draft, screenshot strategy (what to show in each of 5 screenshots), category recommendation
 3. Call `plan_aso` WITH content → writes `.plan/ASO_KEYWORDS.md`
 
-### Phase 5: Capstone
+### Phase 5: Synthesis (reads everything from Phases 1-4)
 
-**Step 13:** Call `plan_generate_claude_md`.
-This is always the final step. It synthesizes everything from the scan into a CLAUDE.md.
+**Step 13: HARDENING.md**
+Call `plan_generate_hardening` with the project root. This is a pure synthesis step — no web search, no Claude analysis in the loop. The tool reads every `.plan/*.md` from steps 1-12 and programmatically extracts action items:
+- `RISK_MATRIX.md` critical → must-fix; high → must-fix (if security/data) or should-fix; medium → nice-to-have
+- `ARCHITECTURE.md` weaknesses → should-fix (or must-fix if they mention security/data)
+- `SCHEMA.md` gaps and disabled RLS → must-fix
+- `API_MAP.md` endpoints with auth = none/public → must-fix
+- `DESIGN_TOKENS.md` violations → should-fix
+- `FEATURES.md` gaps → should-fix (or must-fix if security-related)
+
+Each item is tagged with category (security / data / architecture / schema / api / design / performance / ux / feature / general), source doc, and effort (S/M/L). Duplicates across docs are merged.
+
+Writes `.plan/HARDENING.md` with three sections: Must Fix (blocks launch), Should Fix (improves quality), Nice to Have (polish).
+
+### Phase 6: Capstone
+
+**Step 14:** Call `plan_generate_claude_md`.
+This is always the final step. It reads ALL `.plan/*.md` files INCLUDING `HARDENING.md` and distills them into a CLAUDE.md cheat sheet (~2000-3000 tokens). The "Known Issues" section surfaces the top 10 items from HARDENING.md, must-fix first.
+
 If CLAUDE.md already exists: present the diff to the user, ask to apply. If new: writes directly.
 
 ### Summary
@@ -101,7 +119,8 @@ Plan complete. Generated [N] documents in .plan/:
 - DEPENDENCY_GRAPH.md ✓
 - MONETIZATION.md ✓ (or skipped: not a product)
 - ASO_KEYWORDS.md ✓ (or skipped: not mobile)
-- CLAUDE.md ✓ (generated or updated)
+- HARDENING.md ✓ (prioritized action items)
+- CLAUDE.md ✓ (synthesizes everything, surfaces top hardening items)
 ```
 
 ## Subcommand Flows
@@ -152,6 +171,9 @@ Two-mode. ONLY for products. Writes `.plan/MONETIZATION.md`.
 ### /linkraft plan aso
 Two-mode. ONLY for mobile apps. Uses web_search. Writes `.plan/ASO_KEYWORDS.md`.
 
+### /linkraft plan hardening
+Call `plan_generate_hardening`. Reads every `.plan/*.md` present and synthesizes `.plan/HARDENING.md` with prioritized action items (must-fix / should-fix / nice-to-have). Deterministic — no web search, no Claude analysis in the loop. Must run AFTER the research steps and BEFORE `plan claude-md` to fully benefit from the chain.
+
 ## CLAUDE.md Details
 
 CLAUDE.md is always generated. It includes:
@@ -188,9 +210,6 @@ When CLAUDE.md already exists:
 ### Core (deterministic, single-mode):
 - `plan_analyze_stack`: tech stack + conventions → .plan/STACK.md
 - `plan_features`: which outputs applicable → .plan/FEATURES.md
-- `plan_generate_claude_md`: generate/diff CLAUDE.md
-- `plan_write_claude_md`: write reviewed CLAUDE.md content
-- `plan_preview_claude_md`: preview without writing
 - `plan_schema`: database schema → .plan/SCHEMA.md
 - `plan_api_map`: API endpoints → .plan/API_MAP.md
 - `plan_tokens`: design tokens → .plan/DESIGN_TOKENS.md
@@ -203,6 +222,14 @@ When CLAUDE.md already exists:
 - `plan_dependency_graph`: task dependencies → .plan/DEPENDENCY_GRAPH.md
 - `plan_monetization`: pricing/revenue (products only) → .plan/MONETIZATION.md
 - `plan_aso`: ASO keywords (mobile only) → .plan/ASO_KEYWORDS.md
+
+### Synthesis (step 13 — reads everything from phases 1-4):
+- `plan_generate_hardening`: prioritized action items → .plan/HARDENING.md (deterministic, reads all .plan/ docs)
+
+### Capstone (step 14 — reads everything including HARDENING.md):
+- `plan_generate_claude_md`: distill into CLAUDE.md cheat sheet with Known Issues section
+- `plan_write_claude_md`: write reviewed CLAUDE.md content
+- `plan_preview_claude_md`: preview without writing
 
 ## Zero Config
 

@@ -7,6 +7,8 @@ export interface PlanDocs {
     riskMatrix?: string;
     executiveSummary?: string;
     features?: string;
+    /** Step 13: prioritized action items synthesized from all earlier docs. */
+    hardening?: string;
 }
 /**
  * Reads every known .plan/*.md document from the project root.
