@@ -14,6 +14,22 @@ import { collectDependencyGraphContext, generateDependencyGraphTemplate, writeDe
 import { collectMonetizationContext, generateMonetizationTemplate, writeMonetization } from '../../plan/monetization-gen.js';
 import { collectAsoContext, generateAsoTemplate, writeAso } from '../../plan/aso-gen.js';
 import { generateHardeningMd, writeHardeningMd } from '../../plan/hardening-gen.js';
+import { detectPlanPath, findIdeaFile } from '../../plan/path-detector.js';
+import { readIdeaFile, writeIdeaSummary, formatIdeaSummary } from '../../plan/idea-reader.js';
+import {
+  resolveIdeaContext,
+  generateStackFromIdeaTemplate,
+  writeStackFromIdea,
+  generateSchemaFromIdeaTemplate,
+  writeSchemaFromIdea,
+  generateApiMapFromIdeaTemplate,
+  writeApiMapFromIdea,
+  generateTokensFromIdeaTemplate,
+  writeTokensFromIdea,
+  generateFeaturesFromIdeaTemplate,
+  writeFeaturesFromIdea,
+} from '../../plan/from-idea-gen.js';
+import { buildScaffoldPlan, writeScaffold, formatScaffoldPreview } from '../../plan/scaffold-gen.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -371,6 +387,191 @@ export function registerPlanTools(server: McpServer): void {
       const ctx = collectAsoContext(projectRoot);
       const template = generateAsoTemplate(ctx);
       return { content: [{ type: 'text' as const, text: template }] };
+    },
+  );
+
+  // --- Path B (plan from a rough idea .md) -----------------------------------
+
+  server.tool(
+    'plan_detect_path',
+    'First step of /linkraft plan. Decides whether to run in Path A (analyze existing project) or Path B (generate plan from a rough idea .md). Returns { path: "a" | "b" | "missing", ideaFile?, reason }.',
+    projectRootSchema,
+    async ({ projectRoot }) => {
+      const result = detectPlanPath(projectRoot);
+      const lines = [
+        `Path: ${result.path}`,
+        `Reason: ${result.reason}`,
+        ...(result.ideaFile ? [`Idea file: ${result.ideaFile}`] : []),
+        '',
+        result.path === 'a'
+          ? 'Next: run the standard Path A pipeline (plan_analyze_stack, plan_features, plan_schema, plan_api_map, plan_tokens, then research tools, then plan_generate_hardening, then plan_generate_claude_md).'
+          : result.path === 'b'
+            ? 'Next: call plan_read_idea, then the plan_design_* tools for stack/schema/api_map/tokens/features, then the research tools, then plan_generate_hardening, plan_generate_claude_md, and finally plan_scaffold.'
+            : 'Next: ask the user to create a .md file with their idea (PLAN.md, IDEA.md, or BRIEF.md) and re-run /linkraft plan.',
+      ];
+      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
+    },
+  );
+
+  server.tool(
+    'plan_read_idea',
+    'Path B step 1. Reads the rough idea .md at the project root, extracts product context (name, description, category, features, tech hints, target audience), and writes a normalized .plan/IDEA.md summary that every downstream generator consumes.',
+    {
+      projectRoot: z.string().describe('Project root directory'),
+      ideaFile: z.string().optional().describe('Optional filename of the idea .md (relative to projectRoot). Auto-detected if omitted.'),
+    },
+    async ({ projectRoot, ideaFile }) => {
+      const fileName = ideaFile ?? findIdeaFile(projectRoot);
+      if (!fileName) {
+        return {
+          content: [{
+            type: 'text' as const,
+            text: 'No idea .md found. Create PLAN.md, IDEA.md, or BRIEF.md at the project root and re-run.',
+          }],
+        };
+      }
+      const ctx = readIdeaFile(projectRoot, fileName);
+      if (!ctx) {
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Failed to read ${fileName}.`,
+          }],
+        };
+      }
+      const filePath = writeIdeaSummary(projectRoot, ctx);
+      const summary = formatIdeaSummary(ctx);
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `Written to ${filePath}\n\n---\n\n${summary}`,
+        }],
+      };
+    },
+  );
+
+  server.tool(
+    'plan_design_stack',
+    'Path B variant of plan_analyze_stack. Without content: returns idea context and a recommended-stack template for Claude to fill in. With content: writes .plan/STACK.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeStackFromIdea(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = resolveIdeaContext(projectRoot);
+      if (!ctx) {
+        return { content: [{ type: 'text' as const, text: 'No idea context. Run plan_read_idea first.' }] };
+      }
+      return { content: [{ type: 'text' as const, text: generateStackFromIdeaTemplate(ctx) }] };
+    },
+  );
+
+  server.tool(
+    'plan_design_schema',
+    'Path B variant of plan_schema. Without content: returns a schema design template seeded with the idea context. With content: writes .plan/SCHEMA.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeSchemaFromIdea(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = resolveIdeaContext(projectRoot);
+      if (!ctx) {
+        return { content: [{ type: 'text' as const, text: 'No idea context. Run plan_read_idea first.' }] };
+      }
+      return { content: [{ type: 'text' as const, text: generateSchemaFromIdeaTemplate(ctx) }] };
+    },
+  );
+
+  server.tool(
+    'plan_design_api_map',
+    'Path B variant of plan_api_map. Without content: returns an API design template. With content: writes .plan/API_MAP.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeApiMapFromIdea(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = resolveIdeaContext(projectRoot);
+      if (!ctx) {
+        return { content: [{ type: 'text' as const, text: 'No idea context. Run plan_read_idea first.' }] };
+      }
+      return { content: [{ type: 'text' as const, text: generateApiMapFromIdeaTemplate(ctx) }] };
+    },
+  );
+
+  server.tool(
+    'plan_design_tokens',
+    'Path B variant of plan_tokens. Without content: returns a proposed design-tokens template. With content: writes .plan/DESIGN_TOKENS.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeTokensFromIdea(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = resolveIdeaContext(projectRoot);
+      if (!ctx) {
+        return { content: [{ type: 'text' as const, text: 'No idea context. Run plan_read_idea first.' }] };
+      }
+      return { content: [{ type: 'text' as const, text: generateTokensFromIdeaTemplate(ctx) }] };
+    },
+  );
+
+  server.tool(
+    'plan_design_features',
+    'Path B variant of plan_features. Without content: returns a feature breakdown seeded with the idea context. With content: writes .plan/FEATURES.md.',
+    twoModeSchema,
+    async ({ projectRoot, content }) => {
+      if (content) {
+        const filePath = writeFeaturesFromIdea(projectRoot, content);
+        return { content: [{ type: 'text' as const, text: `Written to ${filePath}` }] };
+      }
+      const ctx = resolveIdeaContext(projectRoot);
+      if (!ctx) {
+        return { content: [{ type: 'text' as const, text: 'No idea context. Run plan_read_idea first.' }] };
+      }
+      return { content: [{ type: 'text' as const, text: generateFeaturesFromIdeaTemplate(ctx) }] };
+    },
+  );
+
+  server.tool(
+    'plan_scaffold',
+    'Path B step 15. Generates a minimal project scaffold (package.json, tsconfig, folder structure, .env.example, config files) from the idea context. No application code is written. Existing files are never overwritten. Preview mode returns the plan without writing; apply=true writes files.',
+    {
+      projectRoot: z.string().describe('Project root directory'),
+      apply: z.boolean().optional().describe('If true, writes the scaffold files. If false or omitted, returns a preview only.'),
+    },
+    async ({ projectRoot, apply }) => {
+      const ctx = resolveIdeaContext(projectRoot);
+      if (!ctx) {
+        return {
+          content: [{
+            type: 'text' as const,
+            text: 'No idea context. Run plan_read_idea first, or ensure an idea .md exists at the project root.',
+          }],
+        };
+      }
+      const planResult = buildScaffoldPlan(ctx);
+      if (!apply) {
+        return { content: [{ type: 'text' as const, text: formatScaffoldPreview(planResult) }] };
+      }
+      const result = writeScaffold(projectRoot, planResult);
+      const lines = [
+        `Scaffold applied for ${planResult.projectName} (${planResult.category}).`,
+        '',
+        `Directories created: ${result.directories.length}`,
+        ...result.directories.map(d => `  + ${d}/`),
+        '',
+        `Files created: ${result.created.length}`,
+        ...result.created.map(f => `  + ${f}`),
+        '',
+        `Files skipped (already existed): ${result.skipped.length}`,
+        ...result.skipped.map(f => `  = ${f}`),
+        '',
+        'Next: review CLAUDE.md, then tell Claude to start building phase 1.',
+      ];
+      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
     },
   );
 }
