@@ -1,12 +1,32 @@
 // CLAUDE.md Generator: THE KEY FEATURE of Plan mode.
-// Scans a project and generates a complete, project-specific CLAUDE.md.
-// Not a template. A CLAUDE.md synthesized from everything it learned.
-// Handles merge with existing CLAUDE.md intelligently.
+//
+// Two paths:
+//   1. PLAN-AWARE (preferred): reads .plan/*.md docs produced by the other
+//      plan_* generators and distills them into a CLAUDE.md cheat sheet.
+//      This runs when /linkraft plan has completed its pipeline before
+//      calling plan_generate_claude_md.
+//   2. DIRECT SCAN (fallback): if no .plan/ docs exist, scans the project
+//      directly (package.json, file structure, source files) and produces
+//      a CLAUDE.md from that. This is what runs when the user calls
+//      /linkraft plan claude-md on its own.
+//
+// Both paths produce the same shape of markdown and go through the same
+// diff/merge logic so existing CLAUDE.md files are respected.
 
 import * as fs from 'fs';
 import * as path from 'path';
 import type { ClaudeMdConfig, FileMapEntry, EnvVar } from './types.js';
 import { analyzeStack, detectConventions } from './stack-analyzer.js';
+import {
+  loadPlanDocs,
+  hasPlanDocs,
+  extractSection,
+  extractBullets,
+  extractTableRows,
+  extractLeadParagraph,
+  extractCommands,
+  type PlanDocs,
+} from './plan-reader.js';
 
 /**
  * Scans a project and builds the config needed to generate CLAUDE.md.
@@ -147,6 +167,338 @@ export function generateClaudeMd(config: ClaudeMdConfig): string {
 }
 
 /**
+ * Generates a CLAUDE.md by distilling the .plan/*.md documents.
+ *
+ * This is the preferred path when the full /linkraft plan pipeline has run
+ * and produced the research + analysis outputs. The resulting CLAUDE.md is a
+ * cheat sheet (~2000-3000 tokens) — not a copy of the plan docs. Sections are
+ * intentionally short bullet lists so future Claude sessions can load the
+ * whole file into context cheaply.
+ *
+ * Unknown or missing docs are tolerated — each section is emitted only when
+ * the corresponding source is available and parseable.
+ */
+export function generateClaudeMdFromPlan(projectRoot: string, docs: PlanDocs): string {
+  const s: string[] = [];
+
+  // Project name + description: derived from package.json, NOT the plan docs
+  // (plan docs don't reliably carry the identifier we want in the h1).
+  let projectName = path.basename(projectRoot);
+  let projectDescription = '';
+  const pkgPath = path.join(projectRoot, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as Record<string, unknown>;
+      if (typeof pkg['name'] === 'string') projectName = pkg['name'];
+      if (typeof pkg['description'] === 'string') projectDescription = pkg['description'];
+    } catch {}
+  }
+
+  s.push(`# ${projectName}`);
+  if (projectDescription) s.push('', projectDescription);
+  s.push('', '> Synthesized from `.plan/` documents. Distillation, not duplication — read the source docs for full detail.');
+
+  // ── Project Overview (from executive summary) ──────────────────────────
+  if (docs.executiveSummary) {
+    const overview = extractLeadParagraph(docs.executiveSummary, 600);
+    const currentState =
+      extractSection(docs.executiveSummary, 'Current State') ||
+      extractSection(docs.executiveSummary, 'State') ||
+      extractSection(docs.executiveSummary, 'What It Is');
+    if (overview || currentState) {
+      s.push('', '## Project Overview', '');
+      if (overview) s.push(overview);
+      if (currentState && currentState !== overview) {
+        const paragraph = extractLeadParagraph(currentState, 500);
+        if (paragraph) s.push('', paragraph);
+      }
+    }
+  }
+
+  // ── Tech Stack (from STACK.md) ─────────────────────────────────────────
+  if (docs.stack) {
+    const stackSection =
+      extractSection(docs.stack, 'Tech Stack') ||
+      extractSection(docs.stack, 'Stack') ||
+      extractSection(docs.stack, 'Detected Stack');
+    if (stackSection) {
+      const bullets = extractBullets(stackSection, 12);
+      const rows = extractTableRows(stackSection, 12);
+      if (rows.length > 0) {
+        s.push('', '## Tech Stack', '', ...rows);
+      } else if (bullets.length > 0) {
+        s.push('', '## Tech Stack', '', ...bullets.map(b => `- ${b}`));
+      }
+    }
+  }
+
+  // ── Commands (from STACK.md or wherever) ───────────────────────────────
+  const commandSource = docs.stack ?? '';
+  const commands = extractCommands(commandSource, 8);
+  if (commands.length > 0) {
+    s.push('', '## Commands', '');
+    for (const cmd of commands) s.push(`- \`${cmd}\``);
+  }
+
+  // ── Directory Structure (from STACK.md if provided) ────────────────────
+  if (docs.stack) {
+    const structure =
+      extractSection(docs.stack, 'File Organization') ||
+      extractSection(docs.stack, 'Directory Structure') ||
+      extractSection(docs.stack, 'Project Structure');
+    if (structure) {
+      // Try to pull a code block first; fall back to bullet list
+      const codeBlock = /```[\w-]*\n([\s\S]*?)```/m.exec(structure);
+      if (codeBlock?.[1]) {
+        s.push('', '## Directory Structure', '', '```', codeBlock[1].trim(), '```');
+      } else {
+        const bullets = extractBullets(structure, 15);
+        if (bullets.length > 0) {
+          s.push('', '## Directory Structure', '', ...bullets.map(b => `- ${b}`));
+        }
+      }
+    }
+  }
+
+  // ── Database (from SCHEMA.md, condensed) ───────────────────────────────
+  if (docs.schema) {
+    const lines: string[] = [];
+
+    const tables =
+      extractSection(docs.schema, 'Tables') ||
+      extractSection(docs.schema, 'Schema') ||
+      extractSection(docs.schema, 'Database Tables');
+    if (tables) {
+      const tableRows = extractTableRows(tables, 10);
+      const tableBullets = extractBullets(tables, 10);
+      if (tableRows.length > 0) {
+        lines.push(...tableRows);
+      } else if (tableBullets.length > 0) {
+        lines.push(...tableBullets.map(b => `- ${b}`));
+      }
+    }
+
+    const rls = extractSection(docs.schema, 'RLS');
+    if (rls) {
+      const rlsBullets = extractBullets(rls, 4);
+      if (rlsBullets.length > 0) {
+        lines.push('', '**Row Level Security:**');
+        lines.push(...rlsBullets.map(b => `- ${b}`));
+      }
+    }
+
+    const rpc =
+      extractSection(docs.schema, 'RPC') ||
+      extractSection(docs.schema, 'Functions') ||
+      extractSection(docs.schema, 'Stored Procedures');
+    if (rpc) {
+      const rpcBullets = extractBullets(rpc, 6);
+      if (rpcBullets.length > 0) {
+        lines.push('', '**Key RPC functions:**');
+        lines.push(...rpcBullets.map(b => `- ${b}`));
+      }
+    }
+
+    if (lines.length > 0) {
+      s.push('', '## Database', '', ...lines);
+    }
+  }
+
+  // ── API Endpoints (from API_MAP.md, table format) ──────────────────────
+  if (docs.apiMap) {
+    const endpoints =
+      extractSection(docs.apiMap, 'Endpoints') ||
+      extractSection(docs.apiMap, 'Routes') ||
+      extractSection(docs.apiMap, 'API');
+    const source = endpoints || docs.apiMap;
+    const tableRows = extractTableRows(source, 15);
+    if (tableRows.length > 0) {
+      s.push('', '## API Endpoints', '', ...tableRows);
+    } else {
+      const bullets = extractBullets(source, 15);
+      if (bullets.length > 0) {
+        s.push('', '## API Endpoints', '', ...bullets.map(b => `- ${b}`));
+      }
+    }
+  }
+
+  // ── Design System (from DESIGN_TOKENS.md) ──────────────────────────────
+  if (docs.tokens) {
+    const lines: string[] = [];
+
+    const colors =
+      extractSection(docs.tokens, 'Colors') ||
+      extractSection(docs.tokens, 'Color');
+    if (colors) {
+      const bullets = extractBullets(colors, 8);
+      if (bullets.length > 0) {
+        lines.push('**Colors:**');
+        lines.push(...bullets.map(b => `- ${b}`));
+      }
+    }
+
+    const typography =
+      extractSection(docs.tokens, 'Typography') ||
+      extractSection(docs.tokens, 'Fonts') ||
+      extractSection(docs.tokens, 'Type');
+    if (typography) {
+      const bullets = extractBullets(typography, 6);
+      if (bullets.length > 0) {
+        if (lines.length > 0) lines.push('');
+        lines.push('**Typography:**');
+        lines.push(...bullets.map(b => `- ${b}`));
+      }
+    }
+
+    const banned =
+      extractSection(docs.tokens, 'Banned') ||
+      extractSection(docs.tokens, 'Never') ||
+      extractSection(docs.tokens, 'Forbidden') ||
+      extractSection(docs.tokens, 'Anti-Patterns');
+    if (banned) {
+      const bullets = extractBullets(banned, 8);
+      if (bullets.length > 0) {
+        if (lines.length > 0) lines.push('');
+        lines.push('**Banned patterns:**');
+        lines.push(...bullets.map(b => `- ${b}`));
+      }
+    }
+
+    if (lines.length > 0) {
+      s.push('', '## Design System', '', ...lines);
+    }
+  }
+
+  // ── Architecture Notes (from ARCHITECTURE.md) ──────────────────────────
+  if (docs.architecture) {
+    const lines: string[] = [];
+
+    const strengths = extractSection(docs.architecture, 'Strengths');
+    if (strengths) {
+      const bullets = extractBullets(strengths, 6);
+      if (bullets.length > 0) {
+        lines.push('**Strengths:**');
+        lines.push(...bullets.map(b => `- ${b}`));
+      }
+    }
+
+    const weaknesses =
+      extractSection(docs.architecture, 'Weaknesses') ||
+      extractSection(docs.architecture, 'Issues') ||
+      extractSection(docs.architecture, 'Problems');
+    if (weaknesses) {
+      const bullets = extractBullets(weaknesses, 6);
+      if (bullets.length > 0) {
+        if (lines.length > 0) lines.push('');
+        lines.push('**Weaknesses:**');
+        lines.push(...bullets.map(b => `- ${b}`));
+      }
+    }
+
+    const flow =
+      extractSection(docs.architecture, 'Request Flow') ||
+      extractSection(docs.architecture, 'Data Flow') ||
+      extractSection(docs.architecture, 'Architecture');
+    if (flow && lines.length === 0) {
+      // Only use generic architecture summary if we couldn't find strengths/weaknesses
+      const paragraph = extractLeadParagraph(flow, 400);
+      if (paragraph) lines.push(paragraph);
+    }
+
+    if (lines.length > 0) {
+      s.push('', '## Architecture Notes', '', ...lines);
+    }
+  }
+
+  // ── Critical Risks (from RISK_MATRIX.md, critical+high only) ───────────
+  if (docs.riskMatrix) {
+    const lines: string[] = [];
+
+    const critical = extractSection(docs.riskMatrix, 'Critical');
+    if (critical) {
+      const bullets = extractBullets(critical, 6);
+      if (bullets.length > 0) {
+        lines.push('**Critical:**');
+        lines.push(...bullets.map(b => `- ${b}`));
+      }
+    }
+
+    const high = extractSection(docs.riskMatrix, 'High');
+    if (high) {
+      const bullets = extractBullets(high, 6);
+      if (bullets.length > 0) {
+        if (lines.length > 0) lines.push('');
+        lines.push('**High:**');
+        lines.push(...bullets.map(b => `- ${b}`));
+      }
+    }
+
+    if (lines.length > 0) {
+      s.push('', '## Critical Risks', '', ...lines);
+    }
+  }
+
+  // ── Hard Constraints (from conventions + banned patterns + git rules) ──
+  const constraints: string[] = [];
+  if (docs.stack) {
+    const conv =
+      extractSection(docs.stack, 'Conventions') ||
+      extractSection(docs.stack, 'Coding Standards') ||
+      extractSection(docs.stack, 'Style');
+    if (conv) {
+      constraints.push(...extractBullets(conv, 6));
+    }
+  }
+  if (docs.tokens) {
+    const banned =
+      extractSection(docs.tokens, 'Banned') ||
+      extractSection(docs.tokens, 'Never');
+    if (banned) {
+      const bullets = extractBullets(banned, 4);
+      for (const b of bullets) if (!constraints.includes(b)) constraints.push(b);
+    }
+  }
+  // Always include git/env hard rules
+  if (fs.existsSync(path.join(projectRoot, '.env')) || fs.existsSync(path.join(projectRoot, '.env.local'))) {
+    const envRule = 'Environment variables in use. Never hardcode secrets. Never commit .env files.';
+    if (!constraints.includes(envRule)) constraints.push(envRule);
+  }
+  if (fs.existsSync(path.join(projectRoot, 'supabase', 'migrations')) || fs.existsSync(path.join(projectRoot, 'prisma', 'migrations'))) {
+    const migRule = 'Never edit existing migrations. Always create new ones.';
+    if (!constraints.includes(migRule)) constraints.push(migRule);
+  }
+  if (constraints.length > 0) {
+    s.push('', '## Hard Constraints', '');
+    for (const c of constraints.slice(0, 10)) s.push(`- ${c}`);
+  }
+
+  // ── Known Issues (from FEATURES.md gaps section) ───────────────────────
+  if (docs.features) {
+    const gaps =
+      extractSection(docs.features, 'Gaps') ||
+      extractSection(docs.features, 'Missing') ||
+      extractSection(docs.features, 'Known Issues') ||
+      extractSection(docs.features, 'Incomplete');
+    if (gaps) {
+      const bullets = extractBullets(gaps, 8);
+      if (bullets.length > 0) {
+        s.push('', '## Known Issues', '');
+        for (const b of bullets) s.push(`- ${b}`);
+      }
+    }
+  }
+
+  // ── Session Protocol (always present, short) ───────────────────────────
+  s.push('', '## Session Protocol', '');
+  s.push('1. Read this CLAUDE.md');
+  s.push('2. For deeper detail on any section, read the corresponding `.plan/*.md`');
+  s.push('3. Check git status and recent commits');
+  s.push('4. Ask what to work on');
+
+  return s.join('\n');
+}
+
+/**
  * Compares generated CLAUDE.md with existing one.
  */
 export function diffClaudeMd(existing: string, generated: string): {
@@ -191,7 +543,17 @@ export function writeClaudeMd(projectRoot: string, content: string): string {
 }
 
 /**
- * Full pipeline: scan + generate + write (or detect existing for merge).
+ * Full pipeline: generate CLAUDE.md and write it (or detect existing for merge).
+ *
+ * PRIMARY PATH: if `.plan/*.md` documents are present (produced by steps 1-12
+ * of /linkraft plan), distill them into the CLAUDE.md. This gives the user a
+ * cheat sheet synthesized from the full research + analysis pipeline.
+ *
+ * FALLBACK PATH: if no `.plan/` docs exist (e.g. user ran `plan claude-md`
+ * standalone), scan the project directly and build CLAUDE.md from that.
+ *
+ * The return shape now includes a `source` field so callers can surface
+ * whether the plan-aware or direct-scan path was used.
  */
 export function generateAndWriteClaudeMd(projectRoot: string): {
   path: string;
@@ -201,9 +563,15 @@ export function generateAndWriteClaudeMd(projectRoot: string): {
   hasChanges: boolean;
   newSections: string[];
   updatedSections: string[];
+  source: 'plan' | 'scan';
 } {
-  const config = scanProject(projectRoot);
-  const generated = generateClaudeMd(config);
+  const planDocs = loadPlanDocs(projectRoot);
+  const usePlan = hasPlanDocs(planDocs);
+
+  const generated = usePlan
+    ? generateClaudeMdFromPlan(projectRoot, planDocs)
+    : generateClaudeMd(scanProject(projectRoot));
+  const source: 'plan' | 'scan' = usePlan ? 'plan' : 'scan';
 
   const existingPath = path.join(projectRoot, 'CLAUDE.md');
   if (fs.existsSync(existingPath)) {
@@ -218,11 +586,21 @@ export function generateAndWriteClaudeMd(projectRoot: string): {
       hasChanges,
       newSections: diff.newSections,
       updatedSections: diff.updatedSections,
+      source,
     };
   }
 
   const filePath = writeClaudeMd(projectRoot, generated);
-  return { path: filePath, content: generated, mergedContent: generated, existed: false, hasChanges: false, newSections: [], updatedSections: [] };
+  return {
+    path: filePath,
+    content: generated,
+    mergedContent: generated,
+    existed: false,
+    hasChanges: false,
+    newSections: [],
+    updatedSections: [],
+    source,
+  };
 }
 
 // --- Helpers ---

@@ -94,19 +94,23 @@ function registerPlanTools(server) {
         fs.writeFileSync(path.join(planDir, 'STACK.md'), md, 'utf-8');
         return { content: [{ type: 'text', text: `Written to .plan/STACK.md\n\n${md}` }] };
     });
-    server.tool('plan_generate_claude_md', 'Generates a complete CLAUDE.md from scanning the project. If one exists, reports diff for merge review.', projectRootSchema, async ({ projectRoot }) => {
+    server.tool('plan_generate_claude_md', 'Generates CLAUDE.md. Prefers distilling .plan/*.md docs when they exist (post-/linkraft plan); falls back to direct project scan otherwise. If CLAUDE.md already exists, reports diff for merge review.', projectRootSchema, async ({ projectRoot }) => {
         const result = (0, claude_md_gen_js_1.generateAndWriteClaudeMd)(projectRoot);
+        const sourceNote = result.source === 'plan'
+            ? 'Source: distilled from `.plan/*.md` documents.'
+            : 'Source: direct project scan (no `.plan/` docs found — run /linkraft plan for richer output).';
         // Case 1: No CLAUDE.md existed, generated and written
         if (!result.existed) {
-            return { content: [{ type: 'text', text: `CLAUDE.md generated and written to: ${result.path}\n\n---\n\n${result.content}` }] };
+            return { content: [{ type: 'text', text: `CLAUDE.md generated and written to: ${result.path}\n${sourceNote}\n\n---\n\n${result.content}` }] };
         }
         // Case 3: CLAUDE.md exists and is comprehensive, nothing to add
         if (!result.hasChanges) {
-            return { content: [{ type: 'text', text: 'Existing CLAUDE.md is comprehensive. No new sections or updates detected from scan. Skipping.' }] };
+            return { content: [{ type: 'text', text: `Existing CLAUDE.md is comprehensive. No new sections or updates detected.\n${sourceNote}` }] };
         }
         // Case 2: CLAUDE.md exists but is stale/incomplete, propose merge
         const lines = [
             'Existing CLAUDE.md found with gaps.',
+            sourceNote,
             '',
             `New sections to add (${result.newSections.length}): ${result.newSections.join(', ')}`,
             `Sections with updates (${result.updatedSections.length}): ${result.updatedSections.join(', ')}`,

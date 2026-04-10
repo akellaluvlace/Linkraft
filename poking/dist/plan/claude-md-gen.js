@@ -1,8 +1,18 @@
 "use strict";
 // CLAUDE.md Generator: THE KEY FEATURE of Plan mode.
-// Scans a project and generates a complete, project-specific CLAUDE.md.
-// Not a template. A CLAUDE.md synthesized from everything it learned.
-// Handles merge with existing CLAUDE.md intelligently.
+//
+// Two paths:
+//   1. PLAN-AWARE (preferred): reads .plan/*.md docs produced by the other
+//      plan_* generators and distills them into a CLAUDE.md cheat sheet.
+//      This runs when /linkraft plan has completed its pipeline before
+//      calling plan_generate_claude_md.
+//   2. DIRECT SCAN (fallback): if no .plan/ docs exist, scans the project
+//      directly (package.json, file structure, source files) and produces
+//      a CLAUDE.md from that. This is what runs when the user calls
+//      /linkraft plan claude-md on its own.
+//
+// Both paths produce the same shape of markdown and go through the same
+// diff/merge logic so existing CLAUDE.md files are respected.
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -39,12 +49,14 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.scanProject = scanProject;
 exports.generateClaudeMd = generateClaudeMd;
+exports.generateClaudeMdFromPlan = generateClaudeMdFromPlan;
 exports.diffClaudeMd = diffClaudeMd;
 exports.writeClaudeMd = writeClaudeMd;
 exports.generateAndWriteClaudeMd = generateAndWriteClaudeMd;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const stack_analyzer_js_1 = require("./stack-analyzer.js");
+const plan_reader_js_1 = require("./plan-reader.js");
 /**
  * Scans a project and builds the config needed to generate CLAUDE.md.
  */
@@ -180,6 +192,315 @@ function generateClaudeMd(config) {
     return s.join('\n');
 }
 /**
+ * Generates a CLAUDE.md by distilling the .plan/*.md documents.
+ *
+ * This is the preferred path when the full /linkraft plan pipeline has run
+ * and produced the research + analysis outputs. The resulting CLAUDE.md is a
+ * cheat sheet (~2000-3000 tokens) — not a copy of the plan docs. Sections are
+ * intentionally short bullet lists so future Claude sessions can load the
+ * whole file into context cheaply.
+ *
+ * Unknown or missing docs are tolerated — each section is emitted only when
+ * the corresponding source is available and parseable.
+ */
+function generateClaudeMdFromPlan(projectRoot, docs) {
+    const s = [];
+    // Project name + description: derived from package.json, NOT the plan docs
+    // (plan docs don't reliably carry the identifier we want in the h1).
+    let projectName = path.basename(projectRoot);
+    let projectDescription = '';
+    const pkgPath = path.join(projectRoot, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+        try {
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+            if (typeof pkg['name'] === 'string')
+                projectName = pkg['name'];
+            if (typeof pkg['description'] === 'string')
+                projectDescription = pkg['description'];
+        }
+        catch { }
+    }
+    s.push(`# ${projectName}`);
+    if (projectDescription)
+        s.push('', projectDescription);
+    s.push('', '> Synthesized from `.plan/` documents. Distillation, not duplication — read the source docs for full detail.');
+    // ── Project Overview (from executive summary) ──────────────────────────
+    if (docs.executiveSummary) {
+        const overview = (0, plan_reader_js_1.extractLeadParagraph)(docs.executiveSummary, 600);
+        const currentState = (0, plan_reader_js_1.extractSection)(docs.executiveSummary, 'Current State') ||
+            (0, plan_reader_js_1.extractSection)(docs.executiveSummary, 'State') ||
+            (0, plan_reader_js_1.extractSection)(docs.executiveSummary, 'What It Is');
+        if (overview || currentState) {
+            s.push('', '## Project Overview', '');
+            if (overview)
+                s.push(overview);
+            if (currentState && currentState !== overview) {
+                const paragraph = (0, plan_reader_js_1.extractLeadParagraph)(currentState, 500);
+                if (paragraph)
+                    s.push('', paragraph);
+            }
+        }
+    }
+    // ── Tech Stack (from STACK.md) ─────────────────────────────────────────
+    if (docs.stack) {
+        const stackSection = (0, plan_reader_js_1.extractSection)(docs.stack, 'Tech Stack') ||
+            (0, plan_reader_js_1.extractSection)(docs.stack, 'Stack') ||
+            (0, plan_reader_js_1.extractSection)(docs.stack, 'Detected Stack');
+        if (stackSection) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(stackSection, 12);
+            const rows = (0, plan_reader_js_1.extractTableRows)(stackSection, 12);
+            if (rows.length > 0) {
+                s.push('', '## Tech Stack', '', ...rows);
+            }
+            else if (bullets.length > 0) {
+                s.push('', '## Tech Stack', '', ...bullets.map(b => `- ${b}`));
+            }
+        }
+    }
+    // ── Commands (from STACK.md or wherever) ───────────────────────────────
+    const commandSource = docs.stack ?? '';
+    const commands = (0, plan_reader_js_1.extractCommands)(commandSource, 8);
+    if (commands.length > 0) {
+        s.push('', '## Commands', '');
+        for (const cmd of commands)
+            s.push(`- \`${cmd}\``);
+    }
+    // ── Directory Structure (from STACK.md if provided) ────────────────────
+    if (docs.stack) {
+        const structure = (0, plan_reader_js_1.extractSection)(docs.stack, 'File Organization') ||
+            (0, plan_reader_js_1.extractSection)(docs.stack, 'Directory Structure') ||
+            (0, plan_reader_js_1.extractSection)(docs.stack, 'Project Structure');
+        if (structure) {
+            // Try to pull a code block first; fall back to bullet list
+            const codeBlock = /```[\w-]*\n([\s\S]*?)```/m.exec(structure);
+            if (codeBlock?.[1]) {
+                s.push('', '## Directory Structure', '', '```', codeBlock[1].trim(), '```');
+            }
+            else {
+                const bullets = (0, plan_reader_js_1.extractBullets)(structure, 15);
+                if (bullets.length > 0) {
+                    s.push('', '## Directory Structure', '', ...bullets.map(b => `- ${b}`));
+                }
+            }
+        }
+    }
+    // ── Database (from SCHEMA.md, condensed) ───────────────────────────────
+    if (docs.schema) {
+        const lines = [];
+        const tables = (0, plan_reader_js_1.extractSection)(docs.schema, 'Tables') ||
+            (0, plan_reader_js_1.extractSection)(docs.schema, 'Schema') ||
+            (0, plan_reader_js_1.extractSection)(docs.schema, 'Database Tables');
+        if (tables) {
+            const tableRows = (0, plan_reader_js_1.extractTableRows)(tables, 10);
+            const tableBullets = (0, plan_reader_js_1.extractBullets)(tables, 10);
+            if (tableRows.length > 0) {
+                lines.push(...tableRows);
+            }
+            else if (tableBullets.length > 0) {
+                lines.push(...tableBullets.map(b => `- ${b}`));
+            }
+        }
+        const rls = (0, plan_reader_js_1.extractSection)(docs.schema, 'RLS');
+        if (rls) {
+            const rlsBullets = (0, plan_reader_js_1.extractBullets)(rls, 4);
+            if (rlsBullets.length > 0) {
+                lines.push('', '**Row Level Security:**');
+                lines.push(...rlsBullets.map(b => `- ${b}`));
+            }
+        }
+        const rpc = (0, plan_reader_js_1.extractSection)(docs.schema, 'RPC') ||
+            (0, plan_reader_js_1.extractSection)(docs.schema, 'Functions') ||
+            (0, plan_reader_js_1.extractSection)(docs.schema, 'Stored Procedures');
+        if (rpc) {
+            const rpcBullets = (0, plan_reader_js_1.extractBullets)(rpc, 6);
+            if (rpcBullets.length > 0) {
+                lines.push('', '**Key RPC functions:**');
+                lines.push(...rpcBullets.map(b => `- ${b}`));
+            }
+        }
+        if (lines.length > 0) {
+            s.push('', '## Database', '', ...lines);
+        }
+    }
+    // ── API Endpoints (from API_MAP.md, table format) ──────────────────────
+    if (docs.apiMap) {
+        const endpoints = (0, plan_reader_js_1.extractSection)(docs.apiMap, 'Endpoints') ||
+            (0, plan_reader_js_1.extractSection)(docs.apiMap, 'Routes') ||
+            (0, plan_reader_js_1.extractSection)(docs.apiMap, 'API');
+        const source = endpoints || docs.apiMap;
+        const tableRows = (0, plan_reader_js_1.extractTableRows)(source, 15);
+        if (tableRows.length > 0) {
+            s.push('', '## API Endpoints', '', ...tableRows);
+        }
+        else {
+            const bullets = (0, plan_reader_js_1.extractBullets)(source, 15);
+            if (bullets.length > 0) {
+                s.push('', '## API Endpoints', '', ...bullets.map(b => `- ${b}`));
+            }
+        }
+    }
+    // ── Design System (from DESIGN_TOKENS.md) ──────────────────────────────
+    if (docs.tokens) {
+        const lines = [];
+        const colors = (0, plan_reader_js_1.extractSection)(docs.tokens, 'Colors') ||
+            (0, plan_reader_js_1.extractSection)(docs.tokens, 'Color');
+        if (colors) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(colors, 8);
+            if (bullets.length > 0) {
+                lines.push('**Colors:**');
+                lines.push(...bullets.map(b => `- ${b}`));
+            }
+        }
+        const typography = (0, plan_reader_js_1.extractSection)(docs.tokens, 'Typography') ||
+            (0, plan_reader_js_1.extractSection)(docs.tokens, 'Fonts') ||
+            (0, plan_reader_js_1.extractSection)(docs.tokens, 'Type');
+        if (typography) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(typography, 6);
+            if (bullets.length > 0) {
+                if (lines.length > 0)
+                    lines.push('');
+                lines.push('**Typography:**');
+                lines.push(...bullets.map(b => `- ${b}`));
+            }
+        }
+        const banned = (0, plan_reader_js_1.extractSection)(docs.tokens, 'Banned') ||
+            (0, plan_reader_js_1.extractSection)(docs.tokens, 'Never') ||
+            (0, plan_reader_js_1.extractSection)(docs.tokens, 'Forbidden') ||
+            (0, plan_reader_js_1.extractSection)(docs.tokens, 'Anti-Patterns');
+        if (banned) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(banned, 8);
+            if (bullets.length > 0) {
+                if (lines.length > 0)
+                    lines.push('');
+                lines.push('**Banned patterns:**');
+                lines.push(...bullets.map(b => `- ${b}`));
+            }
+        }
+        if (lines.length > 0) {
+            s.push('', '## Design System', '', ...lines);
+        }
+    }
+    // ── Architecture Notes (from ARCHITECTURE.md) ──────────────────────────
+    if (docs.architecture) {
+        const lines = [];
+        const strengths = (0, plan_reader_js_1.extractSection)(docs.architecture, 'Strengths');
+        if (strengths) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(strengths, 6);
+            if (bullets.length > 0) {
+                lines.push('**Strengths:**');
+                lines.push(...bullets.map(b => `- ${b}`));
+            }
+        }
+        const weaknesses = (0, plan_reader_js_1.extractSection)(docs.architecture, 'Weaknesses') ||
+            (0, plan_reader_js_1.extractSection)(docs.architecture, 'Issues') ||
+            (0, plan_reader_js_1.extractSection)(docs.architecture, 'Problems');
+        if (weaknesses) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(weaknesses, 6);
+            if (bullets.length > 0) {
+                if (lines.length > 0)
+                    lines.push('');
+                lines.push('**Weaknesses:**');
+                lines.push(...bullets.map(b => `- ${b}`));
+            }
+        }
+        const flow = (0, plan_reader_js_1.extractSection)(docs.architecture, 'Request Flow') ||
+            (0, plan_reader_js_1.extractSection)(docs.architecture, 'Data Flow') ||
+            (0, plan_reader_js_1.extractSection)(docs.architecture, 'Architecture');
+        if (flow && lines.length === 0) {
+            // Only use generic architecture summary if we couldn't find strengths/weaknesses
+            const paragraph = (0, plan_reader_js_1.extractLeadParagraph)(flow, 400);
+            if (paragraph)
+                lines.push(paragraph);
+        }
+        if (lines.length > 0) {
+            s.push('', '## Architecture Notes', '', ...lines);
+        }
+    }
+    // ── Critical Risks (from RISK_MATRIX.md, critical+high only) ───────────
+    if (docs.riskMatrix) {
+        const lines = [];
+        const critical = (0, plan_reader_js_1.extractSection)(docs.riskMatrix, 'Critical');
+        if (critical) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(critical, 6);
+            if (bullets.length > 0) {
+                lines.push('**Critical:**');
+                lines.push(...bullets.map(b => `- ${b}`));
+            }
+        }
+        const high = (0, plan_reader_js_1.extractSection)(docs.riskMatrix, 'High');
+        if (high) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(high, 6);
+            if (bullets.length > 0) {
+                if (lines.length > 0)
+                    lines.push('');
+                lines.push('**High:**');
+                lines.push(...bullets.map(b => `- ${b}`));
+            }
+        }
+        if (lines.length > 0) {
+            s.push('', '## Critical Risks', '', ...lines);
+        }
+    }
+    // ── Hard Constraints (from conventions + banned patterns + git rules) ──
+    const constraints = [];
+    if (docs.stack) {
+        const conv = (0, plan_reader_js_1.extractSection)(docs.stack, 'Conventions') ||
+            (0, plan_reader_js_1.extractSection)(docs.stack, 'Coding Standards') ||
+            (0, plan_reader_js_1.extractSection)(docs.stack, 'Style');
+        if (conv) {
+            constraints.push(...(0, plan_reader_js_1.extractBullets)(conv, 6));
+        }
+    }
+    if (docs.tokens) {
+        const banned = (0, plan_reader_js_1.extractSection)(docs.tokens, 'Banned') ||
+            (0, plan_reader_js_1.extractSection)(docs.tokens, 'Never');
+        if (banned) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(banned, 4);
+            for (const b of bullets)
+                if (!constraints.includes(b))
+                    constraints.push(b);
+        }
+    }
+    // Always include git/env hard rules
+    if (fs.existsSync(path.join(projectRoot, '.env')) || fs.existsSync(path.join(projectRoot, '.env.local'))) {
+        const envRule = 'Environment variables in use. Never hardcode secrets. Never commit .env files.';
+        if (!constraints.includes(envRule))
+            constraints.push(envRule);
+    }
+    if (fs.existsSync(path.join(projectRoot, 'supabase', 'migrations')) || fs.existsSync(path.join(projectRoot, 'prisma', 'migrations'))) {
+        const migRule = 'Never edit existing migrations. Always create new ones.';
+        if (!constraints.includes(migRule))
+            constraints.push(migRule);
+    }
+    if (constraints.length > 0) {
+        s.push('', '## Hard Constraints', '');
+        for (const c of constraints.slice(0, 10))
+            s.push(`- ${c}`);
+    }
+    // ── Known Issues (from FEATURES.md gaps section) ───────────────────────
+    if (docs.features) {
+        const gaps = (0, plan_reader_js_1.extractSection)(docs.features, 'Gaps') ||
+            (0, plan_reader_js_1.extractSection)(docs.features, 'Missing') ||
+            (0, plan_reader_js_1.extractSection)(docs.features, 'Known Issues') ||
+            (0, plan_reader_js_1.extractSection)(docs.features, 'Incomplete');
+        if (gaps) {
+            const bullets = (0, plan_reader_js_1.extractBullets)(gaps, 8);
+            if (bullets.length > 0) {
+                s.push('', '## Known Issues', '');
+                for (const b of bullets)
+                    s.push(`- ${b}`);
+            }
+        }
+    }
+    // ── Session Protocol (always present, short) ───────────────────────────
+    s.push('', '## Session Protocol', '');
+    s.push('1. Read this CLAUDE.md');
+    s.push('2. For deeper detail on any section, read the corresponding `.plan/*.md`');
+    s.push('3. Check git status and recent commits');
+    s.push('4. Ask what to work on');
+    return s.join('\n');
+}
+/**
  * Compares generated CLAUDE.md with existing one.
  */
 function diffClaudeMd(existing, generated) {
@@ -216,11 +537,25 @@ function writeClaudeMd(projectRoot, content) {
     return filePath;
 }
 /**
- * Full pipeline: scan + generate + write (or detect existing for merge).
+ * Full pipeline: generate CLAUDE.md and write it (or detect existing for merge).
+ *
+ * PRIMARY PATH: if `.plan/*.md` documents are present (produced by steps 1-12
+ * of /linkraft plan), distill them into the CLAUDE.md. This gives the user a
+ * cheat sheet synthesized from the full research + analysis pipeline.
+ *
+ * FALLBACK PATH: if no `.plan/` docs exist (e.g. user ran `plan claude-md`
+ * standalone), scan the project directly and build CLAUDE.md from that.
+ *
+ * The return shape now includes a `source` field so callers can surface
+ * whether the plan-aware or direct-scan path was used.
  */
 function generateAndWriteClaudeMd(projectRoot) {
-    const config = scanProject(projectRoot);
-    const generated = generateClaudeMd(config);
+    const planDocs = (0, plan_reader_js_1.loadPlanDocs)(projectRoot);
+    const usePlan = (0, plan_reader_js_1.hasPlanDocs)(planDocs);
+    const generated = usePlan
+        ? generateClaudeMdFromPlan(projectRoot, planDocs)
+        : generateClaudeMd(scanProject(projectRoot));
+    const source = usePlan ? 'plan' : 'scan';
     const existingPath = path.join(projectRoot, 'CLAUDE.md');
     if (fs.existsSync(existingPath)) {
         const existing = fs.readFileSync(existingPath, 'utf-8');
@@ -234,10 +569,20 @@ function generateAndWriteClaudeMd(projectRoot) {
             hasChanges,
             newSections: diff.newSections,
             updatedSections: diff.updatedSections,
+            source,
         };
     }
     const filePath = writeClaudeMd(projectRoot, generated);
-    return { path: filePath, content: generated, mergedContent: generated, existed: false, hasChanges: false, newSections: [], updatedSections: [] };
+    return {
+        path: filePath,
+        content: generated,
+        mergedContent: generated,
+        existed: false,
+        hasChanges: false,
+        newSections: [],
+        updatedSections: [],
+        source,
+    };
 }
 // --- Helpers ---
 function findCommands(projectRoot) {
