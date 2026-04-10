@@ -6,23 +6,27 @@ import type { SeedParameters } from './types.js';
 export type StyleGenome = SeedParameters;
 /**
  * Builds the complete generation prompt for Claude to create a landing page
- * variation matching this genome. Includes:
- * - All 14 dimensions
- * - CSS signature for the chosen style archetype
- * - Computed harmony palette
- * - Google Fonts link tag
- * - Type scale steps
- * - Page content template
- * - CSS quality rules
+ * variation matching this genome.
+ *
+ * Structure (spec-driven to combat generic output):
+ *   1. VISUAL IDENTITY (the style archetype, front and center)
+ *   2. Constraint (first of three repetitions)
+ *   3. THIS PAGE MUST NOT LOOK LIKE
+ *   4. Required distinctive CSS declarations
+ *   5. All 14 genome dimensions with metadata
+ *   6. Constraint (second repetition)
+ *   7. Google Fonts link
+ *   8. Page structure + CSS quality rules
+ *   9. HTML comment header template
+ *  10. Constraint (third repetition) + failure warning
  */
 export declare function genomeToPrompt(genome: StyleGenome, brief: string, variationNumber: number, outputPath: string): string;
 /**
  * Serializes a genome as the HTML comment header that goes at the top of
- * each generated variation file. Used for grep/compare across variations.
- * Scores are filled in by genomeWithScoresAsComment after judging.
+ * each generated variation file.
  */
 export declare function serializeGenomeAsComment(genome: StyleGenome, variationNumber: number): string;
 /**
- * Returns a short single-line summary of a genome, used in status output and gem listings.
+ * Short single-line summary of a genome for status output.
  */
 export declare function genomeSummary(genome: StyleGenome): string;

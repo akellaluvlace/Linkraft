@@ -5,7 +5,7 @@ import * as path from 'path';
 import { loadState, saveState, createState, stopRun } from '../../dreamroll/state.js';
 import { getMorningReport, rollSeedParameters } from '../../dreamroll/generator.js';
 import { genomeToPrompt, genomeSummary } from '../../dreamroll/genome.js';
-import { getJudgeEvaluationPrompts, calculateVerdict } from '../../dreamroll/judges.js';
+import { getJudgeEvaluationPrompts, calculateVerdict, applyStyleAdherenceDeduction } from '../../dreamroll/judges.js';
 import { maybeEvolve } from '../../dreamroll/evolution.js';
 import type { DreamrollConfig, Variation } from '../../dreamroll/types.js';
 
@@ -83,15 +83,36 @@ export function registerDreamrollTools(server: McpServer): void {
       // 3. Record previous variation if scores were passed
       let recordedSummary = '';
       if (completed) {
-        const verdict = calculateVerdict(completed.scores);
+        // Find the pre-recorded variation (dreamroll_start rolls the seed and
+        // stores a placeholder variation, so we have the correct genome here).
         let variation = state.variations.find(v => v.id === completed.variationId);
+        const recordedStyle = variation?.seed.genre;
+
+        // Style-adherence auto-deduction: read the HTML file and check for
+        // the required distinctive CSS declarations. Missing strings dock BRUTUS.
+        let finalScores = completed.scores;
+        let deductionNote = '';
+        if (recordedStyle && completed.filePath && fs.existsSync(completed.filePath)) {
+          try {
+            const htmlContent = fs.readFileSync(completed.filePath, 'utf-8');
+            const result = applyStyleAdherenceDeduction(completed.scores, htmlContent, recordedStyle);
+            finalScores = result.scores;
+            if (result.deducted) {
+              deductionNote = `\n  Auto-deduction: BRUTUS -2 for missing distinctive CSS (${recordedStyle}): ${result.missing.join(', ')}`;
+            }
+          } catch {
+            // Best effort; if the file can't be read, skip the deduction
+          }
+        }
+
+        const verdict = calculateVerdict(finalScores);
         if (variation) {
           variation.verdict = verdict;
           variation.filesPath = completed.filePath;
         } else {
           variation = {
             id: completed.variationId,
-            seed: rollSeedParameters(state), // placeholder if missing
+            seed: rollSeedParameters(state), // fallback if the placeholder was lost
             verdict,
             screenshotPath: null,
             filesPath: completed.filePath,
@@ -108,7 +129,7 @@ export function registerDreamrollTools(server: McpServer): void {
         saveState(projectRoot, state);
 
         recordedSummary = [
-          `Recorded variation ${completed.variationId}: avg ${verdict.averageScore}/10 — ${verdict.verdict.toUpperCase()}${verdict.hasInstantKeep ? ' (INSTANT KEEP)' : ''}.`,
+          `Recorded variation ${completed.variationId}: avg ${verdict.averageScore}/10 — ${verdict.verdict.toUpperCase()}${verdict.hasInstantKeep ? ' (INSTANT KEEP)' : ''}.${deductionNote}`,
           adjustments.length > 0 ? `Evolution kicked in (${adjustments.length} pattern adjustments applied).` : '',
         ].filter(l => l !== '').join('\n');
       }

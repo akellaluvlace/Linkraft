@@ -14,6 +14,22 @@ export declare function parseJudgeResponse(response: string): {
     comment: string;
 };
 /**
+ * Applies the style-adherence auto-deduction to BRUTUS.
+ *
+ * Reads the generated HTML, checks it against the required CSS declarations
+ * for the given style archetype, and deducts 2 BRUTUS points if ANY required
+ * strings are missing. Returns the adjusted scores plus a note listing what
+ * was missing so the caller can display it.
+ *
+ * This is the hard-coded check the build spec calls for: "If the distinctive
+ * CSS is missing, BRUTUS deducts 2 points automatically."
+ */
+export declare function applyStyleAdherenceDeduction(scores: JudgeScore[], htmlContent: string, styleId: string): {
+    scores: JudgeScore[];
+    deducted: boolean;
+    missing: string[];
+};
+/**
  * Determines the verdict from judge scores.
  */
 export declare function calculateVerdict(scores: JudgeScore[]): JudgeVerdict;

@@ -2,11 +2,29 @@ import type { SeedParameters } from './types.js';
 export interface StyleArchetype {
     id: string;
     category: 'modern-digital' | 'historical' | 'subcultural' | 'editorial' | 'emerging';
+    /** Short CSS signature string used in prompt summary. */
     signature: string;
+    /** 3-4 sentence description of what makes this style VISUALLY DISTINCT from a generic page. */
+    distinctive: string;
+    /** Specific CSS declarations that MUST appear in the generated HTML. Checked programmatically. */
+    distinctiveCSS: string[];
+    /** Anti-patterns: what the page MUST NOT look like for this style. */
+    notLikeThis: string[];
 }
 export declare const STYLE_ARCHETYPES: StyleArchetype[];
 export declare const STYLE_POOL: string[];
 export declare function getStyleSignature(styleId: string): string;
+export declare function getStyleArchetype(styleId: string): StyleArchetype | undefined;
+/**
+ * Scans generated HTML for the required CSS declarations for a given style.
+ * Returns which required strings are present vs missing.
+ * Used by the auto-deduction path in the recording flow.
+ */
+export declare function checkDistinctiveCSS(htmlContent: string, styleId: string): {
+    required: string[];
+    present: string[];
+    missing: string[];
+};
 export type HarmonyKind = 'algorithmic' | 'curated';
 export interface HarmonyScheme {
     id: string;

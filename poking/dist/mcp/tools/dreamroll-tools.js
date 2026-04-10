@@ -112,8 +112,28 @@ function registerDreamrollTools(server) {
         // 3. Record previous variation if scores were passed
         let recordedSummary = '';
         if (completed) {
-            const verdict = (0, judges_js_1.calculateVerdict)(completed.scores);
+            // Find the pre-recorded variation (dreamroll_start rolls the seed and
+            // stores a placeholder variation, so we have the correct genome here).
             let variation = state.variations.find(v => v.id === completed.variationId);
+            const recordedStyle = variation?.seed.genre;
+            // Style-adherence auto-deduction: read the HTML file and check for
+            // the required distinctive CSS declarations. Missing strings dock BRUTUS.
+            let finalScores = completed.scores;
+            let deductionNote = '';
+            if (recordedStyle && completed.filePath && fs.existsSync(completed.filePath)) {
+                try {
+                    const htmlContent = fs.readFileSync(completed.filePath, 'utf-8');
+                    const result = (0, judges_js_1.applyStyleAdherenceDeduction)(completed.scores, htmlContent, recordedStyle);
+                    finalScores = result.scores;
+                    if (result.deducted) {
+                        deductionNote = `\n  Auto-deduction: BRUTUS -2 for missing distinctive CSS (${recordedStyle}): ${result.missing.join(', ')}`;
+                    }
+                }
+                catch {
+                    // Best effort; if the file can't be read, skip the deduction
+                }
+            }
+            const verdict = (0, judges_js_1.calculateVerdict)(finalScores);
             if (variation) {
                 variation.verdict = verdict;
                 variation.filesPath = completed.filePath;
@@ -121,7 +141,7 @@ function registerDreamrollTools(server) {
             else {
                 variation = {
                     id: completed.variationId,
-                    seed: (0, generator_js_1.rollSeedParameters)(state), // placeholder if missing
+                    seed: (0, generator_js_1.rollSeedParameters)(state), // fallback if the placeholder was lost
                     verdict,
                     screenshotPath: null,
                     filesPath: completed.filePath,
@@ -138,7 +158,7 @@ function registerDreamrollTools(server) {
                 state.evolutionAdjustments.push(...adjustments);
             (0, state_js_1.saveState)(projectRoot, state);
             recordedSummary = [
-                `Recorded variation ${completed.variationId}: avg ${verdict.averageScore}/10 — ${verdict.verdict.toUpperCase()}${verdict.hasInstantKeep ? ' (INSTANT KEEP)' : ''}.`,
+                `Recorded variation ${completed.variationId}: avg ${verdict.averageScore}/10 — ${verdict.verdict.toUpperCase()}${verdict.hasInstantKeep ? ' (INSTANT KEEP)' : ''}.${deductionNote}`,
                 adjustments.length > 0 ? `Evolution kicked in (${adjustments.length} pattern adjustments applied).` : '',
             ].filter(l => l !== '').join('\n');
         }

@@ -26,23 +26,61 @@ function makeGenome(overrides: Partial<StyleGenome> = {}): StyleGenome {
 }
 
 describe('genomeToPrompt', () => {
-  it('includes all 14 dimensions', () => {
+  it('includes all 14 dimensions in the full genome block', () => {
     const genome = makeGenome();
     const prompt = genomeToPrompt(genome, 'AI study app for students', 7, '/tmp/v007.html');
-    expect(prompt).toContain('Style archetype: glassmorphism');
+    expect(prompt).toContain('Style archetype:  glassmorphism');
     expect(prompt).toContain('jewel-tones');
-    expect(prompt).toContain('Typography: cormorant-proza');
-    expect(prompt).toContain('Type scale: golden-ratio');
-    expect(prompt).toContain('Layout pattern: stacked-panels');
-    expect(prompt).toContain('Density: sparse');
-    expect(prompt).toContain('Mood: premium-luxury');
-    expect(prompt).toContain('Era influence: 2020s-modern');
-    expect(prompt).toContain('Animation personality: cinematic-reveal');
-    expect(prompt).toContain('Imagery approach: abstract-blobs');
-    expect(prompt).toContain('Border radius: rounded-large');
-    expect(prompt).toContain('Shadow system: soft-neumorphic');
-    expect(prompt).toContain('CTA style: pill-glow');
+    expect(prompt).toContain('Typography:       cormorant-proza');
+    expect(prompt).toContain('Type scale:       golden-ratio');
+    expect(prompt).toContain('Layout pattern:   stacked-panels');
+    expect(prompt).toContain('Density:          sparse');
+    expect(prompt).toContain('Mood:             premium-luxury');
+    expect(prompt).toContain('Era influence:    2020s-modern');
+    expect(prompt).toContain('Animation:        cinematic-reveal');
+    expect(prompt).toContain('Imagery:          abstract-blobs');
+    expect(prompt).toContain('Border radius:    rounded-large');
+    expect(prompt).toContain('Shadow system:    soft-neumorphic');
+    expect(prompt).toContain('CTA style:        pill-glow');
     expect(prompt).toContain('Oblique constraint: glass-everything');
+  });
+
+  it('leads with VISUAL IDENTITY section as the most important part', () => {
+    const prompt = genomeToPrompt(makeGenome(), 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('VISUAL IDENTITY (this is the most important part)');
+    // VISUAL IDENTITY must appear before the FULL GENOME block
+    const idPos = prompt.indexOf('VISUAL IDENTITY');
+    const genomePos = prompt.indexOf('FULL GENOME');
+    expect(idPos).toBeGreaterThan(0);
+    expect(idPos).toBeLessThan(genomePos);
+  });
+
+  it('includes THIS PAGE MUST NOT LOOK LIKE section', () => {
+    const prompt = genomeToPrompt(makeGenome({ genre: 'neo-brutalism' }), 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('THIS PAGE MUST NOT LOOK LIKE');
+    // Neo-brutalism anti-patterns
+    expect(prompt).toContain('rounded corners');
+    expect(prompt).toContain('gradient backgrounds');
+  });
+
+  it('repeats the constraint 3 times', () => {
+    const prompt = genomeToPrompt(makeGenome({ wildcard: 'one-font-only' }), 'X', 1, '/tmp/x.html');
+    const matches = prompt.match(/CONSTRAINT \(mandatory/g);
+    expect(matches).not.toBeNull();
+    expect(matches!.length).toBe(3);
+  });
+
+  it('ends with the failure warning about obvious style', () => {
+    const prompt = genomeToPrompt(makeGenome(), 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('you have failed');
+    expect(prompt).toContain('OBVIOUS within 2 seconds');
+  });
+
+  it('lists required distinctive CSS declarations', () => {
+    const prompt = genomeToPrompt(makeGenome({ genre: 'neo-brutalism' }), 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('REQUIRED CSS DECLARATIONS');
+    expect(prompt).toContain('border: 3px solid #000');
+    expect(prompt).toContain('box-shadow:');
   });
 
   it('includes the brief and output path', () => {
@@ -105,7 +143,9 @@ describe('genomeToPrompt', () => {
     const rolled = rollParams();
     const prompt = genomeToPrompt(rolled, 'Brief', 1, '/tmp/x.html');
     expect(prompt.length).toBeGreaterThan(500);
-    expect(prompt).toContain('STYLE GENOME');
+    expect(prompt).toContain('VISUAL IDENTITY');
+    expect(prompt).toContain('FULL GENOME');
+    expect(prompt).toContain(`STYLE: ${rolled.genre}`);
   });
 });
 

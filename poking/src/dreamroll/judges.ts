@@ -5,6 +5,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { JudgeScore, JudgeVerdict, Verdict } from './types.js';
+import { checkDistinctiveCSS } from './params.js';
+
+const AUTO_DEDUCTION = 2;
 
 const JUDGE_NAMES = ['brutus', 'venus', 'mercury'] as const;
 type JudgeName = typeof JUDGE_NAMES[number];
@@ -36,6 +39,36 @@ export function parseJudgeResponse(response: string): { score: number; comment: 
   const comment = commentMatch ? commentMatch[1]!.trim() : response.trim();
 
   return { score, comment };
+}
+
+/**
+ * Applies the style-adherence auto-deduction to BRUTUS.
+ *
+ * Reads the generated HTML, checks it against the required CSS declarations
+ * for the given style archetype, and deducts 2 BRUTUS points if ANY required
+ * strings are missing. Returns the adjusted scores plus a note listing what
+ * was missing so the caller can display it.
+ *
+ * This is the hard-coded check the build spec calls for: "If the distinctive
+ * CSS is missing, BRUTUS deducts 2 points automatically."
+ */
+export function applyStyleAdherenceDeduction(
+  scores: JudgeScore[],
+  htmlContent: string,
+  styleId: string,
+): { scores: JudgeScore[]; deducted: boolean; missing: string[] } {
+  const { missing } = checkDistinctiveCSS(htmlContent, styleId);
+  if (missing.length === 0) {
+    return { scores, deducted: false, missing: [] };
+  }
+
+  const adjusted = scores.map(s => {
+    if (s.judge !== 'brutus') return s;
+    const newScore = Math.max(1, s.score - AUTO_DEDUCTION);
+    const note = ` [auto: -${AUTO_DEDUCTION} for missing distinctive CSS (${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ', ...' : ''})]`;
+    return { ...s, score: newScore, comment: s.comment + note };
+  });
+  return { scores: adjusted, deducted: true, missing };
 }
 
 /**

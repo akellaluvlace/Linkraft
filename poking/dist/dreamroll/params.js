@@ -6,6 +6,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WILDCARD_POOL = exports.CTA_STYLE_POOL = exports.CTA_STYLE_SPECS = exports.SHADOW_POOL = exports.SHADOW_SPECS = exports.BORDER_RADIUS_POOL = exports.BORDER_RADIUS_SPECS = exports.IMAGERY_POOL = exports.ANIMATION_POOL = exports.ERA_POOL = exports.MOOD_POOL = exports.DENSITY_POOL = exports.LAYOUT_POOL = exports.TYPE_SCALE_POOL = exports.TYPE_SCALES = exports.TYPOGRAPHY_POOL = exports.TYPOGRAPHY_PAIRINGS = exports.PALETTE_POOL = exports.HARMONY_SCHEMES = exports.STYLE_POOL = exports.STYLE_ARCHETYPES = void 0;
 exports.getStyleSignature = getStyleSignature;
+exports.getStyleArchetype = getStyleArchetype;
+exports.checkDistinctiveCSS = checkDistinctiveCSS;
 exports.getHarmonyScheme = getHarmonyScheme;
 exports.computeHarmonyPalette = computeHarmonyPalette;
 exports.getTypographyPairing = getTypographyPairing;
@@ -14,45 +16,288 @@ exports.weightedPick = weightedPick;
 exports.rollParams = rollParams;
 exports.getAllPools = getAllPools;
 exports.STYLE_ARCHETYPES = [
+    // ==========================================================================
     // MODERN DIGITAL
-    { id: 'glassmorphism', category: 'modern-digital', signature: 'backdrop-filter: blur(10px); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.18)' },
-    { id: 'neumorphism', category: 'modern-digital', signature: 'matching bg + element color; box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' },
-    { id: 'aurora-ui', category: 'modern-digital', signature: 'absolute-positioned color blobs with filter: blur(50px) and animated hue-rotate()' },
-    { id: 'bento-grid', category: 'modern-digital', signature: 'CSS Grid with mixed span sizes, consistent gap: 16px, border-radius: 16px' },
-    { id: 'neo-brutalism', category: 'modern-digital', signature: 'border: 3px solid #000; box-shadow: 4px 4px 0 #000; saturated flat fills' },
-    { id: 'claymorphism', category: 'modern-digital', signature: 'border-radius: 30px; background: pastel; box-shadow with inner highlight + outer soft shadow' },
-    { id: 'liquid-glass', category: 'modern-digital', signature: 'backdrop-filter: blur(20px) saturate(180%); semi-transparent layers; refraction borders (Apple 2025)' },
+    // ==========================================================================
+    {
+        id: 'glassmorphism',
+        category: 'modern-digital',
+        signature: 'backdrop-filter: blur(10px); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.18)',
+        distinctive: 'Every container is translucent with heavy backdrop-blur. Content floats on frosted glass layers. The background bleeds through everything. You can see blurred color shapes behind every UI element. There must be at least two colored blob shapes behind the content, visible through the frosted containers.',
+        distinctiveCSS: ['backdrop-filter: blur(', 'background: rgba(', 'border: 1px solid rgba('],
+        notLikeThis: ['opaque card backgrounds', 'hard solid borders', 'flat single-color fills', 'containers without blur', 'no visible background through elements'],
+    },
+    {
+        id: 'neumorphism',
+        category: 'modern-digital',
+        signature: 'matching bg + element color; box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+        distinctive: 'Elements extrude from a matching-color background using dual shadows (one light from top-left, one dark from bottom-right). No strong borders. No saturated colors. The whole interface looks carved from a single piece of soft material. Cards must be the EXACT same background color as the page, differentiated only by shadow.',
+        distinctiveCSS: ['box-shadow:', '-8px -8px', '8px 8px'],
+        notLikeThis: ['cards with contrasting backgrounds', 'dark mode', 'gradient fills', 'sharp borders', 'saturated accent colors on containers'],
+    },
+    {
+        id: 'aurora-ui',
+        category: 'modern-digital',
+        signature: 'absolute-positioned color blobs with filter: blur(50px) and animated hue-rotate()',
+        distinctive: 'Large blurred color blobs float absolutely-positioned behind content. The page has a dreamlike atmospheric quality. Colors gradually shift across the viewport like a slow aurora. Content sits above diffuse color washes. There must be at least 3 blurred circles positioned around the page, each with different hues.',
+        distinctiveCSS: ['filter: blur(', 'position: absolute', 'border-radius: 50%'],
+        notLikeThis: ['solid backgrounds', 'sharp edges', 'uniform color fills', 'static decoration', 'no blurred shapes'],
+    },
+    {
+        id: 'bento-grid',
+        category: 'modern-digital',
+        signature: 'CSS Grid with mixed span sizes, consistent gap: 16px, border-radius: 16px',
+        distinctive: 'Mixed-size cards arranged on a CSS Grid with consistent gaps. Each cell tells one thing. Cards feel like tiles in a Japanese bento box. Every tile has the same rounded corners and same shadow depth. The hero itself is a bento arrangement, not a traditional centered headline.',
+        distinctiveCSS: ['grid-template-columns', 'grid-column: span', 'gap: 16px', 'border-radius: 16px'],
+        notLikeThis: ['single-column layouts', 'irregular gaps', 'cards with different radii', 'traditional centered hero', 'floating elements outside the grid'],
+    },
+    {
+        id: 'neo-brutalism',
+        category: 'modern-digital',
+        signature: 'border: 3px solid #000; box-shadow: 4px 4px 0 #000; saturated flat fills',
+        distinctive: 'Thick black borders on everything. Hard offset shadows that look drawn with a marker. No gradients. Raw saturated fills like #FF6B6B, #FFE66D, #4ECDC4. Elements look like they were slapped onto the page with confidence. Buttons and cards have 4px solid black borders and box-shadow: 6px 6px 0 #000 (no blur, pure offset).',
+        distinctiveCSS: ['border: 3px solid #000', 'box-shadow:', '0 #000'],
+        notLikeThis: ['subtle shadows with blur', 'rounded corners over 8px', 'gradient backgrounds', 'thin borders', 'pastel colors', 'soft easing'],
+    },
+    {
+        id: 'claymorphism',
+        category: 'modern-digital',
+        signature: 'border-radius: 30px; background: pastel; box-shadow with inner highlight + outer soft shadow',
+        distinctive: 'Everything has deep rounded corners (30px+). Soft pastel backgrounds (#F5E6E8, #E8F0F5, #F8F4E6). Inner highlights and outer shadows give elements a 3D "clay" feel. The page looks like it was sculpted from playdough. Buttons and cards must have extreme rounding and dual shadows (inner + outer).',
+        distinctiveCSS: ['border-radius: 30px', 'box-shadow:', 'inset'],
+        notLikeThis: ['sharp corners', 'flat 2D look', 'saturated colors', 'hard borders', 'small border-radius values'],
+    },
+    {
+        id: 'liquid-glass',
+        category: 'modern-digital',
+        signature: 'backdrop-filter: blur(20px) saturate(180%); semi-transparent layers; refraction borders (Apple 2025)',
+        distinctive: 'Heavy backdrop-blur with saturation boost. Multiple semi-transparent layers stack with subtle refraction borders. Content feels like it is under water. This is Apple 2025 liquid glass: heavier than classic glassmorphism, with 180% saturation boost and visible layering. Nav, cards, and CTA are all translucent layers.',
+        distinctiveCSS: ['backdrop-filter: blur(', 'saturate(', 'rgba('],
+        notLikeThis: ['opaque cards', 'single layer design', 'no blur', 'solid borders', 'matte finishes'],
+    },
+    // ==========================================================================
     // HISTORICAL MOVEMENTS
-    { id: 'bauhaus', category: 'historical', signature: 'circles + triangles + squares; primary colors (#DD0000, #FFD700, #003DA5); Futura; strict grid' },
-    { id: 'art-deco', category: 'historical', signature: 'navy bg (#1A1A2E) + gold (#C9A94E); geometric symmetry; condensed serif; wide letter-spacing' },
-    { id: 'de-stijl', category: 'historical', signature: 'CSS Grid asymmetric blocks; border: 3px solid #000; pure primaries only; Mondrian composition' },
-    { id: 'constructivism', category: 'historical', signature: 'transform: rotate(-15deg); diagonal compositions; Bebas Neue; red/black/cream' },
-    { id: 'swiss-international', category: 'historical', signature: 'Helvetica/Arial; strict 12-column grid; asymmetric layout; black + white + one accent' },
-    { id: 'memphis', category: 'historical', signature: 'squiggles + dots + triangles; clashing pastels + neons; playful sans-serif; pattern backgrounds' },
-    { id: 'art-nouveau', category: 'historical', signature: 'organic curves; clip-path with flowing shapes; muted greens/golds; decorative serif' },
+    // ==========================================================================
+    {
+        id: 'bauhaus',
+        category: 'historical',
+        signature: 'circles + triangles + squares; primary colors (#DD0000, #FFD700, #003DA5); Futura; strict grid',
+        distinctive: 'Pure geometric primitives everywhere: circles, triangles, squares as the only decorative elements. Primary colors ONLY: red #DD0000, yellow #FFD700, blue #003DA5. Futura or geometric sans-serif. Strict mathematical grid. Anti-decorative. The page should feel like Herbert Bayer designed it in 1923.',
+        distinctiveCSS: ['border-radius: 50%', '#DD0000', '#FFD700', '#003DA5'],
+        notLikeThis: ['organic shapes', 'gradients', 'decorative fonts', 'soft or muted colors', 'curves', 'shadows'],
+    },
+    {
+        id: 'art-deco',
+        category: 'historical',
+        signature: 'navy bg (#1A1A2E) + gold (#C9A94E); geometric symmetry; condensed serif; wide letter-spacing',
+        distinctive: 'Navy #1A1A2E background with gold #C9A94E accents as the ONLY palette. Geometric symmetry everywhere. Wide letter-spacing on condensed serif headlines. Vertical chevrons, stepped pyramids, and sunburst motifs. Gatsby-era glamour. The Chrysler Building translated to web.',
+        distinctiveCSS: ['#1A1A2E', '#C9A94E', 'letter-spacing:', 'text-transform: uppercase'],
+        notLikeThis: ['sans-serif body', 'bright modern colors', 'asymmetric layouts', 'casual typography', 'soft shapes'],
+    },
+    {
+        id: 'de-stijl',
+        category: 'historical',
+        signature: 'CSS Grid asymmetric blocks; border: 3px solid #000; pure primaries only; Mondrian composition',
+        distinctive: 'Mondrian composition: rectangular blocks separated by 3px solid black borders. Only five colors allowed: red #E63946, blue #1D3557, yellow #F1C40F, white #FFFFFF, black #000000. CSS Grid with asymmetric cells. NO other colors. NO shadows. NO gradients. NO curves.',
+        distinctiveCSS: ['border: 3px solid #000', 'grid-template', '#E63946', '#1D3557', '#F1C40F'],
+        notLikeThis: ['curves', 'gradients', 'soft colors', 'rounded corners', 'shadows', 'any color outside primaries'],
+    },
+    {
+        id: 'constructivism',
+        category: 'historical',
+        signature: 'transform: rotate(-15deg); diagonal compositions; Bebas Neue; red/black/cream',
+        distinctive: 'Diagonal compositions via transform: rotate(-15deg) on multiple elements. Bebas Neue or condensed sans-serif, uppercase. Red #C41E3A, black, and cream palette only. Propaganda poster energy. Everything tilted and urgent. Hero headline at 15 degrees. Blocks that feel like they are about to fly off the page.',
+        distinctiveCSS: ['transform: rotate(', '#C41E3A', 'text-transform: uppercase'],
+        notLikeThis: ['horizontal baselines only', 'centered compositions', 'soft colors', 'serif fonts', 'calm rhythm'],
+    },
+    {
+        id: 'swiss-international',
+        category: 'historical',
+        signature: 'Helvetica/Arial; strict 12-column grid; asymmetric layout; black + white + one accent',
+        distinctive: 'Strict 12-column grid. Helvetica, Arial, or Inter (geometric sans). Pure black-and-white base with exactly ONE accent color (usually red or blue). Asymmetric layout with disciplined alignment. Extreme whitespace. Every element aligns to the grid. This is Muller-Brockmann-level discipline.',
+        distinctiveCSS: ['grid-template-columns: repeat(12', 'Helvetica', 'Arial'],
+        notLikeThis: ['decorative typography', 'multiple accent colors', 'gradients', 'centered layouts', 'soft shapes'],
+    },
+    {
+        id: 'memphis',
+        category: 'historical',
+        signature: 'squiggles + dots + triangles; clashing pastels + neons; playful sans-serif; pattern backgrounds',
+        distinctive: 'Clashing pastels and neons: pink #FF4081, cyan #00E5FF, yellow #FFEB3B, all at once. Squiggles, dots, triangles as repeating background patterns. Playful anti-minimalist chaos. Looks like 80s wallpaper designed by kids on sugar. Use repeating-linear-gradient or background-image patterns on multiple sections.',
+        distinctiveCSS: ['repeating-linear-gradient', 'background-image:', '#FF4081', '#00E5FF'],
+        notLikeThis: ['restrained palettes', 'professional tone', 'minimal decoration', 'monochrome', 'calm rhythm'],
+    },
+    {
+        id: 'art-nouveau',
+        category: 'historical',
+        signature: 'organic curves; clip-path with flowing shapes; muted greens/golds; decorative serif',
+        distinctive: 'Flowing organic curves via clip-path on sections and images. Muted greens #5D7052, golds #C9A94E, and warm creams #F5F0E1. Decorative serif fonts (Cormorant Garamond, Playfair). Nature-inspired curves and vines. Cards with wavy bottom edges. William Morris meets modern CSS.',
+        distinctiveCSS: ['clip-path:', '#C9A94E', 'serif'],
+        notLikeThis: ['geometric shapes', 'rigid grid layouts', 'bright saturated colors', 'sans-serif only', 'straight edges'],
+    },
+    // ==========================================================================
     // SUBCULTURAL
-    { id: 'synthwave', category: 'subcultural', signature: 'sunset gradient (purple to orange); perspective grid lines; neon glow text-shadows; chrome text' },
-    { id: 'cyberpunk', category: 'subcultural', signature: 'clip-path angular cuts; magenta/cyan neon; #0A0A0A bg; glitch effects; monospace' },
-    { id: 'vaporwave', category: 'subcultural', signature: 'pastel neons (#FF71CE, #01CDFE, #05FFA1); glitch text; monospace; nostalgic imagery references' },
-    { id: 'solarpunk', category: 'subcultural', signature: 'warm greens + amber; organic shapes; rounded everything; natural textures via CSS patterns' },
-    { id: 'steampunk', category: 'subcultural', signature: 'brass/copper gradients; gear-shaped borders; sepia tones; ornate serif; textured backgrounds' },
-    { id: 'y2k', category: 'subcultural', signature: 'glossy bubbles; filter: saturate(1.5); bubblegum neons; metallic text; blob shapes' },
+    // ==========================================================================
+    {
+        id: 'synthwave',
+        category: 'subcultural',
+        signature: 'sunset gradient (purple to orange); perspective grid lines; neon glow text-shadows; chrome text',
+        distinctive: 'Sunset gradient from deep purple #0D0221 to hot magenta #CC00FF to orange #FF6600 as the hero background. Perspective grid lines receding on the floor (repeating-linear-gradient + transform: perspective). Neon pink #FF006E and cyan #00F5D4 glow text-shadows on headlines. Chrome effect on typography. 80s retrofuture Miami.',
+        distinctiveCSS: ['linear-gradient(', '#FF006E', 'text-shadow:', 'perspective('],
+        notLikeThis: ['muted colors', 'no gradients', 'light backgrounds', 'subtle type', 'corporate palette'],
+    },
+    {
+        id: 'cyberpunk',
+        category: 'subcultural',
+        signature: 'clip-path angular cuts; magenta/cyan neon; #0A0A0A bg; glitch effects; monospace',
+        distinctive: 'Angular clip-path cuts on every container (corners sliced off). Magenta #FF00FF and cyan #00FFFF neon borders on #0A0A0A background. Monospace typography (JetBrains Mono or Fira Code). Glitch effects on hover. Blade Runner Tokyo neon. Containers look like interface panels in a hacking terminal.',
+        distinctiveCSS: ['clip-path: polygon', '#0A0A0A', 'monospace', '#FF00FF', '#00FFFF'],
+        notLikeThis: ['rounded corners', 'pastel colors', 'serif fonts', 'light backgrounds', 'calm composition'],
+    },
+    {
+        id: 'vaporwave',
+        category: 'subcultural',
+        signature: 'pastel neons (#FF71CE, #01CDFE, #05FFA1); glitch text; monospace; nostalgic imagery references',
+        distinctive: 'Pastel neons only: pink #FF71CE, cyan #01CDFE, mint #05FFA1. Monospace or italic serif text. Gradient text fills. Roman statue and 90s Windows references in copy. Lo-fi dreamy 90s mall aesthetics. Grid backgrounds. Every element feels slightly melancholy and VHS-degraded.',
+        distinctiveCSS: ['#FF71CE', '#01CDFE', '#05FFA1'],
+        notLikeThis: ['corporate palettes', 'modern clean look', 'dark mode minimalism', 'serif headlines', 'sharp edges'],
+    },
+    {
+        id: 'solarpunk',
+        category: 'subcultural',
+        signature: 'warm greens + amber; organic shapes; rounded everything; natural textures via CSS patterns',
+        distinctive: 'Warm forest greens #2D5016, #5D7052, and amber #DAA520, #F4A261. Everything rounded (no sharp corners at all). Leaf and wave motifs via SVG or clip-path. Natural texture patterns via repeating-radial-gradient. Hopeful utopian imagery. Plants and growth copy. Post-oil future optimism.',
+        distinctiveCSS: ['border-radius:', '#2D5016', '#DAA520'],
+        notLikeThis: ['hard edges', 'cool blues', 'minimal greenery', 'dystopian dark palette', 'corporate tone'],
+    },
+    {
+        id: 'steampunk',
+        category: 'subcultural',
+        signature: 'brass/copper gradients; gear-shaped borders; sepia tones; ornate serif; textured backgrounds',
+        distinctive: 'Brass #B87333 and copper #A0522D linear gradients on borders and CTAs. Gear and cog motifs. Sepia tones throughout. Ornate serif typography (Cinzel, Cormorant). Textured backgrounds via repeating radial gradients suggesting wood or leather. Victorian industrial revolution. The page feels like a mechanical contraption.',
+        distinctiveCSS: ['linear-gradient(', '#B87333', '#A0522D', 'serif'],
+        notLikeThis: ['modern clean look', 'cool colors', 'sans-serif', 'minimal texture', 'flat design'],
+    },
+    {
+        id: 'y2k',
+        category: 'subcultural',
+        signature: 'glossy bubbles; filter: saturate(1.5); bubblegum neons; metallic text; blob shapes',
+        distinctive: 'Glossy bubble shapes via border-radius: 50% on decorative divs. filter: saturate(1.5) applied to the whole page. Bubblegum neon blobs: pink #FF71CE, sky #01CDFE, purple #B967FF. Metallic silver text via gradient clips. Chrome and plastic textures. Late 90s MSN Messenger energy. Aqua buttons with inset highlights.',
+        distinctiveCSS: ['filter: saturate', 'border-radius: 50%', '#FF71CE'],
+        notLikeThis: ['muted palette', 'minimalism', 'flat design', 'editorial tone', 'monochrome'],
+    },
+    // ==========================================================================
     // EDITORIAL / PRINT
-    { id: 'newspaper', category: 'editorial', signature: 'multi-column text (column-count: 3); serif body; rules between columns; masthead layout' },
-    { id: 'magazine', category: 'editorial', signature: 'full-bleed images; overlapping text on image; dramatic scale contrast; editorial serif' },
-    { id: 'poster', category: 'editorial', signature: 'single viewport; massive typography (120px+); minimal elements; maximum impact' },
-    { id: 'book-cover', category: 'editorial', signature: 'centered composition; single typeface; restrained color; strong vertical rhythm' },
+    // ==========================================================================
+    {
+        id: 'newspaper',
+        category: 'editorial',
+        signature: 'multi-column text (column-count: 3); serif body; rules between columns; masthead layout',
+        distinctive: 'Body text in 3 columns (column-count: 3) with column-rule separators. Serif body fonts (Merriweather, Source Serif). Horizontal double-rules between sections. Masthead at top with volume/issue date. Drop caps on first paragraph via ::first-letter. Editorial gravitas. The page must look like a broadsheet paper.',
+        distinctiveCSS: ['column-count:', 'column-rule:', 'serif'],
+        notLikeThis: ['single column prose', 'sans-serif body', 'casual layout', 'no rules between sections', 'modern card grids'],
+    },
+    {
+        id: 'magazine',
+        category: 'editorial',
+        signature: 'full-bleed images; overlapping text on image; dramatic scale contrast; editorial serif',
+        distinctive: 'Full-bleed hero that touches both edges of the viewport. Overlapping text on image placeholders (position: absolute with z-index). Dramatic scale contrast: huge display type next to tiny captions. Editorial serif headlines (Playfair Display, Bodoni). Large intentional whitespace. Vogue/Harpers layout energy.',
+        distinctiveCSS: ['position: absolute', 'font-size: clamp(', 'serif'],
+        notLikeThis: ['contained images only', 'uniform type sizes', 'grid-only layout', 'sans-serif everywhere', 'symmetric compositions'],
+    },
+    {
+        id: 'poster',
+        category: 'editorial',
+        signature: 'single viewport; massive typography (120px+); minimal elements; maximum impact',
+        distinctive: 'The entire landing page is essentially one giant poster. Massive typography at clamp(80px, 14vw, 180px). One headline, one CTA, minimal elements. Maximum visual impact with 3-5 total elements on screen. Concert poster energy. The rest of the page sections are small subordinate additions below the poster hero.',
+        distinctiveCSS: ['font-size: clamp(', 'font-weight: 900'],
+        notLikeThis: ['many small sections', 'small typography', 'dense content', 'grid layouts', 'multiple CTAs in hero'],
+    },
+    {
+        id: 'book-cover',
+        category: 'editorial',
+        signature: 'centered composition; single typeface; restrained color; strong vertical rhythm',
+        distinctive: 'Everything perfectly centered on a vertical axis. Single typeface (one serif for everything, differentiated by weight and size). Maximum 3 colors. Strong vertical rhythm. Penguin Classics energy. Every element in symmetric hierarchy. Hero looks like the front of a novel, not a landing page.',
+        distinctiveCSS: ['text-align: center', 'serif'],
+        notLikeThis: ['asymmetric layouts', 'multiple type families', 'busy composition', 'grid layouts'],
+    },
+    // ==========================================================================
     // EMERGING 2025-2026
-    { id: 'kinetic-type', category: 'emerging', signature: 'variable font animation; font-variation-settings transitions; text as hero element' },
-    { id: 'tactile-rebellion', category: 'emerging', signature: 'grain texture overlays; hand-drawn SVG borders; deliberate imperfection; anti-AI-polish' },
-    { id: 'dopamine-design', category: 'emerging', signature: 'hyper-saturated palettes; bold gradients; energetic layout; maximum visual stimulation' },
-    { id: 'dark-luxe', category: 'emerging', signature: 'near-black bg (#0A0A0A); gold or silver accent; thin serif; extreme whitespace' },
-    { id: 'scrollytelling', category: 'emerging', signature: 'CSS scroll-timeline animations; narrative section flow; parallax depth layers' },
-    { id: 'organic-minimal', category: 'emerging', signature: 'earth tones; generous whitespace; rounded shapes; natural proportions; calm energy' },
+    // ==========================================================================
+    {
+        id: 'kinetic-type',
+        category: 'emerging',
+        signature: 'variable font animation; font-variation-settings transitions; text as hero element',
+        distinctive: 'Text IS the design. Animated variable font weight/width transitions via @keyframes on font-variation-settings. Huge typography with constant motion. Words move, morph, or pulse. Typography is the hero element, not supporting. The page should feel like a typographic animation played on a loop.',
+        distinctiveCSS: ['font-variation-settings', '@keyframes', 'animation:'],
+        notLikeThis: ['static typography only', 'small type', 'image-dominated design', 'no animation', 'calm type'],
+    },
+    {
+        id: 'tactile-rebellion',
+        category: 'emerging',
+        signature: 'grain texture overlays; hand-drawn SVG borders; deliberate imperfection; anti-AI-polish',
+        distinctive: 'Visible grain texture overlays via SVG noise filter or background-image. Hand-drawn wavy SVG borders instead of clean lines. Deliberate imperfection: uneven margins, slightly rotated elements (transform: rotate(-0.7deg)). Warm paper colors. Anti-AI-polish. The page should look like it was built by a person who does not care about pixel-perfect alignment.',
+        distinctiveCSS: ['background-image:', 'transform: rotate('],
+        notLikeThis: ['pixel-perfect alignment', 'cold digital look', 'AI-generated feel', 'sharp edges', 'perfect grid'],
+    },
+    {
+        id: 'dopamine-design',
+        category: 'emerging',
+        signature: 'hyper-saturated palettes; bold gradients; energetic layout; maximum visual stimulation',
+        distinctive: 'Hyper-saturated palette with 5+ bright colors used aggressively. Bold multi-stop linear gradients on every section. Energetic chaotic layout. Maximum visual stimulation. Every element competes for attention. TikTok/Gen Z energy. The page should feel like a sugar rush.',
+        distinctiveCSS: ['linear-gradient(', 'filter: saturate'],
+        notLikeThis: ['restrained palette', 'muted colors', 'minimal design', 'corporate tone', 'monochrome'],
+    },
+    {
+        id: 'dark-luxe',
+        category: 'emerging',
+        signature: 'near-black bg (#0A0A0A); gold or silver accent; thin serif; extreme whitespace',
+        distinctive: 'Near-black #0A0A0A background. Gold #D4AF37 or silver #C0C0C0 accents only. Thin elegant serifs (font-weight: 300, Playfair Display Light). Extreme whitespace (padding-block: 160px+ on sections). Restrained like a luxury jeweler website. The page should feel expensive and quiet.',
+        distinctiveCSS: ['#0A0A0A', '#D4AF37', 'font-weight: 300', 'serif'],
+        notLikeThis: ['bright colors', 'bold weights', 'dense layouts', 'multiple accents', 'casual tone'],
+    },
+    {
+        id: 'scrollytelling',
+        category: 'emerging',
+        signature: 'CSS scroll-timeline animations; narrative section flow; parallax depth layers',
+        distinctive: 'CSS scroll-driven animations on every section. Parallax depth layers via transform: translateZ or scroll-triggered transforms. Each section tells part of a narrative. Content reveals on scroll. position: sticky elements that pin and release. Information unfolds cinematically.',
+        distinctiveCSS: ['position: sticky', 'transform:', '@keyframes'],
+        notLikeThis: ['static layout', 'no scroll effects', 'traditional landing page', 'no narrative flow'],
+    },
+    {
+        id: 'organic-minimal',
+        category: 'emerging',
+        signature: 'earth tones; generous whitespace; rounded shapes; natural proportions; calm energy',
+        distinctive: 'Earth tones: warm beige #F5F0EB, sage green #8A9A5B, soft ochre #E8B07A. Generous whitespace (sections at 120px+ padding). All corners rounded (border-radius: 16-24px). Natural proportions. Calm breathing rhythm. Notion meets Muji. The page should feel like a quiet morning.',
+        distinctiveCSS: ['border-radius:', '#F5F0EB', '#8A9A5B'],
+        notLikeThis: ['sharp corners', 'bright saturated colors', 'dense layouts', 'cold tones', 'aggressive tone'],
+    },
 ];
 exports.STYLE_POOL = exports.STYLE_ARCHETYPES.map(s => s.id);
 function getStyleSignature(styleId) {
     return exports.STYLE_ARCHETYPES.find(s => s.id === styleId)?.signature ?? '';
+}
+function getStyleArchetype(styleId) {
+    return exports.STYLE_ARCHETYPES.find(s => s.id === styleId);
+}
+/**
+ * Scans generated HTML for the required CSS declarations for a given style.
+ * Returns which required strings are present vs missing.
+ * Used by the auto-deduction path in the recording flow.
+ */
+function checkDistinctiveCSS(htmlContent, styleId) {
+    const archetype = getStyleArchetype(styleId);
+    if (!archetype || archetype.distinctiveCSS.length === 0) {
+        return { required: [], present: [], missing: [] };
+    }
+    const present = [];
+    const missing = [];
+    for (const req of archetype.distinctiveCSS) {
+        if (htmlContent.includes(req))
+            present.push(req);
+        else
+            missing.push(req);
+    }
+    return { required: archetype.distinctiveCSS, present, missing };
 }
 exports.HARMONY_SCHEMES = [
     { id: 'monochromatic', kind: 'algorithmic' },
