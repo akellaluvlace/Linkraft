@@ -1,9 +1,22 @@
 {
   "name": "linkraft",
-  "description": "Open-source MCP toolkit for Claude Code. Curated, tested integrations for popular services.",
-  "version": "0.1.0",
+  "description": "Open-source toolkit for Claude Code. Autonomous QA, project planning, overnight design generation, plus pre-built MCP packs for popular services.",
+  "version": "0.2.0",
+  "owner": {
+    "name": "Akella inMotion",
+    "email": "nikita.akella13@gmail.com"
+  },
   "author": "Akella inMotion",
   "repository": "https://github.com/akellaluvlace/Linkraft",
+  "plugins": [
+    {
+      "name": "linkraft",
+      "source": "./poking",
+      "version": "1.1.0",
+      "description": "Four autonomous Claude Code commands. /linkraft plan (project blueprint + CLAUDE.md, Path A from existing code or Path B from a rough idea .md). /linkraft preflight (60-second security/health/readiness scan). /linkraft sheep (autonomous QA agent that finds and fixes bugs overnight). /linkraft dreamroll (overnight design generator with 15-dimension Style Genome and 3 judges).",
+      "keywords": ["claude-code", "planning", "qa", "autonomous", "design", "claude-md", "linkraft"]
+    }
+  ],
   "packs": [
     {
       "name": "telegram",

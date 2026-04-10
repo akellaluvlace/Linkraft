@@ -21,10 +21,14 @@ Requirements: Claude Code, Claude Pro/Max/Team/Enterprise, Node.js 18+
 
 ## /linkraft plan
 
-Scans your project and generates up to 14 planning documents. The chain is self-reinforcing: research phase (steps 1-12) feeds a synthesis step (13: HARDENING.md with prioritized action items) which feeds the capstone (14: CLAUDE.md). Every future Claude session starts knowing the project AND what to work on.
+One command, two modes. Auto-detects which to run.
+
+**Path A — existing project.** When `package.json` is present at the root, plan scans the code and generates up to 14 planning documents. The chain is self-reinforcing: research phase (steps 1-12) feeds a synthesis step (13: HARDENING.md with prioritized action items) which feeds the capstone (14: CLAUDE.md).
+
+**Path B — new project from a rough idea.** When there is no `package.json` but a `.md` file at the root (PLAN.md, IDEA.md, BRIEF.md, SPEC.md, PRD.md, or README.md), plan reads the rough idea, extracts product context (name, category, features, audience, tech hints), and generates the same documents from scratch — recommended stack with reasoning, designed schema, designed API map, proposed design tokens — followed by a runnable scaffold (package.json, tsconfig, folder structure, .env.example, framework config). No application code is written, and existing files are never overwritten. You go from rough idea to "Claude, build phase 1" in 10 minutes.
 
 ```
-/linkraft plan               Full flow (all 14 steps)
+/linkraft plan               Full flow (auto Path A or Path B)
 /linkraft plan claude-md     Generate CLAUDE.md (reads .plan/ if present)
 /linkraft plan stack         Tech stack analysis
 /linkraft plan competitors   Competitive analysis (uses web search)
@@ -32,9 +36,11 @@ Scans your project and generates up to 14 planning documents. The chain is self-
 /linkraft plan risks         Risk matrix
 /linkraft plan deps          Task dependency graph
 /linkraft plan hardening     Synthesize prioritized action items from .plan/
+/linkraft plan idea          Path B: read rough .md and write .plan/IDEA.md
+/linkraft plan scaffold      Path B: generate project skeleton (preview/apply)
 ```
 
-Research outputs in `.plan/`: stack, features, schema, API map, design tokens, competitors, architecture, executive summary, risk matrix, dependency graph, plus conditional monetization and ASO.
+Research outputs in `.plan/`: stack, features, schema, API map, design tokens, competitors, architecture, executive summary, risk matrix, dependency graph, plus conditional monetization and ASO. Path B adds `IDEA.md` and a runnable scaffold.
 
 Synthesis output: `HARDENING.md` — categorizes everything into **must-fix** (blocks launch), **should-fix** (improves quality), **nice-to-have** (polish). Each item is tagged with category, source doc, and effort estimate.
 
@@ -117,7 +123,7 @@ Every feature works with zero config on first run. No API keys. No MCPs required
 
 ## MCP Tools
 
-34 tools across four modes: 16 plan tools, 4 preflight tools, 8 sheep tools, 6 dreamroll tools.
+42 tools across four modes: 24 plan tools (16 Path A + 8 Path B), 4 preflight tools, 8 sheep tools, 6 dreamroll tools.
 
 ## Running Overnight
 
@@ -139,9 +145,10 @@ Bonus: during a normal run, sheep and dreamroll automatically surface a reminder
 
 ## Numbers
 
-- 540 tests across 36 test files
+- 579 tests across 39 test files
 - 4 modes (plan, preflight, sheep, dreamroll)
-- 14 plan outputs: 10 research + 1 synthesis (HARDENING.md) + 3 conditional + CLAUDE.md (capstone)
+- 2 plan paths (A: scan existing code, B: generate from a rough idea .md + scaffold)
+- 14 plan outputs in Path A, 15 + scaffold in Path B
 - 3 preflight scores (security, health, readiness)
 - 6 agent personalities (3 sheep, 3 dreamroll judges)
 - 15 dreamroll Style Genome dimensions (180+ values total)
@@ -168,10 +175,10 @@ poking/
     sheep.md
     dreamroll.md
   src/
-    plan/              # 12 generators + scaffolder + memory config
+    plan/              # 16 generators (Path A scan + Path B from-idea + scaffolder)
     preflight/         # Security, health, readiness scanners + runner
     sheep/             # Auto-config, hunter, personas, stats, content gen
-    dreamroll/         # 14-dim params, genome, generator, judges, evolution, reporter, state
+    dreamroll/         # 15-dim params, genome, generator, judges, evolution, reporter, state
     shared/            # Scanner utilities, types, format
     mcp/
       server.ts        # MCP server (all four modes)
@@ -180,7 +187,7 @@ poking/
         preflight-tools.ts
         sheep-tools.ts
         dreamroll-tools.ts
-  tests/               # 464 tests across 34 files
+  tests/               # 579 tests across 39 files
   README.md
   LICENSE
 ```

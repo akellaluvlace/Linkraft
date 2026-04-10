@@ -1,7 +1,7 @@
 {
   "name": "linkraft",
-  "description": "Autonomous QA and project analysis for Claude Code. /linkraft sheep (QA agent, proven across 4 runs), /linkraft plan (CLAUDE.md generator + planning documents).",
-  "version": "1.0.0",
+  "description": "Four autonomous Claude Code commands. /linkraft plan: project blueprint and CLAUDE.md generator (Path A from existing code, Path B from a rough idea .md). /linkraft preflight: 60-second security, health, and ship-readiness scan. /linkraft sheep: autonomous QA agent that finds bugs, fixes the safe ones, and runs overnight. /linkraft dreamroll: overnight design generator with a 15-dimension Style Genome judged by three personas.",
+  "version": "1.1.0",
   "author": {
     "name": "Akella inMotion",
     "email": "nikita.akella13@gmail.com"
@@ -11,11 +11,14 @@
   "license": "MIT",
   "keywords": [
     "claude-code",
-    "qa",
-    "autonomous",
     "planning",
     "claude-md",
-    "testing",
+    "qa",
+    "autonomous",
+    "preflight",
+    "design",
+    "dreamroll",
+    "sheep",
     "linkraft"
   ]
 }
