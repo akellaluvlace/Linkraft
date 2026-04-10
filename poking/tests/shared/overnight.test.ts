@@ -15,18 +15,39 @@ afterEach(() => {
 });
 
 describe('writeOvernightScript', () => {
-  it('writes dreamroll script to .dreamroll directory', () => {
+  it('writes dreamroll script to project root', () => {
     const script = writeOvernightScript(tmpDir, 'dreamroll');
     expect(fs.existsSync(script.path)).toBe(true);
-    expect(script.path).toContain('.dreamroll');
+    expect(path.dirname(script.path)).toBe(tmpDir);
     expect(script.path).toMatch(/dreamroll-loop\.(ps1|sh)$/);
   });
 
-  it('writes sheep script to .sheep directory', () => {
+  it('writes sheep script to project root', () => {
     const script = writeOvernightScript(tmpDir, 'sheep');
     expect(fs.existsSync(script.path)).toBe(true);
-    expect(script.path).toContain('.sheep');
+    expect(path.dirname(script.path)).toBe(tmpDir);
     expect(script.path).toMatch(/sheep-loop\.(ps1|sh)$/);
+  });
+
+  it('returns a runCommand the user can paste directly', () => {
+    const script = writeOvernightScript(tmpDir, 'dreamroll');
+    expect(script.runCommand).toBeTruthy();
+    if (script.platform === 'windows') {
+      expect(script.runCommand).toContain('powershell');
+      expect(script.runCommand).toContain('ExecutionPolicy Bypass');
+      expect(script.runCommand).toContain(script.path);
+    } else {
+      expect(script.runCommand).toBe(script.path);
+    }
+  });
+
+  it('script self-locates to its own directory', () => {
+    const script = writeOvernightScript(tmpDir, 'dreamroll');
+    if (script.platform === 'windows') {
+      expect(script.content).toContain('Set-Location -Path $PSScriptRoot');
+    } else {
+      expect(script.content).toContain('cd "$(dirname');
+    }
   });
 
   it('script content invokes claude with the correct mode command', () => {
@@ -41,10 +62,11 @@ describe('writeOvernightScript', () => {
     expect(script.content).toContain('claude -p "/linkraft sheep"');
   });
 
-  it('creates the state directory if missing', () => {
+  it('works even when state directory does not exist yet', () => {
+    // Script lives at project root so state dir is not required
     expect(fs.existsSync(path.join(tmpDir, '.dreamroll'))).toBe(false);
-    writeOvernightScript(tmpDir, 'dreamroll');
-    expect(fs.existsSync(path.join(tmpDir, '.dreamroll'))).toBe(true);
+    const script = writeOvernightScript(tmpDir, 'dreamroll');
+    expect(fs.existsSync(script.path)).toBe(true);
   });
 
   it('windows script uses while ($true) and Start-Sleep', () => {
@@ -97,8 +119,7 @@ describe('overnightInstructions', () => {
   it('tells the user to open a new terminal', () => {
     const script = writeOvernightScript(tmpDir, 'dreamroll');
     const instructions = overnightInstructions(script, 'dreamroll');
-    expect(instructions.toLowerCase()).toContain('new');
-    expect(instructions.toLowerCase()).toContain('separate');
+    expect(instructions.toLowerCase()).toContain('new terminal');
   });
 
   it('mentions resumption from state.json', () => {
@@ -107,17 +128,15 @@ describe('overnightInstructions', () => {
     expect(instructions).toContain('state.json');
   });
 
-  it('reminds user to keep laptop awake', () => {
+  it('reminds user to keep machine awake', () => {
     const script = writeOvernightScript(tmpDir, 'dreamroll');
     const instructions = overnightInstructions(script, 'dreamroll');
     expect(instructions.toLowerCase()).toContain('plugged');
   });
 
-  it('windows instructions include ExecutionPolicy bypass', () => {
+  it('instructions include the paste-ready runCommand', () => {
     const script = writeOvernightScript(tmpDir, 'dreamroll');
-    if (script.platform === 'windows') {
-      const instructions = overnightInstructions(script, 'dreamroll');
-      expect(instructions).toContain('ExecutionPolicy Bypass');
-    }
+    const instructions = overnightInstructions(script, 'dreamroll');
+    expect(instructions).toContain(script.runCommand);
   });
 });

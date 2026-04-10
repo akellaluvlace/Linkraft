@@ -4,7 +4,7 @@
 // Some pools attach metadata (CSS signatures, font names, etc.) used by genome.ts
 // when constructing the generation prompt.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WILDCARD_POOL = exports.CTA_STYLE_POOL = exports.CTA_STYLE_SPECS = exports.SHADOW_POOL = exports.SHADOW_SPECS = exports.BORDER_RADIUS_POOL = exports.BORDER_RADIUS_SPECS = exports.IMAGERY_POOL = exports.ANIMATION_POOL = exports.ERA_POOL = exports.MOOD_POOL = exports.DENSITY_POOL = exports.LAYOUT_POOL = exports.TYPE_SCALE_POOL = exports.TYPE_SCALES = exports.TYPOGRAPHY_POOL = exports.TYPOGRAPHY_PAIRINGS = exports.PALETTE_POOL = exports.HARMONY_SCHEMES = exports.STYLE_POOL = exports.STYLE_ARCHETYPES = void 0;
+exports.WILDCARD_POOL = exports.MATERIALS = exports.MUTATION_POOL = exports.MUTATIONS = exports.CTA_STYLE_POOL = exports.CTA_STYLE_SPECS = exports.SHADOW_POOL = exports.SHADOW_SPECS = exports.BORDER_RADIUS_POOL = exports.BORDER_RADIUS_SPECS = exports.IMAGERY_POOL = exports.ANIMATION_POOL = exports.ERA_POOL = exports.MOOD_POOL = exports.DENSITY_POOL = exports.LAYOUT_POOL = exports.TYPE_SCALE_POOL = exports.TYPE_SCALES = exports.TYPOGRAPHY_POOL = exports.TYPOGRAPHY_PAIRINGS = exports.PALETTE_POOL = exports.HARMONY_SCHEMES = exports.STYLE_POOL = exports.STYLE_ARCHETYPES = void 0;
 exports.getStyleSignature = getStyleSignature;
 exports.getStyleArchetype = getStyleArchetype;
 exports.checkDistinctiveCSS = checkDistinctiveCSS;
@@ -12,6 +12,7 @@ exports.getHarmonyScheme = getHarmonyScheme;
 exports.computeHarmonyPalette = computeHarmonyPalette;
 exports.getTypographyPairing = getTypographyPairing;
 exports.getTypeScale = getTypeScale;
+exports.getMutation = getMutation;
 exports.weightedPick = weightedPick;
 exports.rollParams = rollParams;
 exports.getAllPools = getAllPools;
@@ -509,9 +510,64 @@ exports.CTA_STYLE_SPECS = [
     { id: 'brutalist-block', css: 'thick border, hard shadow offset, square corners, uppercase' },
 ];
 exports.CTA_STYLE_POOL = exports.CTA_STYLE_SPECS.map(c => c.id);
-// ============================================================================
-// Dimension 14: OBLIQUE STRATEGY CONSTRAINT (40 options)
-// ============================================================================
+exports.MUTATIONS = [
+    {
+        id: 'pure',
+        weight: 30,
+        summary: 'Apply the archetype faithfully',
+        describe: () => 'Standard execution. Apply the style archetype faithfully as documented.',
+    },
+    {
+        id: 'mashup',
+        weight: 25,
+        summary: 'Two archetypes fused',
+        describe: ({ primary, secondary }) => `Roll TWO style archetypes. Apply "${primary}" to layout and structure. Apply "${secondary}" to color, texture, and surface treatment. The skeleton is ${primary}. The skin is ${secondary}.`,
+    },
+    {
+        id: 'invert',
+        weight: 10,
+        summary: 'Opposite of archetype rules',
+        describe: ({ primary }) => `Take "${primary}"'s rules and do the OPPOSITE. If the archetype says thick borders, use whisper-thin. If it says dark background, use pastel. If it says hard edges, use soft. Invert every distinctive property while keeping the same product brief.`,
+    },
+    {
+        id: 'era-clash',
+        weight: 10,
+        summary: 'Archetype forced through the era',
+        describe: ({ primary, era }) => `Apply "${primary}" but force it through the era "${era}" literally. The archetype provides structure and layout philosophy, but every color, texture, and typographic flourish comes from ${era}. Example: Swiss-international grid with 1970s warm earth tones.`,
+    },
+    {
+        id: 'material-swap',
+        weight: 10,
+        summary: 'Surfaces replaced with a material',
+        describe: ({ primary, material }) => `Keep "${primary}"'s layout and structure but replace every surface, border, and fill with the physical material "${material}". Cards become ${material}. Buttons become ${material}. Backgrounds become ${material}. Use CSS to simulate the material's visual properties (texture, transparency, weight, light).`,
+    },
+    {
+        id: 'maximum',
+        weight: 5,
+        summary: 'Archetype properties pushed to 200%',
+        describe: ({ primary }) => `Take every distinctive CSS property of "${primary}" and push it to 200%. If the archetype has 3px borders, use 8px. If 10px blur, use 40px. If 10% gold accent, use 30%. Every rule amplified past normal. Over-commit to the style.`,
+    },
+    {
+        id: 'minimum',
+        weight: 5,
+        summary: 'Strip to one essential property',
+        describe: ({ primary }) => `Strip "${primary}" to its ONE most essential property. Identify the single most defining CSS rule of the archetype and apply ONLY that. Everything else is clean, neutral, unremarkable. Force elegant restraint.`,
+    },
+    {
+        id: 'franken',
+        weight: 5,
+        summary: 'Chimera of three archetypes',
+        describe: ({ primary, secondary, tertiary }) => `Three archetypes fused. Take the COLOR SYSTEM from "${primary}". Take the TYPOGRAPHY rules from "${secondary}". Take the LAYOUT pattern from "${tertiary}". Deliberately chimeric. The result should have no coherent parent — it's a new creature.`,
+    },
+];
+exports.MUTATION_POOL = exports.MUTATIONS.map(m => m.id);
+function getMutation(id) {
+    return exports.MUTATIONS.find(m => m.id === id);
+}
+/** Materials for the material-swap mode. */
+exports.MATERIALS = [
+    'concrete', 'silk', 'glass', 'paper', 'metal', 'water', 'marble', 'velvet',
+];
 exports.WILDCARD_POOL = [
     // REDUCTION
     'one-font-only',
@@ -583,14 +639,52 @@ function weightedPick(pool, weights) {
     return weighted[weighted.length - 1].value;
 }
 /**
- * Rolls all 14 parameter dimensions, returning a complete StyleGenome.
+ * Rolls the STYLE_MUTATION dimension using the weights defined in MUTATIONS.
+ * Respects chaos mode (uniform random) and optional weight overrides.
+ */
+function rollMutation(weights, chaos = false) {
+    if (chaos)
+        return randomFrom(exports.MUTATION_POOL);
+    // Build weights object from MUTATIONS distribution unless overridden
+    const built = {};
+    for (const m of exports.MUTATIONS)
+        built[m.id] = weights?.[m.id] ?? m.weight;
+    return weightedPick(exports.MUTATION_POOL, built);
+}
+/**
+ * Rolls all 15 parameter dimensions, returning a complete StyleGenome.
  * If weights are provided, uses weighted selection.
  * If chaos is true, ignores weights (mandatory chaos rounds).
+ *
+ * Mashup rolls a secondary archetype (distinct from the primary).
+ * Franken rolls a secondary AND tertiary (both distinct from each other and primary).
+ * Material-swap rolls a physical material from MATERIALS.
  */
 function rollParams(weights, chaos = false) {
     const w = chaos ? undefined : weights;
+    const primary = weightedPick(exports.STYLE_POOL, w?.style);
+    // Roll the mutation (15th dimension)
+    const mutation = rollMutation(w?.mutation, chaos);
+    // Roll dependent values based on mutation
+    let mutationSecondary;
+    let mutationTertiary;
+    let mutationMaterial;
+    const pickDifferent = (exclude) => {
+        const pool = exports.STYLE_POOL.filter(s => !exclude.includes(s));
+        return pool[Math.floor(Math.random() * pool.length)];
+    };
+    if (mutation === 'mashup') {
+        mutationSecondary = pickDifferent([primary]);
+    }
+    else if (mutation === 'franken') {
+        mutationSecondary = pickDifferent([primary]);
+        mutationTertiary = pickDifferent([primary, mutationSecondary]);
+    }
+    else if (mutation === 'material-swap') {
+        mutationMaterial = randomFrom(exports.MATERIALS);
+    }
     return {
-        genre: weightedPick(exports.STYLE_POOL, w?.style),
+        genre: primary,
         colorPalette: weightedPick(exports.PALETTE_POOL, w?.palette),
         harmonyBaseHue: Math.floor(Math.random() * 360),
         typography: weightedPick(exports.TYPOGRAPHY_POOL, w?.typography),
@@ -605,11 +699,15 @@ function rollParams(weights, chaos = false) {
         shadows: weightedPick(exports.SHADOW_POOL, w?.shadows),
         ctaStyle: weightedPick(exports.CTA_STYLE_POOL, w?.ctaStyle),
         wildcard: weightedPick(exports.WILDCARD_POOL, w?.wildcard),
+        mutation,
+        mutationSecondary,
+        mutationTertiary,
+        mutationMaterial,
         temperature: Math.round((0.7 + Math.random() * 0.6) * 100) / 100,
     };
 }
 /**
- * Returns all 14 pools for tests and documentation.
+ * Returns all 15 pools for tests and documentation.
  */
 function getAllPools() {
     return {
@@ -627,6 +725,7 @@ function getAllPools() {
         shadows: exports.SHADOW_POOL,
         ctaStyle: exports.CTA_STYLE_POOL,
         wildcard: exports.WILDCARD_POOL,
+        mutation: exports.MUTATION_POOL,
     };
 }
 //# sourceMappingURL=params.js.map

@@ -91,18 +91,34 @@ If the session is interrupted (context window fills, crash, user stops):
 
 ### /linkraft sheep overnight
 
-Overnight operation: Claude Code sessions end when context fills, so something external must relaunch Claude to keep sheep running. Sheep ships a generator for that.
+**Handle this exactly like this, every time:**
 
-When the user says `/linkraft sheep overnight`, call `sheep_overnight`. The tool writes an OS-appropriate script to `.sheep/sheep-loop.ps1` (Windows) or `.sheep/sheep-loop.sh` (Mac/Linux) and prints exact run instructions. The user runs the script in a separate terminal and it keeps relaunching `claude -p "/linkraft sheep"` across every context-fill boundary until they ctrl+c. Each new session reads `.sheep/stats.json` and resumes from the last completed cycle — no work is repeated.
+1. Call `sheep_overnight` with `projectRoot`. The tool detects the OS and writes a restart loop script to the project root:
+   - Windows → `sheep-loop.ps1`
+   - Mac/Linux → `sheep-loop.sh` (auto chmod +x)
+   The script self-locates via `$PSScriptRoot` or `cd "$(dirname "${BASH_SOURCE[0]}")"` so `claude` runs from the project directory no matter where the user invokes it.
+
+2. The tool returns a ready-to-paste `runCommand` plus the full script content.
+
+3. Present the response to the user with ZERO rewriting. Critical: "Run this in a NEW terminal window" followed by the one command. Do not explain how PowerShell works. The user should see: one sentence, one command to paste, done.
+
+4. Tell the user: "Open a new terminal and paste this. It will keep relaunching Claude until you Ctrl+C. You can close this Claude session once the loop is running."
+
+Each relaunched session resumes from `.sheep/stats.json` at the next cycle — no work is repeated. The shame engine stays off. Stop with Ctrl+C.
 
 Example generated Unix script:
 ```bash
 #!/usr/bin/env bash
+cd "$(dirname "${BASH_SOURCE[0]}")"
 while true; do
   claude -p "/linkraft sheep" --allowedTools 'Bash(*)' 'Read(*)' 'Write(*)' 'Edit(*)' 'Glob(*)' 'Grep(*)'
   sleep 10
 done
 ```
+
+### Contextual overnight hints
+
+During a normal `/linkraft sheep` run, the `sheep_next` MCP tool automatically surfaces an overnight hint block every 3 cycles (starting at cycle 4). When you see that block in the response, present it to the user alongside the next cycle instructions. Don't hide it. The user should see "you're on cycle 4, run this one command to keep going overnight".
 
 ## The Cast
 

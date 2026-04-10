@@ -88,17 +88,21 @@ export function registerDreamrollTools(server: McpServer): void {
         // stores a placeholder variation, so we have the correct genome here).
         let variation = state.variations.find(v => v.id === completed.variationId);
         const recordedStyle = variation?.seed.genre;
+        const recordedMutation = variation?.seed.mutation ?? 'pure';
 
         // Style-adherence auto-deduction: read the HTML file and check for
         // the required distinctive CSS declarations. Missing strings dock BRUTUS.
+        // Skipped for non-pure mutations (they deliberately violate the archetype).
         let finalScores = completed.scores;
         let deductionNote = '';
         if (recordedStyle && completed.filePath && fs.existsSync(completed.filePath)) {
           try {
             const htmlContent = fs.readFileSync(completed.filePath, 'utf-8');
-            const result = applyStyleAdherenceDeduction(completed.scores, htmlContent, recordedStyle);
+            const result = applyStyleAdherenceDeduction(completed.scores, htmlContent, recordedStyle, recordedMutation);
             finalScores = result.scores;
-            if (result.deducted) {
+            if (result.skipped) {
+              deductionNote = `\n  CSS check skipped: mutation "${recordedMutation}" is experimental — judges evaluate whether the combination works.`;
+            } else if (result.deducted) {
               deductionNote = `\n  Auto-deduction: BRUTUS -2 for missing distinctive CSS (${recordedStyle}): ${result.missing.join(', ')}`;
             }
           } catch {
@@ -165,7 +169,18 @@ export function registerDreamrollTools(server: McpServer): void {
         const agentsDir = path.join(pluginRoot, 'agents');
         const prompts = getJudgeEvaluationPrompts(agentsDir, `${outputPath} — ${genomeSummary(seed)}`);
         if (prompts.length > 0) {
-          const blocks = ['', '════════ JUDGES ════════', 'After writing the HTML, score it as each judge below. Use exactly:', 'Judge: [name]', 'Score: [1-10]', 'Comment: [1-2 sentences in character]', '', 'Then call dreamroll_start again with `completed: { variationId, filePath, scores }` to record scores and get the next variation.', ''];
+          const isMutation = (seed.mutation ?? 'pure') !== 'pure';
+          const blocks = ['', '════════ JUDGES ════════', 'After writing the HTML, score it as each judge below. Use exactly:', 'Judge: [name]', 'Score: [1-10]', 'Comment: [1-2 sentences in character]', ''];
+          if (isMutation) {
+            blocks.push(
+              `IMPORTANT: This variation is an experimental STYLE MUTATION (${seed.mutation}).`,
+              'Do NOT evaluate whether it matches the base style archetype. Evaluate whether',
+              'the mutation WORKS as a new aesthetic. Is it coherent? Does it communicate?',
+              'Is there anything genuinely novel here? Score on invention, not recognition.',
+              '',
+            );
+          }
+          blocks.push('Then call dreamroll_start again with `completed: { variationId, filePath, scores }` to record scores and get the next variation.', '');
           for (const p of prompts) {
             blocks.push(`-- ${p.judge.toUpperCase()} --`);
             blocks.push(p.prompt);
@@ -179,10 +194,32 @@ export function registerDreamrollTools(server: McpServer): void {
         ? `Dreamroll INITIALIZED.\nProject: ${projectRoot}\nBrief: ${state.config.brief ?? '(none)'}`
         : `Dreamroll RESUMED at variation ${nextId}.`;
 
+      // Overnight hint: once the user has generated a handful of variations,
+      // nudge them toward the overnight loop so they don't have to babysit the
+      // session. Surfaced every 5 variations so it isn't spammy.
+      let overnightHint = '';
+      const completedCount = state.variations.filter(v => v.verdict).length;
+      if (completedCount >= 3 && completedCount % 5 === 3) {
+        overnightHint = [
+          '',
+          '────────────────────────────────────────',
+          `Tip: you have ${completedCount} variations so far.`,
+          'To keep dreamroll running after this session ends:',
+          '',
+          '    /linkraft dreamroll overnight',
+          '',
+          'That generates a restart loop script you paste into a separate',
+          'terminal. Each new session reads .dreamroll/state.json and continues',
+          'where the previous one left off. Leaves you to sleep. Stop with Ctrl+C.',
+          '────────────────────────────────────────',
+          '',
+        ].join('\n');
+      }
+
       const text = [
         header,
         recordedSummary,
-        '',
+        overnightHint,
         '════════ NEXT VARIATION ════════',
         generationPrompt,
         judgeBlock,

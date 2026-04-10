@@ -13,6 +13,7 @@ import {
   computeHarmonyPalette,
   getTypographyPairing,
   getTypeScale,
+  getMutation,
   BORDER_RADIUS_SPECS,
   SHADOW_SPECS,
   CTA_STYLE_SPECS,
@@ -51,6 +52,9 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
   const borderRadius = BORDER_RADIUS_SPECS.find(b => b.id === genome.borderRadius);
   const shadow = SHADOW_SPECS.find(s => s.id === genome.shadows);
   const cta = CTA_STYLE_SPECS.find(c => c.id === genome.ctaStyle);
+  const mutationId = genome.mutation ?? 'pure';
+  const mutationSpec = getMutation(mutationId);
+  const isMutation = mutationId !== 'pure';
 
   const fontsLink = typography
     ? `https://fonts.googleapis.com/css2?${typography.googleFontsParam}&display=swap`
@@ -62,12 +66,62 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
 
   const constraintBlock = `CONSTRAINT (mandatory, applied to the whole page): ${genome.wildcard}`;
 
+  // Build the mutation banner (only when non-pure)
+  const mutationBanner: string[] = [];
+  if (isMutation && mutationSpec) {
+    const mutationDescription = mutationSpec.describe({
+      primary: genome.genre,
+      secondary: genome.mutationSecondary,
+      tertiary: genome.mutationTertiary,
+      material: genome.mutationMaterial,
+      era: genome.era,
+    });
+    mutationBanner.push(
+      '════════════════════════════════════════════════════════════════════════',
+      `STYLE MUTATION: ${mutationId.toUpperCase()}`,
+      '════════════════════════════════════════════════════════════════════════',
+      '',
+      `This variation is a STYLE MUTATION (${mutationId}). You are NOT recreating a known style. You are INVENTING a new one by ${mutationDescription}`,
+      '',
+      'The result should look like nothing that exists on any design website. If a designer could name this style in one word, you have not gone far enough.',
+      '',
+    );
+    if (genome.mutationSecondary) {
+      const secondaryArch = getStyleArchetype(genome.mutationSecondary);
+      if (secondaryArch) {
+        mutationBanner.push(
+          `SECONDARY ARCHETYPE: ${genome.mutationSecondary}`,
+          `  Signature: ${secondaryArch.signature}`,
+          `  Identity: ${secondaryArch.distinctive}`,
+          '',
+        );
+      }
+    }
+    if (genome.mutationTertiary) {
+      const tertiaryArch = getStyleArchetype(genome.mutationTertiary);
+      if (tertiaryArch) {
+        mutationBanner.push(
+          `TERTIARY ARCHETYPE: ${genome.mutationTertiary}`,
+          `  Signature: ${tertiaryArch.signature}`,
+          `  Identity: ${tertiaryArch.distinctive}`,
+          '',
+        );
+      }
+    }
+    if (genome.mutationMaterial) {
+      mutationBanner.push(`MATERIAL: ${genome.mutationMaterial}`, '');
+    }
+  }
+
   const lines: string[] = [
     `Generate a complete standalone HTML landing page for variation #${String(variationNumber).padStart(3, '0')}.`,
     `Output path: ${outputPath}`,
     '',
+    ...mutationBanner,
     '════════════════════════════════════════════════════════════════════════',
-    'VISUAL IDENTITY (this is the most important part)',
+    isMutation
+      ? `PRIMARY ARCHETYPE: ${genome.genre} (the mutation operates on this)`
+      : 'VISUAL IDENTITY (this is the most important part)',
     '════════════════════════════════════════════════════════════════════════',
     '',
     `STYLE: ${genome.genre}`,
@@ -78,24 +132,49 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
     '',
     constraintBlock,
     '',
-    '════════════════════════════════════════════════════════════════════════',
-    'THIS PAGE MUST NOT LOOK LIKE',
-    '════════════════════════════════════════════════════════════════════════',
-    '',
-    ...notLikeThis.map(n => `  - ${n}`),
-    '',
-    'If your output could pass for any of the above, you have failed the style brief.',
-    '',
-    '════════════════════════════════════════════════════════════════════════',
-    `REQUIRED CSS DECLARATIONS (must appear in the output for "${genome.genre}")`,
-    '════════════════════════════════════════════════════════════════════════',
-    '',
-    'Every one of these strings must appear somewhere in your generated HTML/CSS.',
-    'They are checked programmatically after generation. Missing any triggers',
-    'an automatic 2-point BRUTUS deduction.',
-    '',
-    ...requiredCSS.map(c => `  - ${c}`),
-    '',
+    ...(isMutation
+      ? [
+        '════════════════════════════════════════════════════════════════════════',
+        'ANTI-PATTERNS (use as reference — the mutation may override these)',
+        '════════════════════════════════════════════════════════════════════════',
+        '',
+        'In a PURE application of this archetype, these would be failures:',
+        ...notLikeThis.map(n => `  - ${n}`),
+        '',
+        'Because this is a mutation, some of these may actively be required. Use judgment.',
+        '',
+        '════════════════════════════════════════════════════════════════════════',
+        `REFERENCE CSS (for "${genome.genre}" — not strictly required during mutations)`,
+        '════════════════════════════════════════════════════════════════════════',
+        '',
+        'In a PURE application of this archetype, these strings would be checked',
+        'programmatically. For mutations the check is skipped — you are free to',
+        'violate them when the mutation demands it.',
+        '',
+        ...requiredCSS.map(c => `  - ${c}`),
+        '',
+      ]
+      : [
+        '════════════════════════════════════════════════════════════════════════',
+        'THIS PAGE MUST NOT LOOK LIKE',
+        '════════════════════════════════════════════════════════════════════════',
+        '',
+        ...notLikeThis.map(n => `  - ${n}`),
+        '',
+        'If your output could pass for any of the above, you have failed the style brief.',
+        '',
+        '════════════════════════════════════════════════════════════════════════',
+        `REQUIRED CSS DECLARATIONS (must appear in the output for "${genome.genre}")`,
+        '════════════════════════════════════════════════════════════════════════',
+        '',
+        'Every one of these strings must appear somewhere in your generated HTML/CSS.',
+        'They are checked programmatically after generation. Missing any triggers',
+        'an automatic 2-point BRUTUS deduction.',
+        '',
+        ...requiredCSS.map(c => `  - ${c}`),
+        '',
+      ]
+    ),
     '════════════════════════════════════════════════════════════════════════',
     'PRODUCT BRIEF',
     '════════════════════════════════════════════════════════════════════════',
@@ -103,7 +182,7 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
     brief,
     '',
     '════════════════════════════════════════════════════════════════════════',
-    'FULL GENOME (14 dimensions — all must visibly influence the design)',
+    'FULL GENOME (15 dimensions — all must visibly influence the design)',
     '════════════════════════════════════════════════════════════════════════',
     '',
     `  1.  Style archetype:  ${genome.genre}  ← the dominating concern above`,
@@ -122,6 +201,7 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
     `  12. Shadow system:    ${genome.shadows ?? '(default)'}${shadow ? ` — ${shadow.css}` : ''}`,
     `  13. CTA style:        ${genome.ctaStyle ?? '(default)'}${cta ? ` — ${cta.css}` : ''}`,
     `  14. Oblique constraint: ${genome.wildcard}  ← MUST be applied`,
+    `  15. Style mutation:   ${mutationId}${mutationSpec ? ` — ${mutationSpec.summary}` : ''}`,
     '',
     constraintBlock,
     '',
@@ -178,7 +258,9 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
     '',
     constraintBlock,
     '',
-    `If this variation looks like it could have been generated without knowing the style archetype "${genome.genre}", you have failed. The style must be OBVIOUS within 2 seconds of seeing the page. Every element should telegraph "${genome.genre}" — not a generic card grid with different colors.`,
+    isMutation
+      ? `This variation is an experimental STYLE MUTATION (${mutationId}). Do not try to match a known style — the mutation demands invention. The judges have been told this is experimental: they will evaluate whether the combination WORKS, not whether it matches "${genome.genre}". Push past recognizable aesthetics.`
+      : `If this variation looks like it could have been generated without knowing the style archetype "${genome.genre}", you have failed. The style must be OBVIOUS within 2 seconds of seeing the page. Every element should telegraph "${genome.genre}" — not a generic card grid with different colors.`,
     '',
     'After writing the file, return the file path so it can be scored.',
   ].filter(l => l !== '');
@@ -192,6 +274,13 @@ export function genomeToPrompt(genome: StyleGenome, brief: string, variationNumb
  */
 export function serializeGenomeAsComment(genome: StyleGenome, variationNumber: number): string {
   const baseHue = genome.harmonyBaseHue ?? 0;
+  const mutationId = genome.mutation ?? 'pure';
+
+  const mutationLines: string[] = [`    mutation:   ${mutationId}`];
+  if (genome.mutationSecondary) mutationLines.push(`    secondary:  ${genome.mutationSecondary}`);
+  if (genome.mutationTertiary) mutationLines.push(`    tertiary:   ${genome.mutationTertiary}`);
+  if (genome.mutationMaterial) mutationLines.push(`    material:   ${genome.mutationMaterial}`);
+
   const lines = [
     '<!--',
     `  DREAMROLL VARIATION #${String(variationNumber).padStart(3, '0')}`,
@@ -211,6 +300,7 @@ export function serializeGenomeAsComment(genome: StyleGenome, variationNumber: n
     `    shadows:    ${genome.shadows ?? '(default)'}`,
     `    cta:        ${genome.ctaStyle ?? '(default)'}`,
     `    constraint: ${genome.wildcard}`,
+    ...mutationLines,
     '',
     '  SCORES: (filled in after judging)',
     '-->',
@@ -222,12 +312,21 @@ export function serializeGenomeAsComment(genome: StyleGenome, variationNumber: n
  * Short single-line summary of a genome for status output.
  */
 export function genomeSummary(genome: StyleGenome): string {
-  return [
+  const parts = [
     `style=${genome.genre}`,
     `harmony=${genome.colorPalette}`,
     `type=${genome.typography}`,
     `layout=${genome.layoutArchetype}`,
     `mood=${genome.mood}`,
     `wildcard=${genome.wildcard}`,
-  ].join(' | ');
+  ];
+  const mutationId = genome.mutation ?? 'pure';
+  if (mutationId !== 'pure') {
+    let m = `mutation=${mutationId}`;
+    if (genome.mutationSecondary) m += `(+${genome.mutationSecondary})`;
+    if (genome.mutationTertiary) m += `(+${genome.mutationTertiary})`;
+    if (genome.mutationMaterial) m += `(${genome.mutationMaterial})`;
+    parts.push(m);
+  }
+  return parts.join(' | ');
 }

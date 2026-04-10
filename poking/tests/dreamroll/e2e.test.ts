@@ -47,11 +47,13 @@ function simulateCycle(
   state: ReturnType<typeof loadState>,
   variationId: number,
   mockScores: { brutus: number; venus: number; mercury: number },
+  forceMutation?: string,
 ): { filePath: string; prompt: string; variation: Variation } {
   if (!state) throw new Error('state required');
 
   // 1. Roll genome
   const seed = rollSeedParameters(state);
+  if (forceMutation) seed.mutation = forceMutation;
   const filePath = path.join(tmpDir, '.dreamroll', 'variations', `variation_${String(variationId).padStart(3, '0')}.html`);
 
   // 2. Build the prompt the skill would receive
@@ -99,7 +101,8 @@ describe('dreamroll e2e: full skill-driven loop', () => {
     saveState(tmpDir, state);
 
     // 3 cycles with varied mock scores (one gem, one decent, one weak)
-    const cycle1 = simulateCycle(state, 1, { brutus: 8, venus: 8, mercury: 7 }); // gem (avg 7.7)
+    // cycle1 is forced to pure mutation so the prompt assertions below are stable
+    const cycle1 = simulateCycle(state, 1, { brutus: 8, venus: 8, mercury: 7 }, 'pure'); // gem (avg 7.7)
     const cycle2 = simulateCycle(state, 2, { brutus: 6, venus: 5, mercury: 6 }); // iterate (avg 5.7)
     const cycle3 = simulateCycle(state, 3, { brutus: 3, venus: 4, mercury: 3 }); // discard (avg 3.3)
 
@@ -203,28 +206,38 @@ describe('dreamroll e2e: full skill-driven loop', () => {
     expect(state.paramWeights!['style']?.['neo-brutalism']).toBeGreaterThan(1);
   });
 
-  it('every rolled genome produces a complete 14-dim prompt with weighted style lead', () => {
+  it('every rolled genome produces a complete 15-dim prompt with weighted style lead', () => {
     const state = createState(mkConfig());
+    // Count mutation types to verify distribution over many rolls
+    const mutationCounts: Record<string, number> = {};
     for (let i = 0; i < 20; i++) {
       const seed = rollSeedParameters(state);
+      mutationCounts[seed.mutation ?? 'pure'] = (mutationCounts[seed.mutation ?? 'pure'] ?? 0) + 1;
       const prompt = genomeToPrompt(seed, 'test brief', i + 1, '/tmp/x.html');
       // Style is weighted as the dominating concern
-      expect(prompt).toContain('VISUAL IDENTITY');
+      if (seed.mutation === 'pure') {
+        expect(prompt).toContain('VISUAL IDENTITY');
+        expect(prompt).toContain('THIS PAGE MUST NOT LOOK LIKE');
+        expect(prompt).toContain('REQUIRED CSS DECLARATIONS');
+      } else {
+        expect(prompt).toContain('STYLE MUTATION');
+        expect(prompt).toContain('ANTI-PATTERNS');
+      }
       expect(prompt).toContain(`STYLE: ${seed.genre}`);
-      expect(prompt).toContain('THIS PAGE MUST NOT LOOK LIKE');
-      expect(prompt).toContain('REQUIRED CSS DECLARATIONS');
-      // Constraint repeated 3 times
+      // Constraint repeated 3 times regardless of mutation
       const matches = prompt.match(/CONSTRAINT \(mandatory/g);
       expect(matches?.length).toBe(3);
-      // All 14 dimensions still listed in the full genome block
+      // All 15 dimensions still listed in the full genome block
       for (const label of [
         'Style archetype:', 'Color harmony:', 'Typography:', 'Type scale:',
         'Layout pattern:', 'Density:', 'Mood:', 'Era influence:',
         'Animation:', 'Imagery:', 'Border radius:',
-        'Shadow system:', 'CTA style:', 'Oblique constraint:',
+        'Shadow system:', 'CTA style:', 'Oblique constraint:', 'Style mutation:',
       ]) {
         expect(prompt, `variation ${i + 1} missing "${label}"`).toContain(label);
       }
     }
+    // Over 20 rolls, expect at least 2 different mutation types to appear
+    expect(Object.keys(mutationCounts).length).toBeGreaterThanOrEqual(2);
   });
 });

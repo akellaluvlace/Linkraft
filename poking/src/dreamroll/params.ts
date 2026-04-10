@@ -633,6 +633,95 @@ export const CTA_STYLE_POOL: string[] = CTA_STYLE_SPECS.map(c => c.id);
 // Dimension 14: OBLIQUE STRATEGY CONSTRAINT (40 options)
 // ============================================================================
 
+// ============================================================================
+// Dimension 15: STYLE MUTATION (8 options)
+// Controls HOW the style archetype is applied. Changes the generation prompt.
+// ============================================================================
+
+export interface MutationSpec {
+  id: string;
+  weight: number;
+  /** Short summary shown in the report + HTML comment. */
+  summary: string;
+  /** Per-type description of what the mutation does, templated with primary and other rolled values. */
+  describe: (args: {
+    primary: string;
+    secondary?: string;
+    tertiary?: string;
+    material?: string;
+    era?: string;
+  }) => string;
+}
+
+export const MUTATIONS: MutationSpec[] = [
+  {
+    id: 'pure',
+    weight: 30,
+    summary: 'Apply the archetype faithfully',
+    describe: () => 'Standard execution. Apply the style archetype faithfully as documented.',
+  },
+  {
+    id: 'mashup',
+    weight: 25,
+    summary: 'Two archetypes fused',
+    describe: ({ primary, secondary }) =>
+      `Roll TWO style archetypes. Apply "${primary}" to layout and structure. Apply "${secondary}" to color, texture, and surface treatment. The skeleton is ${primary}. The skin is ${secondary}.`,
+  },
+  {
+    id: 'invert',
+    weight: 10,
+    summary: 'Opposite of archetype rules',
+    describe: ({ primary }) =>
+      `Take "${primary}"'s rules and do the OPPOSITE. If the archetype says thick borders, use whisper-thin. If it says dark background, use pastel. If it says hard edges, use soft. Invert every distinctive property while keeping the same product brief.`,
+  },
+  {
+    id: 'era-clash',
+    weight: 10,
+    summary: 'Archetype forced through the era',
+    describe: ({ primary, era }) =>
+      `Apply "${primary}" but force it through the era "${era}" literally. The archetype provides structure and layout philosophy, but every color, texture, and typographic flourish comes from ${era}. Example: Swiss-international grid with 1970s warm earth tones.`,
+  },
+  {
+    id: 'material-swap',
+    weight: 10,
+    summary: 'Surfaces replaced with a material',
+    describe: ({ primary, material }) =>
+      `Keep "${primary}"'s layout and structure but replace every surface, border, and fill with the physical material "${material}". Cards become ${material}. Buttons become ${material}. Backgrounds become ${material}. Use CSS to simulate the material's visual properties (texture, transparency, weight, light).`,
+  },
+  {
+    id: 'maximum',
+    weight: 5,
+    summary: 'Archetype properties pushed to 200%',
+    describe: ({ primary }) =>
+      `Take every distinctive CSS property of "${primary}" and push it to 200%. If the archetype has 3px borders, use 8px. If 10px blur, use 40px. If 10% gold accent, use 30%. Every rule amplified past normal. Over-commit to the style.`,
+  },
+  {
+    id: 'minimum',
+    weight: 5,
+    summary: 'Strip to one essential property',
+    describe: ({ primary }) =>
+      `Strip "${primary}" to its ONE most essential property. Identify the single most defining CSS rule of the archetype and apply ONLY that. Everything else is clean, neutral, unremarkable. Force elegant restraint.`,
+  },
+  {
+    id: 'franken',
+    weight: 5,
+    summary: 'Chimera of three archetypes',
+    describe: ({ primary, secondary, tertiary }) =>
+      `Three archetypes fused. Take the COLOR SYSTEM from "${primary}". Take the TYPOGRAPHY rules from "${secondary}". Take the LAYOUT pattern from "${tertiary}". Deliberately chimeric. The result should have no coherent parent — it's a new creature.`,
+  },
+];
+
+export const MUTATION_POOL: string[] = MUTATIONS.map(m => m.id);
+
+export function getMutation(id: string): MutationSpec | undefined {
+  return MUTATIONS.find(m => m.id === id);
+}
+
+/** Materials for the material-swap mode. */
+export const MATERIALS = [
+  'concrete', 'silk', 'glass', 'paper', 'metal', 'water', 'marble', 'velvet',
+];
+
 export const WILDCARD_POOL = [
   // REDUCTION
   'one-font-only',
@@ -732,14 +821,54 @@ export function weightedPick<T extends string>(pool: readonly T[], weights?: Rec
 }
 
 /**
- * Rolls all 14 parameter dimensions, returning a complete StyleGenome.
+ * Rolls the STYLE_MUTATION dimension using the weights defined in MUTATIONS.
+ * Respects chaos mode (uniform random) and optional weight overrides.
+ */
+function rollMutation(weights?: Record<string, number>, chaos = false): string {
+  if (chaos) return randomFrom(MUTATION_POOL);
+  // Build weights object from MUTATIONS distribution unless overridden
+  const built: Record<string, number> = {};
+  for (const m of MUTATIONS) built[m.id] = weights?.[m.id] ?? m.weight;
+  return weightedPick(MUTATION_POOL, built);
+}
+
+/**
+ * Rolls all 15 parameter dimensions, returning a complete StyleGenome.
  * If weights are provided, uses weighted selection.
  * If chaos is true, ignores weights (mandatory chaos rounds).
+ *
+ * Mashup rolls a secondary archetype (distinct from the primary).
+ * Franken rolls a secondary AND tertiary (both distinct from each other and primary).
+ * Material-swap rolls a physical material from MATERIALS.
  */
-export function rollParams(weights?: ParamWeights, chaos = false): SeedParameters {
+export function rollParams(weights?: ParamWeights & { mutation?: Record<string, number> }, chaos = false): SeedParameters {
   const w = chaos ? undefined : weights;
+  const primary = weightedPick(STYLE_POOL, w?.style);
+
+  // Roll the mutation (15th dimension)
+  const mutation = rollMutation(w?.mutation, chaos);
+
+  // Roll dependent values based on mutation
+  let mutationSecondary: string | undefined;
+  let mutationTertiary: string | undefined;
+  let mutationMaterial: string | undefined;
+
+  const pickDifferent = (exclude: string[]): string => {
+    const pool = STYLE_POOL.filter(s => !exclude.includes(s));
+    return pool[Math.floor(Math.random() * pool.length)]!;
+  };
+
+  if (mutation === 'mashup') {
+    mutationSecondary = pickDifferent([primary]);
+  } else if (mutation === 'franken') {
+    mutationSecondary = pickDifferent([primary]);
+    mutationTertiary = pickDifferent([primary, mutationSecondary]);
+  } else if (mutation === 'material-swap') {
+    mutationMaterial = randomFrom(MATERIALS);
+  }
+
   return {
-    genre: weightedPick(STYLE_POOL, w?.style),
+    genre: primary,
     colorPalette: weightedPick(PALETTE_POOL, w?.palette),
     harmonyBaseHue: Math.floor(Math.random() * 360),
     typography: weightedPick(TYPOGRAPHY_POOL, w?.typography),
@@ -754,12 +883,16 @@ export function rollParams(weights?: ParamWeights, chaos = false): SeedParameter
     shadows: weightedPick(SHADOW_POOL, w?.shadows),
     ctaStyle: weightedPick(CTA_STYLE_POOL, w?.ctaStyle),
     wildcard: weightedPick(WILDCARD_POOL, w?.wildcard),
+    mutation,
+    mutationSecondary,
+    mutationTertiary,
+    mutationMaterial,
     temperature: Math.round((0.7 + Math.random() * 0.6) * 100) / 100,
   };
 }
 
 /**
- * Returns all 14 pools for tests and documentation.
+ * Returns all 15 pools for tests and documentation.
  */
 export function getAllPools(): Record<string, readonly string[]> {
   return {
@@ -777,5 +910,6 @@ export function getAllPools(): Record<string, readonly string[]> {
     shadows: SHADOW_POOL,
     ctaStyle: CTA_STYLE_POOL,
     wildcard: WILDCARD_POOL,
+    mutation: MUTATION_POOL,
   };
 }

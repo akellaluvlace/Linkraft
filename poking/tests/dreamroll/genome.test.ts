@@ -20,14 +20,15 @@ function makeGenome(overrides: Partial<StyleGenome> = {}): StyleGenome {
     shadows: 'soft-neumorphic',
     ctaStyle: 'pill-glow',
     wildcard: 'glass-everything',
+    mutation: 'pure',
     temperature: 0.9,
     ...overrides,
   };
 }
 
 describe('genomeToPrompt', () => {
-  it('includes all 14 dimensions in the full genome block', () => {
-    const genome = makeGenome();
+  it('includes all 15 dimensions in the full genome block', () => {
+    const genome = makeGenome({ mutation: 'pure' });
     const prompt = genomeToPrompt(genome, 'AI study app for students', 7, '/tmp/v007.html');
     expect(prompt).toContain('Style archetype:  glassmorphism');
     expect(prompt).toContain('jewel-tones');
@@ -43,6 +44,7 @@ describe('genomeToPrompt', () => {
     expect(prompt).toContain('Shadow system:    soft-neumorphic');
     expect(prompt).toContain('CTA style:        pill-glow');
     expect(prompt).toContain('Oblique constraint: glass-everything');
+    expect(prompt).toContain('Style mutation:   pure');
   });
 
   it('leads with VISUAL IDENTITY section as the most important part', () => {
@@ -141,11 +143,78 @@ describe('genomeToPrompt', () => {
 
   it('works with rolled params (no manual overrides)', () => {
     const rolled = rollParams();
+    rolled.mutation = 'pure'; // force pure for the assertion
     const prompt = genomeToPrompt(rolled, 'Brief', 1, '/tmp/x.html');
     expect(prompt.length).toBeGreaterThan(500);
     expect(prompt).toContain('VISUAL IDENTITY');
     expect(prompt).toContain('FULL GENOME');
     expect(prompt).toContain(`STYLE: ${rolled.genre}`);
+  });
+
+  it('mutation: pure produces VISUAL IDENTITY and REQUIRED CSS sections', () => {
+    const genome = makeGenome({ mutation: 'pure' });
+    const prompt = genomeToPrompt(genome, 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('VISUAL IDENTITY');
+    expect(prompt).toContain('REQUIRED CSS DECLARATIONS');
+    expect(prompt).not.toContain('STYLE MUTATION:');
+  });
+
+  it('mutation: mashup prepends STYLE MUTATION banner and shows secondary', () => {
+    const genome = makeGenome({ mutation: 'mashup', mutationSecondary: 'bauhaus' });
+    const prompt = genomeToPrompt(genome, 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('STYLE MUTATION: MASHUP');
+    expect(prompt).toContain('SECONDARY ARCHETYPE: bauhaus');
+    expect(prompt).toContain('circles + triangles + squares');
+    expect(prompt).toContain('experimental STYLE MUTATION');
+  });
+
+  it('mutation: franken shows three archetypes', () => {
+    const genome = makeGenome({
+      mutation: 'franken',
+      mutationSecondary: 'synthwave',
+      mutationTertiary: 'de-stijl',
+    });
+    const prompt = genomeToPrompt(genome, 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('STYLE MUTATION: FRANKEN');
+    expect(prompt).toContain('SECONDARY ARCHETYPE: synthwave');
+    expect(prompt).toContain('TERTIARY ARCHETYPE: de-stijl');
+  });
+
+  it('mutation: invert flips the archetype rules', () => {
+    const genome = makeGenome({ genre: 'neo-brutalism', mutation: 'invert' });
+    const prompt = genomeToPrompt(genome, 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('STYLE MUTATION: INVERT');
+    expect(prompt).toContain('OPPOSITE');
+    expect(prompt).toContain('ANTI-PATTERNS');
+    expect(prompt).not.toContain('THIS PAGE MUST NOT LOOK LIKE');
+  });
+
+  it('mutation: material-swap shows material', () => {
+    const genome = makeGenome({ mutation: 'material-swap', mutationMaterial: 'concrete' });
+    const prompt = genomeToPrompt(genome, 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('STYLE MUTATION: MATERIAL-SWAP');
+    expect(prompt).toContain('MATERIAL: concrete');
+  });
+
+  it('non-pure mutations skip the REQUIRED CSS strict check', () => {
+    const genome = makeGenome({ mutation: 'maximum' });
+    const prompt = genomeToPrompt(genome, 'X', 1, '/tmp/x.html');
+    expect(prompt).toContain('REFERENCE CSS');
+    expect(prompt).not.toContain('REQUIRED CSS DECLARATIONS (must appear');
+  });
+
+  it('all mutations keep the constraint repeated 3 times', () => {
+    for (const m of ['pure', 'mashup', 'invert', 'era-clash', 'material-swap', 'maximum', 'minimum', 'franken']) {
+      const genome = makeGenome({
+        mutation: m,
+        mutationSecondary: 'bauhaus',
+        mutationTertiary: 'synthwave',
+        mutationMaterial: 'silk',
+      });
+      const prompt = genomeToPrompt(genome, 'X', 1, '/tmp/x.html');
+      const matches = prompt.match(/CONSTRAINT \(mandatory/g);
+      expect(matches?.length, `mutation=${m} should have 3 CONSTRAINT blocks`).toBe(3);
+    }
   });
 });
 

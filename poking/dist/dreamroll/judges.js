@@ -80,13 +80,24 @@ function parseJudgeResponse(response) {
  * strings are missing. Returns the adjusted scores plus a note listing what
  * was missing so the caller can display it.
  *
+ * IMPORTANT: The check is SKIPPED when `mutation` is anything other than 'pure'.
+ * Mutations (mashup, invert, maximum, minimum, material-swap, era-clash, franken)
+ * deliberately violate the archetype's CSS — checking it would unfairly punish
+ * variations that are doing exactly what they were asked to do. In mutation mode
+ * the judges evaluate whether the combination works, not whether it matches a
+ * known style.
+ *
  * This is the hard-coded check the build spec calls for: "If the distinctive
  * CSS is missing, BRUTUS deducts 2 points automatically."
  */
-function applyStyleAdherenceDeduction(scores, htmlContent, styleId) {
+function applyStyleAdherenceDeduction(scores, htmlContent, styleId, mutation = 'pure') {
+    // Skip the check entirely for non-pure mutations
+    if (mutation !== 'pure') {
+        return { scores, deducted: false, missing: [], skipped: true };
+    }
     const { missing } = (0, params_js_1.checkDistinctiveCSS)(htmlContent, styleId);
     if (missing.length === 0) {
-        return { scores, deducted: false, missing: [] };
+        return { scores, deducted: false, missing: [], skipped: false };
     }
     const adjusted = scores.map(s => {
         if (s.judge !== 'brutus')
@@ -95,7 +106,7 @@ function applyStyleAdherenceDeduction(scores, htmlContent, styleId) {
         const note = ` [auto: -${AUTO_DEDUCTION} for missing distinctive CSS (${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ', ...' : ''})]`;
         return { ...s, score: newScore, comment: s.comment + note };
     });
-    return { scores: adjusted, deducted: true, missing };
+    return { scores: adjusted, deducted: true, missing, skipped: false };
 }
 /**
  * Determines the verdict from judge scores.

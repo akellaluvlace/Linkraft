@@ -88,6 +88,27 @@ export function registerSheepTools(server: McpServer): void {
         '5. If pass: git commit with [sheep] prefix',
         '6. Call sheep_record_cycle with results',
       ];
+
+      // Overnight hint: once the user has completed a few cycles, nudge them
+      // toward the overnight loop so they don't babysit the session. Shown
+      // every 3 cycles starting at cycle 4.
+      const stats = loadStats(projectRoot);
+      if (stats && stats.cycleCount >= 3 && (stats.cycleCount + 1) % 3 === 0) {
+        lines.push(
+          '',
+          '────────────────────────────────────────',
+          `Tip: ${stats.cycleCount} cycles completed, ${stats.bugs.autoFixed} bugs auto-fixed.`,
+          'To keep sheep hunting after this session ends:',
+          '',
+          '    /linkraft sheep overnight',
+          '',
+          'That generates a restart loop script you paste into a separate',
+          'terminal. Each new session resumes from .sheep/stats.json at the',
+          'next cycle. Stop with Ctrl+C.',
+          '────────────────────────────────────────',
+        );
+      }
+
       return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
     },
   );

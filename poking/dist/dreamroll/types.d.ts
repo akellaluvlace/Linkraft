@@ -49,6 +49,19 @@ export interface SeedParameters {
     ctaStyle?: string;
     /** Dimension 14 — OBLIQUE STRATEGY CONSTRAINT: one-font-only, max-3-colors, etc. (40 options) */
     wildcard: string;
+    /**
+     * Dimension 15 — STYLE MUTATION: controls HOW the style archetype is applied.
+     * Values: pure | mashup | invert | era-clash | material-swap | maximum | minimum | franken.
+     * Non-pure values fundamentally change the generation instructions and may
+     * roll additional archetypes (mashup, franken) or materials (material-swap).
+     */
+    mutation?: string;
+    /** Secondary archetype for mashup mode (first.structure + second.color/texture). */
+    mutationSecondary?: string;
+    /** Tertiary archetype for franken mode (#1 colors + #2 typography + #3 layout). */
+    mutationTertiary?: string;
+    /** Physical material rolled for material-swap mode. */
+    mutationMaterial?: string;
     /** Generation temperature, kept for backward compat. */
     temperature: number;
 }

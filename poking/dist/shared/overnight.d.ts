@@ -3,10 +3,13 @@ export interface OvernightScript {
     path: string;
     platform: 'windows' | 'unix';
     content: string;
+    /** One-line run command the user copies into a new terminal. */
+    runCommand: string;
 }
 /**
- * Writes the overnight script for the current OS into the mode's state dir.
- * Makes the Unix version executable. Returns the script path and content.
+ * Writes the overnight script into the project root. On Unix the script
+ * is chmod +x. Returns the full path, content, and the single command the
+ * user should run in a new terminal.
  */
 export declare function writeOvernightScript(projectRoot: string, mode: OvernightMode): OvernightScript;
 /**

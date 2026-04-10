@@ -87,6 +87,25 @@ export interface CtaStyleSpec {
 }
 export declare const CTA_STYLE_SPECS: CtaStyleSpec[];
 export declare const CTA_STYLE_POOL: string[];
+export interface MutationSpec {
+    id: string;
+    weight: number;
+    /** Short summary shown in the report + HTML comment. */
+    summary: string;
+    /** Per-type description of what the mutation does, templated with primary and other rolled values. */
+    describe: (args: {
+        primary: string;
+        secondary?: string;
+        tertiary?: string;
+        material?: string;
+        era?: string;
+    }) => string;
+}
+export declare const MUTATIONS: MutationSpec[];
+export declare const MUTATION_POOL: string[];
+export declare function getMutation(id: string): MutationSpec | undefined;
+/** Materials for the material-swap mode. */
+export declare const MATERIALS: string[];
 export declare const WILDCARD_POOL: string[];
 export interface ParamWeights {
     style?: Record<string, number>;
@@ -110,12 +129,18 @@ export interface ParamWeights {
  */
 export declare function weightedPick<T extends string>(pool: readonly T[], weights?: Record<string, number>): T;
 /**
- * Rolls all 14 parameter dimensions, returning a complete StyleGenome.
+ * Rolls all 15 parameter dimensions, returning a complete StyleGenome.
  * If weights are provided, uses weighted selection.
  * If chaos is true, ignores weights (mandatory chaos rounds).
+ *
+ * Mashup rolls a secondary archetype (distinct from the primary).
+ * Franken rolls a secondary AND tertiary (both distinct from each other and primary).
+ * Material-swap rolls a physical material from MATERIALS.
  */
-export declare function rollParams(weights?: ParamWeights, chaos?: boolean): SeedParameters;
+export declare function rollParams(weights?: ParamWeights & {
+    mutation?: Record<string, number>;
+}, chaos?: boolean): SeedParameters;
 /**
- * Returns all 14 pools for tests and documentation.
+ * Returns all 15 pools for tests and documentation.
  */
 export declare function getAllPools(): Record<string, readonly string[]>;

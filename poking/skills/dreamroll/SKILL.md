@@ -164,7 +164,25 @@ Call `dreamroll_gems`. List all gems with full genomes.
 Call `dreamroll_report`. Generate the morning report. Writes `.dreamroll/report.md`.
 
 ### /linkraft dreamroll overnight
-Call `dreamroll_overnight`. Generates an OS-appropriate restart loop script into `.dreamroll/dreamroll-loop.ps1` (Windows) or `.dreamroll/dreamroll-loop.sh` (Mac/Linux) and prints run instructions. The user runs that script in a separate terminal and it keeps relaunching `claude -p "/linkraft dreamroll"` across every context-fill boundary until ctrl+c. This is as close to "dreamroll restarts itself" as Claude Code allows — a session can't outlive its context window, so the relaunch has to happen externally. The skill should present the instructions as-is after calling the tool.
+
+**Handle this exactly like this, every time:**
+
+1. Call `dreamroll_overnight` with `projectRoot`. The tool detects the OS and writes a restart loop script to the project root:
+   - Windows → `dreamroll-loop.ps1`
+   - Mac/Linux → `dreamroll-loop.sh` (auto chmod +x)
+   The script self-locates via `$PSScriptRoot` or `cd "$(dirname "${BASH_SOURCE[0]}")"` so it runs `claude` from the project directory no matter where the user invokes it.
+
+2. The tool returns a ready-to-paste `runCommand` plus the full script contents.
+
+3. Present the response to the user with ZERO rewriting. The critical part is the "Run this in a NEW terminal window" block followed by the exact command. Do NOT explain how PowerShell works. Do NOT explain what `Start-Sleep` is. The user should see: one sentence, one command to paste, done.
+
+4. Tell the user: "Open a new terminal and paste this. It will keep relaunching Claude until you Ctrl+C. You can close this Claude session as soon as the loop starts."
+
+The loop is the closest thing to "dreamroll restarts itself" that Claude Code allows — a session can't outlive its context window, so the relaunch has to happen externally. The user never needs to know what PowerShell is. They run one command, paste what you tell them, and go to sleep.
+
+### Contextual overnight hints
+
+During a normal `/linkraft dreamroll` run, the `dreamroll_start` MCP tool will automatically surface an overnight hint block every few variations (every 5, starting after variation 3). When you see that block in the tool response, present it to the user alongside the next variation's prompt — don't hide it. That's how we communicate "your session is about to end, here's the zero-friction path to continuing overnight."
 
 ## MCP Tools
 
@@ -208,21 +226,45 @@ Anti-bias measure: if average creeps above 8.0 across all variations, the system
 
 ## The Overnight Loop
 
-Claude Code sessions can't outlive their context window — when it fills, the session ends. Something external has to relaunch Claude to keep dreamroll running all night. Dreamroll ships a generator for that:
+Claude Code sessions can't outlive their context window — when it fills, the session ends. Something external has to relaunch Claude to keep dreamroll running. Dreamroll ships a zero-friction generator for that:
 
 ```
 /linkraft dreamroll overnight
 ```
 
-That calls `dreamroll_overnight`, which writes an OS-appropriate script to `.dreamroll/dreamroll-loop.ps1` (Windows) or `.dreamroll/dreamroll-loop.sh` (Mac/Linux) and prints exact run instructions. The user runs the script in a separate terminal and it keeps relaunching `claude -p "/linkraft dreamroll"` across every context-fill boundary until they ctrl+c. Each new session reads `.dreamroll/state.json` and continues from the next variation.
+That calls `dreamroll_overnight`, which:
+1. Detects the OS (Windows vs Mac/Linux)
+2. Writes `dreamroll-loop.ps1` or `dreamroll-loop.sh` to the project root
+3. Returns a single paste-ready command
 
-Example generated Windows script:
+The script self-locates via `$PSScriptRoot` (Windows) or `cd "$(dirname ...)"` (Unix) so it runs claude from the right directory regardless of where the user calls it from.
 
-```powershell
-while ($true) {
+Example generated Unix script:
+
+```bash
+#!/usr/bin/env bash
+cd "$(dirname "${BASH_SOURCE[0]}")"
+while true; do
   claude -p "/linkraft dreamroll" --allowedTools 'Bash(*)' 'Read(*)' 'Write(*)' 'Edit(*)' 'Glob(*)' 'Grep(*)'
-  Start-Sleep -Seconds 10
-}
+  sleep 10
+done
 ```
 
-Each session: dreamroll_start in a loop, generates HTML, scores, repeats until context fills. Next session resumes from state.json. No maximum. Runs until ctrl+c.
+The user runs it in a separate terminal. Each relaunched session reads `.dreamroll/state.json` and continues from the next variation. No maximum. Runs until Ctrl+C.
+
+## Session ending gracefully
+
+When `dreamroll_start` detects the run has accumulated variations (3+), its response automatically includes an overnight hint block. Present it to the user verbatim. It looks like:
+
+```
+Tip: you have N variations so far.
+To keep dreamroll running after this session ends:
+
+    /linkraft dreamroll overnight
+
+That generates a restart loop script you paste into a separate
+terminal. Each new session reads .dreamroll/state.json and continues
+where the previous one left off. Leaves you to sleep. Stop with Ctrl+C.
+```
+
+Don't rewrite it. Don't explain it. Just show it.

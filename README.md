@@ -61,6 +61,7 @@ Autonomous QA agent. Zero config. Reads your codebase, generates its own test pl
 /linkraft sheep plan          Generate QA plan only (review before running)
 /linkraft sheep status        Check progress mid-run
 /linkraft sheep report        Generate session report
+/linkraft sheep overnight     Generate restart loop script (runs all night)
 ```
 
 The cast:
@@ -72,7 +73,7 @@ Proven: 122 bugs found across 4 runs, 94 auto-fixed, 0 tests broken.
 
 ## /linkraft dreamroll
 
-Overnight autonomous design generator using a 14-dimension Style Genome: style archetype (30 options with CSS signatures), color harmony (algorithmic + curated, with random base hue), typography pairing (25 Google Font pairs), type scale, layout, density, mood, era, animation, imagery, border radius, shadow system, CTA style, oblique constraint. Generates standalone HTML landing pages, scores each with three judges, evolves toward gems. Never stops until you say so.
+Overnight autonomous design generator using a 15-dimension Style Genome: style archetype (30 options each with a CSS signature and anti-patterns), color harmony (7 algorithmic + 5 curated, with random base hue), typography pairing (25 Google Font pairs), type scale, layout, density, mood, era, animation, imagery, border radius, shadow system, CTA style, oblique constraint, and **style mutation** (pure / mashup / invert / era-clash / material-swap / maximum / minimum / franken). The mutation dimension controls HOW the archetype is applied — pure is faithful, mashup fuses two archetypes, franken fuses three, maximum pushes every property to 200%, and so on. Generates standalone HTML landing pages, scores each with three judges, auto-deducts BRUTUS when required CSS is missing (pure mode only), evolves toward gems. Never stops until you say so.
 
 ```
 /linkraft dreamroll               Start or resume (runs until stopped)
@@ -81,6 +82,7 @@ Overnight autonomous design generator using a 14-dimension Style Genome: style a
 /linkraft dreamroll stop          Graceful stop at next variation
 /linkraft dreamroll gems          List all gems
 /linkraft dreamroll report        Morning report with top 5 gems
+/linkraft dreamroll overnight     Generate restart loop script (runs all night)
 ```
 
 The judges:
@@ -116,26 +118,34 @@ Every feature works with zero config on first run. No API keys. No MCPs required
 
 ## Running Overnight
 
-Claude Code sessions can't outlive their context window, so sheep and dreamroll both ship an `overnight` subcommand that generates an OS-appropriate restart loop script you run in a separate terminal:
+Claude Code sessions can't outlive their context window. Both sheep and dreamroll ship an `overnight` subcommand that generates an OS-appropriate restart loop script you paste into a separate terminal:
 
 ```
-/linkraft dreamroll overnight   # writes .dreamroll/dreamroll-loop.{ps1,sh}
-/linkraft sheep overnight       # writes .sheep/sheep-loop.{ps1,sh}
+/linkraft dreamroll overnight   # writes dreamroll-loop.{ps1,sh} to project root
+/linkraft sheep overnight       # writes sheep-loop.{ps1,sh} to project root
 ```
 
-The script relaunches Claude every time the context fills. Each new session resumes from the mode's state.json and continues where it left off. Stop with Ctrl+C.
+The generator detects your OS (Windows vs Mac/Linux), writes a self-locating script to the project root, and tells you the one command to paste into a new terminal:
+
+- **Windows**: `powershell -ExecutionPolicy Bypass -File dreamroll-loop.ps1`
+- **Mac/Linux**: `./dreamroll-loop.sh` (chmod +x applied automatically)
+
+The loop relaunches Claude every time the context fills. Each new session reads the mode's state file and continues where it left off. Stop with Ctrl+C.
+
+Bonus: during a normal run, sheep and dreamroll automatically surface a reminder after a few variations/cycles so you don't have to remember this feature exists. You never touch PowerShell directly.
 
 ## Numbers
 
-- 445 tests across 34 test files
+- 464 tests across 34 test files
 - 4 modes (plan, preflight, sheep, dreamroll)
 - 13 plan outputs (10 always + 3 conditional)
 - 3 preflight scores (security, health, readiness)
 - 6 agent personalities (3 sheep, 3 dreamroll judges)
-- 14 dreamroll Style Genome dimensions with 180+ total values
-- 30 style archetypes, each with a CSS signature
+- 15 dreamroll Style Genome dimensions (180+ values total)
+- 30 style archetypes, each with a CSS signature + required CSS declarations
 - 25 Google Font typography pairings
 - 40 oblique strategy constraints
+- 8 style mutations (pure / mashup / invert / era-clash / material-swap / maximum / minimum / franken)
 
 ## Project Structure
 
@@ -167,7 +177,7 @@ poking/
         preflight-tools.ts
         sheep-tools.ts
         dreamroll-tools.ts
-  tests/               # 411 tests across 31 files
+  tests/               # 464 tests across 34 files
   README.md
   LICENSE
 ```

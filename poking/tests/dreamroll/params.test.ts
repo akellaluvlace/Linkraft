@@ -3,15 +3,18 @@ import {
   STYLE_POOL, PALETTE_POOL, TYPOGRAPHY_POOL, TYPE_SCALE_POOL, LAYOUT_POOL,
   DENSITY_POOL, MOOD_POOL, ERA_POOL, ANIMATION_POOL, IMAGERY_POOL,
   BORDER_RADIUS_POOL, SHADOW_POOL, CTA_STYLE_POOL, WILDCARD_POOL,
+  MUTATION_POOL, MUTATIONS, MATERIALS,
   rollParams, weightedPick, getAllPools,
 } from '../../src/dreamroll/params.js';
 
 describe('parameter pools', () => {
-  it('all 14 pools have at least 5 values', () => {
+  it('all 15 pools have at least 5 values', () => {
     const pools = getAllPools();
-    expect(Object.keys(pools)).toHaveLength(14);
+    expect(Object.keys(pools)).toHaveLength(15);
     for (const [name, pool] of Object.entries(pools)) {
-      expect(pool.length, `pool ${name} should have >= 5 values`).toBeGreaterThanOrEqual(5);
+      // mutation pool has 8 values; every other pool has >= 5
+      const min = name === 'mutation' ? 5 : 5;
+      expect(pool.length, `pool ${name} should have >= ${min} values`).toBeGreaterThanOrEqual(min);
     }
   });
 
@@ -103,13 +106,18 @@ describe('rollParams', () => {
     }
   });
 
-  it('never picks empty or undefined', () => {
+  it('never picks empty string for required 15 dimensions', () => {
+    const required = [
+      'genre', 'colorPalette', 'typography', 'typeScale', 'layoutArchetype',
+      'density', 'mood', 'era', 'animation', 'imagery', 'borderRadius',
+      'shadows', 'ctaStyle', 'wildcard', 'mutation',
+    ] as const;
     for (let i = 0; i < 50; i++) {
-      const seed = rollParams();
-      for (const value of Object.values(seed)) {
-        expect(value).not.toBeUndefined();
-        expect(value).not.toBeNull();
-        expect(value).not.toBe('');
+      const seed = rollParams() as unknown as Record<string, unknown>;
+      for (const key of required) {
+        expect(seed[key], `${key} should be defined`).toBeDefined();
+        expect(seed[key], `${key} should not be null`).not.toBeNull();
+        expect(seed[key], `${key} should not be empty`).not.toBe('');
       }
     }
   });
@@ -151,6 +159,115 @@ describe('weightedPick', () => {
   it('returns from pool with empty weights object', () => {
     const result = weightedPick(STYLE_POOL, {});
     expect(STYLE_POOL).toContain(result);
+  });
+});
+
+describe('STYLE_MUTATION (dimension 15)', () => {
+  it('mutation pool has exactly 8 values per spec', () => {
+    expect(MUTATION_POOL).toHaveLength(8);
+    expect(MUTATION_POOL).toEqual([
+      'pure', 'mashup', 'invert', 'era-clash',
+      'material-swap', 'maximum', 'minimum', 'franken',
+    ]);
+  });
+
+  it('mutation weights sum to 100', () => {
+    const total = MUTATIONS.reduce((s, m) => s + m.weight, 0);
+    expect(total).toBe(100);
+  });
+
+  it('mutation weights match the spec distribution', () => {
+    const byId = Object.fromEntries(MUTATIONS.map(m => [m.id, m.weight]));
+    expect(byId['pure']).toBe(30);
+    expect(byId['mashup']).toBe(25);
+    expect(byId['invert']).toBe(10);
+    expect(byId['era-clash']).toBe(10);
+    expect(byId['material-swap']).toBe(10);
+    expect(byId['maximum']).toBe(5);
+    expect(byId['minimum']).toBe(5);
+    expect(byId['franken']).toBe(5);
+  });
+
+  it('materials pool has physical substances', () => {
+    expect(MATERIALS.length).toBeGreaterThanOrEqual(5);
+    expect(MATERIALS).toContain('concrete');
+    expect(MATERIALS).toContain('silk');
+    expect(MATERIALS).toContain('glass');
+    expect(MATERIALS).toContain('paper');
+  });
+
+  it('rollParams always produces a mutation value', () => {
+    for (let i = 0; i < 50; i++) {
+      const seed = rollParams();
+      expect(seed.mutation).toBeTruthy();
+      expect(MUTATION_POOL).toContain(seed.mutation);
+    }
+  });
+
+  it('mashup rolls include a secondary archetype different from primary', () => {
+    let mashupHit = false;
+    for (let i = 0; i < 500 && !mashupHit; i++) {
+      const seed = rollParams();
+      if (seed.mutation === 'mashup') {
+        mashupHit = true;
+        expect(seed.mutationSecondary).toBeTruthy();
+        expect(seed.mutationSecondary).not.toBe(seed.genre);
+        expect(STYLE_POOL).toContain(seed.mutationSecondary);
+      }
+    }
+    expect(mashupHit, 'mashup should appear within 500 rolls at 25% weight').toBe(true);
+  });
+
+  it('franken rolls include secondary AND tertiary, all distinct', () => {
+    let frankenHit = false;
+    for (let i = 0; i < 1500 && !frankenHit; i++) {
+      const seed = rollParams();
+      if (seed.mutation === 'franken') {
+        frankenHit = true;
+        expect(seed.mutationSecondary).toBeTruthy();
+        expect(seed.mutationTertiary).toBeTruthy();
+        const styles = [seed.genre, seed.mutationSecondary, seed.mutationTertiary];
+        expect(new Set(styles).size).toBe(3);
+      }
+    }
+    expect(frankenHit, 'franken should appear within 1500 rolls at 5% weight').toBe(true);
+  });
+
+  it('material-swap rolls include a material', () => {
+    let hit = false;
+    for (let i = 0; i < 1000 && !hit; i++) {
+      const seed = rollParams();
+      if (seed.mutation === 'material-swap') {
+        hit = true;
+        expect(seed.mutationMaterial).toBeTruthy();
+        expect(MATERIALS).toContain(seed.mutationMaterial);
+      }
+    }
+    expect(hit).toBe(true);
+  });
+
+  it('non-mashup mutations do not populate secondary', () => {
+    for (let i = 0; i < 100; i++) {
+      const seed = rollParams();
+      if (seed.mutation === 'pure' || seed.mutation === 'invert' || seed.mutation === 'maximum' || seed.mutation === 'minimum') {
+        expect(seed.mutationSecondary).toBeUndefined();
+        expect(seed.mutationTertiary).toBeUndefined();
+      }
+    }
+  });
+
+  it('distribution is roughly on-spec over 1000 rolls', () => {
+    const counts: Record<string, number> = {};
+    for (let i = 0; i < 1000; i++) {
+      const m = rollParams().mutation!;
+      counts[m] = (counts[m] ?? 0) + 1;
+    }
+    // pure should dominate (30% expected, generous tolerance)
+    expect(counts['pure']).toBeGreaterThan(200);
+    expect(counts['pure']).toBeLessThan(400);
+    // mashup should be second (25% expected)
+    expect(counts['mashup']).toBeGreaterThan(150);
+    expect(counts['mashup']).toBeLessThan(350);
   });
 });
 
