@@ -1,7 +1,0 @@
-{
-  "name": "linkraft",
-  "description": "Open-source toolkit connecting Claude Code to any service via MCP servers. Pre-built packs for Telegram, Discord, Twitter/X, LinkedIn, and more.",
-  "author": {
-    "name": "Akella inMotion"
-  }
-}
