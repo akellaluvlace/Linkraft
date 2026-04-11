@@ -28,17 +28,46 @@ export function loadJudgePrompt(judgeName: JudgeName, agentsDir: string): string
 }
 
 /**
- * Parses a judge response to extract score and comment.
- * Expected format: "Score: N\nComment: ..."
+ * Parses a judge response to extract the primary score, comment, and (optionally)
+ * the mobile sub-score and mobile comment.
+ *
+ * Expected format (desktop only, legacy):
+ *     Score: N
+ *     Comment: ...
+ *
+ * Expected format (with mobile, new):
+ *     Score: N
+ *     Comment: ...
+ *     Mobile score: N
+ *     Mobile comment: ...
  */
-export function parseJudgeResponse(response: string): { score: number; comment: string } {
-  const scoreMatch = /Score:\s*(\d+)/i.exec(response);
-  const commentMatch = /Comment:\s*(.+)/is.exec(response);
+export function parseJudgeResponse(response: string): {
+  score: number;
+  comment: string;
+  mobileScore?: number;
+  mobileComment?: string;
+} {
+  // Strict-first match: split on the "Mobile score" label so comment extraction
+  // does not accidentally swallow the mobile block.
+  const mobileHead = /Mobile\s*score:/i.exec(response);
+  const desktopSegment = mobileHead ? response.slice(0, mobileHead.index) : response;
+  const mobileSegment = mobileHead ? response.slice(mobileHead.index) : '';
 
+  const scoreMatch = /Score:\s*(\d+)/i.exec(desktopSegment);
+  const commentMatch = /Comment:\s*(.+)/is.exec(desktopSegment);
   const score = scoreMatch ? Math.min(10, Math.max(1, parseInt(scoreMatch[1]!, 10))) : 5;
-  const comment = commentMatch ? commentMatch[1]!.trim() : response.trim();
+  const comment = commentMatch ? commentMatch[1]!.trim() : desktopSegment.trim();
 
-  return { score, comment };
+  if (!mobileSegment) return { score, comment };
+
+  const mobileScoreMatch = /Mobile\s*score:\s*(\d+)/i.exec(mobileSegment);
+  const mobileCommentMatch = /Mobile\s*comment:\s*(.+)/is.exec(mobileSegment);
+  const mobileScore = mobileScoreMatch
+    ? Math.min(10, Math.max(1, parseInt(mobileScoreMatch[1]!, 10)))
+    : undefined;
+  const mobileComment = mobileCommentMatch ? mobileCommentMatch[1]!.trim() : undefined;
+
+  return { score, comment, mobileScore, mobileComment };
 }
 
 /**
@@ -86,15 +115,33 @@ export function applyStyleAdherenceDeduction(
 
 /**
  * Determines the verdict from judge scores.
+ *
+ * When ANY judge supplies a mobileScore, the overall average counts desktop +
+ * mobile equally — every provided score is summed and divided by the total
+ * count. This means a variation that aces desktop but flops on mobile cannot
+ * become a gem. Variations without mobile scores fall back to desktop-only
+ * averaging so resumed runs from before the mobile dimension still work.
  */
 export function calculateVerdict(scores: JudgeScore[]): JudgeVerdict {
   if (scores.length === 0) {
     return { scores: [], averageScore: 0, verdict: 'discard', hasInstantKeep: false };
   }
 
-  const totalScore = scores.reduce((sum, s) => sum + s.score, 0);
-  const averageScore = Math.round((totalScore / scores.length) * 10) / 10;
-  const hasInstantKeep = scores.some(s => s.score === 10);
+  let total = 0;
+  let count = 0;
+  let hasInstantKeep = false;
+  for (const s of scores) {
+    total += s.score;
+    count += 1;
+    if (s.score === 10) hasInstantKeep = true;
+    if (typeof s.mobileScore === 'number') {
+      total += s.mobileScore;
+      count += 1;
+      if (s.mobileScore === 10) hasInstantKeep = true;
+    }
+  }
+
+  const averageScore = Math.round((total / count) * 10) / 10;
 
   let verdict: Verdict;
   if (hasInstantKeep || averageScore >= 7) {
@@ -114,11 +161,44 @@ export function calculateVerdict(scores: JudgeScore[]): JudgeVerdict {
 export type JudgeCaller = (systemPrompt: string, userPrompt: string) => Promise<string>;
 
 /**
+ * Per-judge mobile evaluation criteria. Each judge's mobile score is asked
+ * against the 375x667 viewport through a lens that matches their personality.
+ */
+const MOBILE_CRITERIA: Record<JudgeName, string> = {
+  brutus:
+    'MOBILE (375x667 viewport): Is the primary CTA visible ABOVE the fold? Can the ' +
+    'hero headline be read without horizontal scroll? Does anything break below 375px? ' +
+    'Score 1-10 on clarity at mobile size — lower it hard if the CTA is buried or the ' +
+    'hero wraps to five lines.',
+  venus:
+    'MOBILE (375x667 viewport): Does the layout feel DESIGNED at mobile, or is it a ' +
+    'collapsed desktop page? Are spacing, typography, and rhythm re-composed for the ' +
+    'smaller canvas, or did a grid just stack into a sad list? Score 1-10 on how ' +
+    'intentional the mobile view feels.',
+  mercury:
+    'MOBILE (375x667 viewport): Could you actually tap the CTA with a thumb? Are touch ' +
+    'targets 44x44px minimum? Is the conversion path — see value, tap button, land on ' +
+    'a form — frictionless on mobile? Score 1-10 on mobile conversion usability.',
+};
+
+/**
  * Builds the evaluation prompt for a judge to be evaluated by Claude in-context.
  * This is the primary mode: Claude IS the judge. The prompt instructs Claude to
- * adopt the judge personality and score the variation.
+ * adopt the judge personality and score the variation on BOTH desktop and
+ * mobile (375x667).
  */
-export function buildJudgeEvaluationPrompt(judgePrompt: string, variationDescription: string): string {
+export function buildJudgeEvaluationPrompt(judgePrompt: string, variationDescription: string): string;
+export function buildJudgeEvaluationPrompt(
+  judgePrompt: string,
+  variationDescription: string,
+  judgeName: JudgeName,
+): string;
+export function buildJudgeEvaluationPrompt(
+  judgePrompt: string,
+  variationDescription: string,
+  judgeName?: JudgeName,
+): string {
+  const mobileBlock = judgeName ? MOBILE_CRITERIA[judgeName] : MOBILE_CRITERIA.brutus;
   return [
     'You are now evaluating a design variation as a judge. Adopt the following personality completely.',
     '',
@@ -130,11 +210,18 @@ export function buildJudgeEvaluationPrompt(judgePrompt: string, variationDescrip
     variationDescription,
     '--- END VARIATION ---',
     '',
+    '--- MOBILE CRITERIA (score separately below) ---',
+    mobileBlock,
+    '--- END MOBILE CRITERIA ---',
+    '',
     'Respond with EXACTLY this format:',
     'Score: [1-10]',
-    'Comment: [Your roast in 2-3 sentences]',
+    'Comment: [Your desktop roast in 2-3 sentences]',
+    'Mobile score: [1-10]',
+    'Mobile comment: [Your mobile roast in 1-2 sentences]',
     '',
-    'Stay in character. Be honest. Score harshly.',
+    'Stay in character. Be honest. Score harshly. Mobile counts: a variation that aces',
+    'desktop but flops on mobile will NOT become a gem — the averages are combined.',
   ].join('\n');
 }
 
@@ -154,7 +241,7 @@ export function getJudgeEvaluationPrompts(
 
     prompts.push({
       judge: judgeName,
-      prompt: buildJudgeEvaluationPrompt(judgePrompt, variationDescription),
+      prompt: buildJudgeEvaluationPrompt(judgePrompt, variationDescription, judgeName),
     });
   }
 
@@ -186,6 +273,8 @@ export async function judgeVariation(
 
     let score: number;
     let comment: string;
+    let mobileScore: number | undefined;
+    let mobileComment: string | undefined;
 
     if (caller) {
       try {
@@ -193,6 +282,8 @@ export async function judgeVariation(
         const parsed = parseJudgeResponse(response);
         score = parsed.score;
         comment = parsed.comment;
+        mobileScore = parsed.mobileScore;
+        mobileComment = parsed.mobileComment;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         process.stderr.write(`[dreamroll] Judge ${judgeName} error: ${msg}\n`);
@@ -205,9 +296,11 @@ export async function judgeVariation(
       // dreamroll_judge tool and evaluate in-context instead.
       score = Math.floor(Math.random() * 6) + 3;
       comment = `[Self-evaluation mode: ${judgeName} mock score. For real judging, run interactively.]`;
+      mobileScore = Math.floor(Math.random() * 6) + 3;
+      mobileComment = `[Self-evaluation mode: mock mobile score]`;
     }
 
-    scores.push({ judge: judgeName, score, comment });
+    scores.push({ judge: judgeName, score, comment, mobileScore, mobileComment });
   }
 
   return calculateVerdict(scores);

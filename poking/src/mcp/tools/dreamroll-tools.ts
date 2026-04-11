@@ -52,6 +52,8 @@ export function registerDreamrollTools(server: McpServer): void {
           judge: z.enum(['brutus', 'venus', 'mercury']),
           score: z.number().min(1).max(10),
           comment: z.string(),
+          mobileScore: z.number().min(1).max(10).optional().describe('Judge score 1-10 for the 375x667 mobile viewport. Averages equally with the desktop score.'),
+          mobileComment: z.string().optional().describe('Short mobile-specific comment from the judge.'),
         })),
       }).optional().describe('Previous variation result. Pass on every call after the first to record scores and trigger evolution.'),
     },

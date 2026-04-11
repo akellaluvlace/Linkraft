@@ -86,8 +86,19 @@ export interface SeedParameters {
 
 export interface JudgeScore {
   judge: 'brutus' | 'venus' | 'mercury';
+  /** Desktop score 1-10. */
   score: number;
   comment: string;
+  /**
+   * Mobile sub-score 1-10, scored against a 375x667 viewport.
+   * - BRUTUS:  is the CTA above the fold at 375x667?
+   * - VENUS:   does the layout feel DESIGNED at mobile, not BROKEN?
+   * - MERCURY: could you actually tap the CTA with a thumb?
+   * Optional for backward compatibility with state files that predate the
+   * mobile dimension.
+   */
+  mobileScore?: number;
+  mobileComment?: string;
 }
 
 export type Verdict = 'gem' | 'iterate' | 'discard';

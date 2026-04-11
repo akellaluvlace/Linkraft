@@ -86,7 +86,11 @@ export function formatReport(report: MorningReport): string {
       lines.push(`     Radius: ${gem.seed.borderRadius ?? '—'} | Shadows: ${gem.seed.shadows ?? '—'} | CTA: ${gem.seed.ctaStyle ?? '—'}`);
       lines.push(`     Constraint: ${gem.seed.wildcard}`);
       for (const s of gem.scores) {
-        lines.push(`     ${s.judge.toUpperCase()} (${s.score}): "${s.comment}"`);
+        const mobile = typeof s.mobileScore === 'number' ? ` | mobile ${s.mobileScore}/10` : '';
+        lines.push(`     ${s.judge.toUpperCase()} (${s.score}${mobile}): "${s.comment}"`);
+        if (s.mobileComment) {
+          lines.push(`       mobile: "${s.mobileComment}"`);
+        }
       }
       lines.push('');
     }
