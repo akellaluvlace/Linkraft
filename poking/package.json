@@ -48,7 +48,7 @@
   "scripts": {
     "build": "npm run build:overlay && tsc && npm run bundle",
     "build:overlay": "webpack --config webpack.config.js",
-    "bundle": "esbuild src/mcp/server.ts --bundle --platform=node --target=node18 --format=cjs --outfile=dist/mcp/server.js --minify",
+    "bundle": "esbuild src/mcp/server.ts --bundle --platform=node --target=node18 --format=cjs --outfile=dist/mcp/server.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "package": "vsce package"
