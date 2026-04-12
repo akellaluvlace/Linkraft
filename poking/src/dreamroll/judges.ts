@@ -169,7 +169,12 @@ const MOBILE_CRITERIA: Record<JudgeName, string> = {
     'MOBILE (375x667 viewport): Is the primary CTA visible ABOVE the fold? Can the ' +
     'hero headline be read without horizontal scroll? Does anything break below 375px? ' +
     'Score 1-10 on clarity at mobile size — lower it hard if the CTA is buried or the ' +
-    'hero wraps to five lines.',
+    'hero wraps to five lines.\n\n' +
+    'LAYOUT DENSITY (applies to BOTH desktop and mobile scores): Deduct 2 points if ' +
+    'any section has more than 40% empty space on one side. Deduct 1 point if the hero ' +
+    'has a small floating element in a large grid cell (e.g. a 200px circle in a 600px ' +
+    'column). Layout must feel intentional and full, not sparse by accident. Every grid ' +
+    'cell must be at least 60% filled by its content.',
   venus:
     'MOBILE (375x667 viewport): Does the layout feel DESIGNED at mobile, or is it a ' +
     'collapsed desktop page? Are spacing, typography, and rhythm re-composed for the ' +
