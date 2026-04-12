@@ -1,9 +1,16 @@
 node_modules/
-dist/
-*.js.map
-*.d.ts
-!scripts/*.js
-!generator/bin/*.js
+
+# Only the bundled MCP server is tracked; all other build output is ignored
+poking/dist/
+!poking/dist/mcp/
+!poking/dist/mcp/server.js
+
+# Legacy directories (removed from repo, prevent re-add)
+core/
+generator/
+packs/
+SecretWeapon/
+scripts/
 
 # Config with secrets
 mcpkit.config.json
@@ -33,3 +40,12 @@ npm-debug.log*
 # Build artifacts
 coverage/
 .tsbuildinfo
+
+# Scratch files
+*.vsix
+compass_artifact_*.md
+dreamroll-build-spec.md
+dreamroll-test/
+plan.md
+poking-vault/
+poking/scripts/dreamroll-*.mjs

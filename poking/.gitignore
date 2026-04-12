@@ -1,7 +1,7 @@
 node_modules/
-!dist/
-!dist/**/*.js.map
-!dist/**/*.d.ts
+dist/
+!dist/mcp/
+!dist/mcp/server.js
 *.vsix
 coverage/
 .tmp-*

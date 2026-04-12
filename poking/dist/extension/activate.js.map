@@ -1,1 +1,0 @@
-{"version":3,"file":"activate.js","sourceRoot":"","sources":["../../src/extension/activate.ts"],"names":[],"mappings":";;AAMA,4BAGC;AAED,gCAEC;AAZD,+CAAiD;AACjD,2CAAyC;AAEzC,IAAI,MAA8B,CAAC;AAEnC,SAAgB,QAAQ,CAAC,OAAgC;IACvD,MAAM,GAAG,IAAI,sBAAU,EAAE,CAAC;IAC1B,IAAA,8BAAgB,EAAC,OAAO,EAAE,MAAM,CAAC,CAAC;AACpC,CAAC;AAED,SAAgB,UAAU;IACxB,MAAM,EAAE,OAAO,EAAE,CAAC;AACpB,CAAC"}
