@@ -152,7 +152,7 @@ describe('buildJudgeEvaluationPrompt with mobile criteria', () => {
 
   it('warns that mobile counts toward the gem threshold', () => {
     const prompt = buildJudgeEvaluationPrompt('BRUTUS', 'X', 'brutus');
-    expect(prompt.toLowerCase()).toContain('averages are combined');
+    expect(prompt.toLowerCase()).toContain('will not become a gem');
   });
 
   it('legacy two-argument form still works (backward compat)', () => {

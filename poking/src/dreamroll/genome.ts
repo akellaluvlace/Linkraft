@@ -459,7 +459,7 @@ export function genomeToPrompt(
     '  - Multi-column grids become single-column BUT each card still reads as',
     '    intentional: full-width, proper internal padding, no orphaned elements.',
     '',
-    'The test: if a designer took a screenshot at 375×667 and put it in Figma',
+    'The test: if a designer viewed this page at 375×667 and put it in Figma',
     'next to the desktop version, would they both look like they belong to the',
     'same designed product? If no, you have failed the responsive brief.',
     '',

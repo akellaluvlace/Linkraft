@@ -37387,7 +37387,7 @@ function genomeToPrompt(genome, brief, variationNumber, outputPath, recentStyles
     "  - Multi-column grids become single-column BUT each card still reads as",
     "    intentional: full-width, proper internal padding, no orphaned elements.",
     "",
-    "The test: if a designer took a screenshot at 375\xD7667 and put it in Figma",
+    "The test: if a designer viewed this page at 375\xD7667 and put it in Figma",
     "next to the desktop version, would they both look like they belong to the",
     "same designed product? If no, you have failed the responsive brief.",
     "",
@@ -37616,26 +37616,32 @@ function buildJudgeEvaluationPrompt(judgePrompt, variationDescription, judgeName
   return [
     "You are now evaluating a design variation as a judge. Adopt the following personality completely.",
     "",
+    "CRITICAL: You are reading HTML and CSS SOURCE CODE. You are NOT looking at a",
+    "screenshot. Do NOT open a browser. Do NOT start a local server. Do NOT use",
+    "Playwright. Evaluate the design from the code: color values, typography",
+    "declarations, layout properties, spacing values, semantic structure.",
+    "",
     "--- JUDGE PERSONALITY ---",
     judgePrompt,
     "--- END PERSONALITY ---",
     "",
-    "--- VARIATION TO JUDGE ---",
+    "--- VARIATION TO JUDGE (HTML/CSS source code) ---",
     variationDescription,
     "--- END VARIATION ---",
     "",
-    "--- MOBILE CRITERIA (score separately below) ---",
+    "--- MOBILE CRITERIA (evaluate from @media queries in the code) ---",
     mobileBlock,
     "--- END MOBILE CRITERIA ---",
     "",
     "Respond with EXACTLY this format:",
     "Score: [1-10]",
-    "Comment: [Your desktop roast in 2-3 sentences]",
+    "Comment: [Your desktop roast in 2-3 sentences, referencing specific CSS properties]",
     "Mobile score: [1-10]",
-    "Mobile comment: [Your mobile roast in 1-2 sentences]",
+    "Mobile comment: [Your mobile roast in 1-2 sentences, referencing @media rules]",
     "",
-    "Stay in character. Be honest. Score harshly. Mobile counts: a variation that aces",
-    "desktop but flops on mobile will NOT become a gem \u2014 the averages are combined."
+    "Stay in character. Be honest. Score harshly. Reference actual CSS values in your",
+    "comments (hex colors, font-sizes, gaps, radii). Mobile counts: a variation that",
+    "aces desktop but flops on mobile will NOT become a gem."
   ].join("\n");
 }
 function getJudgeEvaluationPrompts(agentsDir, variationDescription) {
@@ -37855,9 +37861,10 @@ function formatReport2(report) {
     }
     lines.push("");
   }
-  lines.push("OPEN IN BROWSER:");
+  lines.push("VIEW RESULTS:");
   lines.push("  All variations are standalone HTML files in .dreamroll/variations/");
   lines.push("  Filenames encode genome: {NNN}_{style}_{palette}_{mutation}.html");
+  lines.push("  Open any file in a browser to preview. Judges scored from source code, not visually.");
   if (report.topGems.length > 0) {
     const top = report.topGems[0];
     lines.push(`  Recommended start: ${genomeFilename(top.variationId, top.seed)} (avg ${top.averageScore}/10)`);

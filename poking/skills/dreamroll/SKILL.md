@@ -9,7 +9,7 @@ description: Overnight autonomous design generator using an 18-dimension Style G
 
 Dreamroll generates standalone HTML landing page variations overnight using a **Style Genome** — 18 randomizable parameter dimensions that combine into design DNA. Each variation rolls all 18 dimensions, generates a self-contained HTML file with Lucide icons (via CDN), real Unsplash images, and CSS custom properties in :root for instant editability. Three judges (BRUTUS, VENUS, MERCURY) score both desktop and mobile (375x667) separately. Every 5 variations, it detects patterns in gems and biases future rolls toward winning combinations. Anti-convergence guardrails (diversity reset, chaos ramp, style + layout exclusion windows, unique trios) prevent pages from looking similar.
 
-Zero config. No API keys. No Playwright. No screenshots. Allowed external resources: Google Fonts, Lucide CDN, Unsplash images. Just HTML files on disk that open in any browser.
+Zero config. No API keys. No Playwright. No screenshots. No browser. No local server. Allowed external resources: Google Fonts, Lucide CDN, Unsplash images. Just HTML files on disk.
 
 Part of Linkraft. Fourth mode after plan, preflight, sheep.
 
@@ -47,7 +47,7 @@ Read the generation prompt carefully. Write a single standalone HTML file to the
 - Complete valid HTML5 document
 - All CSS inline in a `<style>` tag inside `<head>`
 - Only the Google Fonts `<link>` is allowed as an external resource
-- Opens directly in any browser, no build step
+- Self-contained HTML, no build step needed to view
 - HTML comment at the top documenting all 14 genome dimensions (use the template the prompt provides)
 - 9-section page content from the brief (real content, not lorem ipsum)
 - 60-30-10 color distribution
@@ -60,13 +60,15 @@ Read the generation prompt carefully. Write a single standalone HTML file to the
 
 ### Step 3: Score the variation
 
-The dreamroll_start response includes three judge prompts. Adopt each persona and score the HTML you just wrote:
+**CRITICAL: You are reading HTML and CSS source code. You are NOT looking at a screenshot. Do NOT open a browser. Do NOT start a local server. Do NOT use Playwright. Evaluate the design from the code: color values, typography declarations, layout properties, spacing values, semantic structure.**
 
-- **BRUTUS** (clarity, 1-10): Ruthless minimalist. Communication efficiency. Can you understand it in 3 seconds? Is the CTA dominant? Is the hierarchy clear? Deduct points for visual noise, unclear CTAs, walls of text.
-- **VENUS** (aesthetics, 1-10): Obsessive aesthete. Color harmony, typography, visual rhythm. Are shadows consistent? Do border-radii follow a system? Is spacing on a grid? Deduct for default-looking design, clashing weights.
-- **MERCURY** (conversion, 1-10): Conversion machine. Value prop in first viewport, dominant CTA, trust signals, flow toward CTA. Deduct for vague headlines, no social proof, weak CTAs.
+The dreamroll_start response includes three judge prompts. Adopt each persona and score the HTML you just wrote by reading the source code:
 
-Write 1-2 sentences per judge. Be specific. Score harshly. The scoring rubrics are deduction-based — start at 10, lose points for problems.
+- **BRUTUS** (clarity, 1-10 + mobile 1-10): Ruthless minimalist. Read the CSS: is the hierarchy expressed through font-size/weight/color contrast? Is the CTA styled dominantly? Are there walls of text? Check the @media query: does the mobile layout preserve clarity?
+- **VENUS** (aesthetics, 1-10 + mobile 1-10): Obsessive aesthete. Read the :root tokens: is the color system harmonious? Are shadows consistent across all box-shadow declarations? Do border-radii follow a system? Is spacing on the 8px grid? Check mobile: are spacing values reduced proportionally?
+- **MERCURY** (conversion, 1-10 + mobile 1-10): Conversion machine. Read the HTML structure: is the CTA in the first section? Is there social proof? Does the section order flow toward conversion? Check mobile: is the CTA reachable without scrolling past the fold at 667px?
+
+Write 1-2 sentences per judge for desktop, 1 sentence for mobile. Be specific about CSS properties. Score harshly. Deduction-based: start at 10, lose points for problems.
 
 ### Step 4: Loop
 
@@ -209,7 +211,7 @@ The single `dreamroll_start` tool drives the entire generation loop. The skill c
     ...
 ```
 
-Dreamroll generates ONLY `.html` files and state/config. No screenshots. No `.png`/`.jpg` output. No temp files. The judges evaluate HTML/CSS code directly.
+Dreamroll generates ONLY `.html` files and state/config. No screenshots. No `.png`/`.jpg` output. No temp files. Judges evaluate the HTML/CSS source code directly. Do NOT open a browser. Do NOT take screenshots. Do NOT start a local server. Read the file, score the code.
 
 ## Evolution Engine
 
@@ -219,7 +221,8 @@ Anti-bias measure: if average creeps above 8.0 across all variations, the system
 
 ## What Dreamroll Does NOT Do
 
-- Does not use Playwright or take screenshots
+- Does NOT use Playwright, take screenshots, open a browser, or start a local server
+- Judges evaluate HTML/CSS source code directly — never visual inspection
 - Does not call external APIs (no Anthropic key needed)
 - Does not require any MCP servers beyond linkraft
 - Does not modify your existing project files

@@ -1,7 +1,7 @@
 {
   "name": "linkraft",
   "description": "Four autonomous Claude Code commands. /linkraft plan: project blueprint and CLAUDE.md generator (Path A from existing code, Path B from a rough idea .md). /linkraft preflight: 60-second security, health, and ship-readiness scan. /linkraft sheep: autonomous QA agent that finds bugs, fixes the safe ones, and runs overnight. /linkraft dreamroll: overnight design generator with an 18-dimension Style Genome, Lucide icons, Unsplash images, mobile scoring, CSS tokens, and anti-convergence guardrails.",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "author": {
     "name": "Akella inMotion",
     "email": "nikita.akella13@gmail.com"

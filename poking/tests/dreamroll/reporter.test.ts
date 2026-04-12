@@ -141,10 +141,10 @@ describe('formatReport', () => {
     expect(formatted).toContain('Self-evaluated');
   });
 
-  it('includes Open in Browser footer', () => {
+  it('includes view results footer', () => {
     const report = generateReport(makeState());
     const formatted = formatReport(report);
-    expect(formatted).toContain('OPEN IN BROWSER');
+    expect(formatted).toContain('VIEW RESULTS');
     expect(formatted).toContain('.dreamroll/variations/');
   });
 });

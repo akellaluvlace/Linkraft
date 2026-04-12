@@ -111,9 +111,10 @@ export function formatReport(report: MorningReport): string {
     lines.push('');
   }
 
-  lines.push('OPEN IN BROWSER:');
+  lines.push('VIEW RESULTS:');
   lines.push('  All variations are standalone HTML files in .dreamroll/variations/');
   lines.push('  Filenames encode genome: {NNN}_{style}_{palette}_{mutation}.html');
+  lines.push('  Open any file in a browser to preview. Judges scored from source code, not visually.');
   if (report.topGems.length > 0) {
     const top = report.topGems[0]!;
     lines.push(`  Recommended start: ${genomeFilename(top.variationId, top.seed)} (avg ${top.averageScore}/10)`);
