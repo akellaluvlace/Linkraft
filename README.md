@@ -82,7 +82,7 @@ Proven: 122 bugs found across 4 runs, 94 auto-fixed, 0 tests broken.
 
 ## /linkraft dreamroll
 
-Overnight autonomous design generator using a 17-dimension Style Genome: style archetype (30 options each with a CSS signature and anti-patterns), color harmony (7 algorithmic + 5 curated, with random base hue), typography pairing (25 Google Font pairs), type scale, layout, density, mood, era, animation, imagery, border radius, shadow system, CTA style, oblique constraint, **style mutation** (pure / mashup / invert / era-clash / material-swap / maximum / minimum / franken), **copy angle** (10 options for headline framing), and **section variation** (uniform / subtle / dramatic — internal rhythm within a single page). Every variation tests design AND messaging simultaneously. Generates standalone HTML landing pages, scores each with three judges, auto-deducts BRUTUS when required CSS is missing (pure mode only), evolves toward gems. Never stops until you say so.
+Overnight autonomous design generator using an 18-dimension Style Genome: style archetype (30 options each with a CSS signature and anti-patterns), color harmony (7 algorithmic + 5 curated, with random base hue), typography pairing (25 Google Font pairs), type scale, layout, density, mood, era, animation, imagery, border radius, shadow system, CTA style, oblique constraint, **style mutation** (pure / mashup / invert / era-clash / material-swap / maximum / minimum / franken), **copy angle** (10 options for headline framing), **section variation** (uniform / subtle / dramatic), and **image treatment** (10 options: editorial-bleed, collage, masked-shapes, duotone-filter, peek-through, filmstrip, single-hero-only, background-ambient, device-mockup, scattered). Every variation tests design, messaging, AND image presentation simultaneously. Generates standalone HTML landing pages with Lucide icons (via CDN) and real Unsplash photos matched to the product brief. Three judges score desktop AND mobile (375x667) separately. Auto-deducts BRUTUS when required CSS is missing (pure mode only). CSS custom properties in :root make every variation instantly editable. Anti-convergence guardrails (diversity reset every 20 variations, unique style+harmony+mutation trios, chaos ramp, 5-variation style exclusion window, DIVERSITY DIRECTIVE prompt) prevent pages from looking similar. Evolves toward gems. Never stops until you say so.
 
 ```
 /linkraft dreamroll                  Start or resume (runs until stopped)
@@ -97,12 +97,12 @@ Overnight autonomous design generator using a 17-dimension Style Genome: style a
 /linkraft dreamroll breed [A] [B]    Cross two gems into 3 children
 ```
 
-The judges:
-- **BRUTUS** (clarity, 1-10): ruthless minimalist. Can you understand it in 3 seconds?
-- **VENUS** (aesthetics, 1-10): obsessive aesthete. Is every pixel considered?
-- **MERCURY** (conversion, 1-10): conversion machine. Would this page make money?
+The judges (each scores desktop AND mobile separately):
+- **BRUTUS** (clarity, 1-10 + mobile 1-10): ruthless minimalist. Desktop: 3 seconds to understand. Mobile: is CTA above the fold at 375x667?
+- **VENUS** (aesthetics, 1-10 + mobile 1-10): obsessive aesthete. Desktop: every pixel considered. Mobile: designed layout, not a collapsed desktop.
+- **MERCURY** (conversion, 1-10 + mobile 1-10): conversion machine. Desktop: would this page make money? Mobile: can you tap the CTA with a thumb?
 
-Gem threshold: avg >= 7 or any single 10. Every 5 variations, evolution detects patterns in gems and biases future rolls toward winning parameter combinations. Mandatory chaos keeps the generator from getting stuck.
+Gem threshold: avg >= 7 or any single 10 (desktop + mobile averaged equally). A variation that aces desktop but flops on mobile cannot become a gem. Every 5 variations, evolution detects patterns. Anti-convergence guardrails kick in after variation 15 (chaos ramp, diversity resets at v20/v40/v60, style exclusion window, unique trio enforcement).
 
 **User feedback overrides judges.** `/linkraft dreamroll like 14` multiplies every dimension value in that genome by 3x. `/linkraft dreamroll hate 7` multiplies by 0.25x. The system learns YOUR taste, not just what the judges think looks good. Multipliers stack across multiple liked/hated variations.
 
@@ -110,7 +110,13 @@ Gem threshold: avg >= 7 or any single 10. Every 5 variations, evolution detects 
 
 **Filenames encode the genome.** Files are named `{NNN}_{style}_{palette}_{mutation}.html` (e.g., `001_cyberpunk_neon-on-dark_pure.html`). You can scan `.dreamroll/variations/` and know what each one is without opening it.
 
-Zero external dependencies. No Playwright. No screenshots. No API keys. Just HTML files on disk you open in a browser.
+**Lucide icons + Unsplash images.** Every variation uses Lucide icons via CDN (same set as shadcn/ui) for nav, features, trust signals, and CTAs. Real Unsplash photos are chosen to match the product brief (not generic placeholders). Images use the rolled IMAGE_TREATMENT dimension for consistent visual style.
+
+**CSS custom properties.** Every variation uses design tokens in `:root` (colors, fonts, spacing, radii, shadows, transitions). Change 5 variables and the entire page updates. That is the bridge from "dreamroll output" to "production page."
+
+**Every variation works on mobile.** Explicit 375x667 responsive rules: CTA above fold, 14px minimum text, 44x44 touch targets, no horizontal scroll. Judges score mobile separately.
+
+Zero external dependencies beyond CDN (Google Fonts, Lucide, Unsplash). No Playwright. No screenshots. No API keys. Just HTML files on disk you open in a browser.
 
 ## The Chain
 
@@ -154,19 +160,25 @@ Bonus: during a normal run, sheep and dreamroll automatically surface a reminder
 
 ## Numbers
 
-- 623 tests across 42 test files
+- 681 tests across 44 test files
 - 4 modes (plan, preflight, sheep, dreamroll)
 - 2 plan paths (A: scan existing code, B: generate from a rough idea .md + scaffold)
 - 14 plan outputs in Path A, 15 + scaffold in Path B
 - 3 preflight scores (security, health, readiness)
-- 6 agent personalities (3 sheep, 3 dreamroll judges)
-- 17 dreamroll Style Genome dimensions (200+ values total)
+- 6 agent personalities (3 sheep, 3 dreamroll judges scoring desktop + mobile)
+- 18 dreamroll Style Genome dimensions (220+ values total)
 - 30 style archetypes, each with a CSS signature + required CSS declarations
 - 25 Google Font typography pairings
 - 40 oblique strategy constraints
 - 8 style mutations (pure / mashup / invert / era-clash / material-swap / maximum / minimum / franken)
 - 10 copy angles (pain-point-first / outcome-first / social-proof-first / contrarian / story / data-driven / question / comparison / minimal / bold-claim)
 - 3 section variation modes (uniform / subtle / dramatic) for internal page rhythm
+- 10 image treatments (editorial-bleed / collage / masked-shapes / duotone-filter / peek-through / filmstrip / single-hero-only / background-ambient / device-mockup / scattered)
+- 5 anti-convergence guardrails (diversity reset, unique trios, chaos ramp, style exclusion window, DIVERSITY DIRECTIVE prompt)
+- Lucide icons via CDN (200+ icons, same set as shadcn/ui)
+- Real Unsplash images matched to the product brief
+- CSS custom properties in :root (colors, fonts, spacing, radii, shadows, transitions)
+- Mobile scoring on every judge (375x667 viewport)
 
 ## Project Structure
 
@@ -189,7 +201,7 @@ poking/
     plan/              # 16 generators (Path A scan + Path B from-idea + scaffolder)
     preflight/         # Security, health, readiness scanners + runner
     sheep/             # Auto-config, hunter, personas, stats, content gen
-    dreamroll/         # 17-dim params, genome, generator, judges, evolution, reporter, state, feedback, breeding
+    dreamroll/         # 18-dim params, genome, generator, judges, evolution, reporter, state, feedback, breeding, diversity
     shared/            # Scanner utilities, types, format
     mcp/
       server.ts        # MCP server (all four modes)
@@ -198,7 +210,7 @@ poking/
         preflight-tools.ts
         sheep-tools.ts
         dreamroll-tools.ts
-  tests/               # 623 tests across 42 files
+  tests/               # 681 tests across 44 files
   README.md
   LICENSE
 ```
