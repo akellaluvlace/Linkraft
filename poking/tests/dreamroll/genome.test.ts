@@ -27,32 +27,30 @@ function makeGenome(overrides: Partial<StyleGenome> = {}): StyleGenome {
 }
 
 describe('genomeToPrompt', () => {
-  it('includes all 15 dimensions in the full genome block', () => {
+  it('includes all dimensions across priority tiers', () => {
     const genome = makeGenome({ mutation: 'pure' });
     const prompt = genomeToPrompt(genome, 'AI study app for students', 7, '/tmp/v007.html');
-    expect(prompt).toContain('Style archetype:  glassmorphism');
+    // Tier 1
+    expect(prompt).toContain('Layout:      stacked-panels');
+    expect(prompt).toContain('cormorant-proza');
     expect(prompt).toContain('jewel-tones');
-    expect(prompt).toContain('Typography:       cormorant-proza');
-    expect(prompt).toContain('Type scale:       golden-ratio');
-    expect(prompt).toContain('Layout pattern:   stacked-panels');
-    expect(prompt).toContain('Density:          sparse');
-    expect(prompt).toContain('Mood:             premium-luxury');
-    expect(prompt).toContain('Era influence:    2020s-modern');
-    expect(prompt).toContain('Animation:        cinematic-reveal');
-    expect(prompt).toContain('Imagery:          abstract-blobs');
-    expect(prompt).toContain('Border radius:    rounded-large');
-    expect(prompt).toContain('Shadow system:    soft-neumorphic');
-    expect(prompt).toContain('CTA style:        pill-glow');
-    expect(prompt).toContain('Oblique constraint: glass-everything');
-    expect(prompt).toContain('Style mutation:   pure');
+    expect(prompt).toContain('Density:     sparse');
+    // Tier 2
+    expect(prompt).toContain('Style:       glassmorphism');
+    expect(prompt).toContain('Mood:        premium-luxury');
+    expect(prompt).toContain('Era:         2020s-modern');
+    expect(prompt).toContain('Animation:   cinematic-reveal');
+    // Tier 3
+    expect(prompt).toContain('Mutation:    pure');
+    expect(prompt).toContain('Constraint:  glass-everything');
   });
 
   it('leads with VISUAL IDENTITY section as the most important part', () => {
     const prompt = genomeToPrompt(makeGenome(), 'X', 1, '/tmp/x.html');
     expect(prompt).toContain('VISUAL IDENTITY (this is the most important part)');
-    // VISUAL IDENTITY must appear before the FULL GENOME block
+    // VISUAL IDENTITY must appear before the PRIORITY TIERS block
     const idPos = prompt.indexOf('VISUAL IDENTITY');
-    const genomePos = prompt.indexOf('FULL GENOME');
+    const genomePos = prompt.indexOf('PRIORITY TIERS');
     expect(idPos).toBeGreaterThan(0);
     expect(idPos).toBeLessThan(genomePos);
   });
@@ -135,10 +133,11 @@ describe('genomeToPrompt', () => {
     expect(prompt).toContain('prefers-reduced-motion');
   });
 
-  it('includes the HTML comment header template', () => {
+  it('includes the compact HTML comment header template', () => {
     const prompt = genomeToPrompt(makeGenome(), 'X', 5, '/tmp/x.html');
-    expect(prompt).toContain('DREAMROLL VARIATION #005');
-    expect(prompt).toContain('GENOME:');
+    expect(prompt).toContain('DREAMROLL #005');
+    expect(prompt).toContain('style:');
+    expect(prompt).toContain('layout:');
   });
 
   it('works with rolled params (no manual overrides)', () => {
@@ -147,7 +146,7 @@ describe('genomeToPrompt', () => {
     const prompt = genomeToPrompt(rolled, 'Brief', 1, '/tmp/x.html');
     expect(prompt.length).toBeGreaterThan(500);
     expect(prompt).toContain('VISUAL IDENTITY');
-    expect(prompt).toContain('FULL GENOME');
+    expect(prompt).toContain('PRIORITY TIERS');
     expect(prompt).toContain(`STYLE: ${rolled.genre}`);
   });
 
@@ -219,34 +218,25 @@ describe('genomeToPrompt', () => {
 });
 
 describe('serializeGenomeAsComment', () => {
-  it('produces a multi-line HTML comment', () => {
+  it('produces a compact HTML comment with key genome fields', () => {
     const comment = serializeGenomeAsComment(makeGenome(), 14);
     expect(comment).toMatch(/^<!--/);
     expect(comment).toMatch(/-->$/);
-    expect(comment).toContain('VARIATION #014');
+    expect(comment).toContain('DREAMROLL #014');
   });
 
-  it('includes all 14 genome fields', () => {
+  it('includes the 5 key genome fields (slim comment, not all 18)', () => {
     const comment = serializeGenomeAsComment(makeGenome(), 1);
     expect(comment).toContain('style:');
-    expect(comment).toContain('harmony:');
-    expect(comment).toContain('typography:');
-    expect(comment).toContain('scale:');
+    expect(comment).toContain('palette:');
+    expect(comment).toContain('type:');
     expect(comment).toContain('layout:');
-    expect(comment).toContain('density:');
-    expect(comment).toContain('mood:');
-    expect(comment).toContain('era:');
-    expect(comment).toContain('animation:');
-    expect(comment).toContain('imagery:');
-    expect(comment).toContain('radius:');
-    expect(comment).toContain('shadows:');
-    expect(comment).toContain('cta:');
-    expect(comment).toContain('constraint:');
+    expect(comment).toContain('mutation:');
   });
 
-  it('includes base hue when present', () => {
+  it('includes base hue in the palette field', () => {
     const comment = serializeGenomeAsComment(makeGenome({ harmonyBaseHue: 195 }), 1);
-    expect(comment).toContain('base hue: 195');
+    expect(comment).toContain('195');
   });
 });
 

@@ -121,15 +121,15 @@ describe('dreamroll e2e: full skill-driven loop', () => {
     // Verify each HTML file has a valid genome comment header
     for (const c of [cycle1, cycle2, cycle3]) {
       const contents = fs.readFileSync(c.filePath, 'utf-8');
-      expect(contents).toMatch(/^<!--\n\s+DREAMROLL VARIATION/);
+      expect(contents).toMatch(/^<!--\n\s+DREAMROLL #/);
       expect(contents).toContain('style:');
-      expect(contents).toContain('harmony:');
-      expect(contents).toContain('constraint:');
+      expect(contents).toContain('palette:');
+      expect(contents).toContain('layout:');
     }
 
     // Verify the prompt passed to the skill contains all the critical bits
     expect(cycle1.prompt).toContain('VISUAL IDENTITY');
-    expect(cycle1.prompt).toContain('FULL GENOME');
+    expect(cycle1.prompt).toContain('PRIORITY TIERS');
     expect(cycle1.prompt).toContain('THIS PAGE MUST NOT LOOK LIKE');
     expect(cycle1.prompt).toContain('REQUIRED CSS DECLARATIONS');
     expect(cycle1.prompt).toContain('CSS signature:');
@@ -228,13 +228,11 @@ describe('dreamroll e2e: full skill-driven loop', () => {
       // Constraint repeated 3 times regardless of mutation
       const matches = prompt.match(/CONSTRAINT \(mandatory/g);
       expect(matches?.length).toBe(3);
-      // All 15 dimensions still listed in the full genome block
-      for (const label of [
-        'Style archetype:', 'Color harmony:', 'Typography:', 'Type scale:',
-        'Layout pattern:', 'Density:', 'Mood:', 'Era influence:',
-        'Animation:', 'Imagery:', 'Border radius:',
-        'Shadow system:', 'CTA style:', 'Oblique constraint:', 'Style mutation:',
-      ]) {
+      // Priority tiers present with key dimensions
+      expect(prompt).toContain('TIER 1');
+      expect(prompt).toContain('TIER 2');
+      expect(prompt).toContain('TIER 3');
+      for (const label of ['Layout:', 'Typography:', 'Color:', 'Style:', 'Mood:', 'Mutation:']) {
         expect(prompt, `variation ${i + 1} missing "${label}"`).toContain(label);
       }
     }
