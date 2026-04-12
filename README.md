@@ -85,16 +85,18 @@ Proven: 122 bugs found across 4 runs, 94 auto-fixed, 0 tests broken.
 Overnight autonomous design generator using an 18-dimension Style Genome: style archetype (30 options each with a CSS signature and anti-patterns), color harmony (7 algorithmic + 5 curated, with random base hue), typography pairing (25 Google Font pairs), type scale, layout, density, mood, era, animation, imagery, border radius, shadow system, CTA style, oblique constraint, **style mutation** (pure / mashup / invert / era-clash / material-swap / maximum / minimum / franken), **copy angle** (10 options for headline framing), **section variation** (uniform / subtle / dramatic), and **image treatment** (10 options: editorial-bleed, collage, masked-shapes, duotone-filter, peek-through, filmstrip, single-hero-only, background-ambient, device-mockup, scattered). Every variation tests design, messaging, AND image presentation simultaneously. Generates standalone HTML landing pages with Lucide icons (via CDN) and real Unsplash photos matched to the product brief. Three judges score desktop AND mobile (375x667) separately. Auto-deducts BRUTUS when required CSS is missing (pure mode only). CSS custom properties in :root make every variation instantly editable. Anti-convergence guardrails (diversity reset every 20 variations, unique style+harmony+mutation trios, chaos ramp, 5-variation style exclusion window, DIVERSITY DIRECTIVE prompt) prevent pages from looking similar. Evolves toward gems. Never stops until you say so.
 
 ```
-/linkraft dreamroll                  Start or resume (runs until stopped)
-/linkraft dreamroll --brief "..."    Start with an explicit product brief
-/linkraft dreamroll status           Show progress
-/linkraft dreamroll stop             Graceful stop at next variation
-/linkraft dreamroll gems             List all gems
-/linkraft dreamroll report           Morning report with top 5 gems
-/linkraft dreamroll overnight        Generate restart loop script (runs all night)
-/linkraft dreamroll like [N]         Mark variation N as a favorite (3x weight)
-/linkraft dreamroll hate [N]         Mark variation N as bad (0.25x weight)
-/linkraft dreamroll breed [A] [B]    Cross two gems into 3 children
+/linkraft dreamroll                         Start or resume (runs until stopped)
+/linkraft dreamroll --brief "..."            Start with an explicit product brief
+/linkraft dreamroll --reference "a.com,b.com" Scrape sites, extract design DNA, bias rolls
+/linkraft dreamroll --style-note "dark, minimal" Plain-text style constraint in the prompt
+/linkraft dreamroll status                   Show progress
+/linkraft dreamroll stop                     Graceful stop at next variation
+/linkraft dreamroll gems                     List all gems
+/linkraft dreamroll report                   Morning report with top 5 gems
+/linkraft dreamroll overnight                Generate restart loop script (runs all night)
+/linkraft dreamroll like [N]                 Mark variation N as a favorite (3x weight)
+/linkraft dreamroll hate [N]                 Mark variation N as bad (0.25x weight)
+/linkraft dreamroll breed [A] [B]            Cross two gems into 3 children
 ```
 
 The judges (each scores desktop AND mobile separately):
@@ -109,6 +111,10 @@ Gem threshold: avg >= 7 or any single 10 (desktop + mobile averaged equally). A 
 **Breeding.** `/linkraft dreamroll breed 14 6` crosses two gem genomes by alternating dimensions and rolling a fresh mutation per child. Three children get queued and consumed by the next 3 variations in the loop. This is genuine genetic selection on top of weighted random.
 
 **Filenames encode the genome.** Files are named `{NNN}_{style}_{palette}_{mutation}.html` (e.g., `001_cyberpunk_neon-on-dark_pure.html`). You can scan `.dreamroll/variations/` and know what each one is without opening it.
+
+**Reference-guided generation.** `--reference "linear.app, stripe.com"` scrapes each site's CSS, extracts design DNA (colors, fonts, radius, shadows, layout, mood), saves to `.dreamroll/references.json`, and biases evolution weights toward matching parameters. The prompt tells the generator: "extract the PRINCIPLES: their restraint, their color temperature, their spacing philosophy. Do NOT copy them." References persist across sessions.
+
+**Style notes.** `--style-note "dark mode, minimal, big bold typography, no gradients"` injects plain text directly into the prompt as a hard constraint. If the genome conflicts with the note, the note wins. Simpler than references, no scraping needed. Both flags are optional and combinable.
 
 **Lucide icons + Unsplash images.** Every variation uses Lucide icons via CDN (same set as shadcn/ui) for nav, features, trust signals, and CTAs. Real Unsplash photos are chosen to match the product brief (not generic placeholders). Images use the rolled IMAGE_TREATMENT dimension for consistent visual style.
 
