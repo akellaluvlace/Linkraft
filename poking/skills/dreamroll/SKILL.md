@@ -9,6 +9,17 @@ hooks:
           command: "echo {\"decision\":\"block\",\"reason\":\"BLOCKED: Dreamroll evaluates HTML/CSS source code directly. Do NOT use browser tools. Read the .html file and score from code.\"}"
 ---
 
+## CRITICAL RULES
+1. Do NOT use Playwright. Ever. For any reason.
+2. Do NOT take screenshots.
+3. Do NOT start a local server (http-server, serve, python -m http.server).
+4. Do NOT navigate to any URL.
+5. Do NOT open a browser.
+6. Judges read the HTML SOURCE CODE, not screenshots.
+7. If you find yourself typing "playwright" or "screenshot" or "localhost", STOP. You are doing it wrong.
+
+This is not optional. Playwright wastes 4 minutes per variation and consumes half the context window on image data. Every screenshot is a variation you didn't generate.
+
 # Dreamroll: Overnight Design Generator
 
 ## What This Is

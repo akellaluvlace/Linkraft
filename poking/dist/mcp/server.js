@@ -36752,7 +36752,7 @@ var IMAGE_TREATMENT_SPECS = [
   },
   {
     id: "device-mockup",
-    description: "Image wrapped in a phone/laptop CSS frame (border-radius + shadow + bezel). App screenshot feel.",
+    description: "Image wrapped in a phone/laptop CSS frame (border-radius + shadow + bezel). App preview mockup feel.",
     css: '.device { border-radius: 24px; padding: 8px; background: #222; box-shadow: 0 20px 60px rgba(0,0,0,0.3); } img inside fills the "screen"'
   },
   {
