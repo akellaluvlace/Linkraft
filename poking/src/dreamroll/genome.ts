@@ -16,6 +16,7 @@ import {
   getMutation,
   getCopyAngle,
   getSectionVariation,
+  getImageTreatment,
   BORDER_RADIUS_SPECS,
   SHADOW_SPECS,
   CTA_STYLE_SPECS,
@@ -67,6 +68,8 @@ export function genomeToPrompt(
   const copyAngleSpec = getCopyAngle(copyAngleId);
   const sectionVariationId = genome.sectionVariation ?? 'uniform';
   const sectionVariationSpec = getSectionVariation(sectionVariationId);
+  const imageTreatmentId = genome.imageTreatment ?? 'editorial-bleed';
+  const imageTreatmentSpec = getImageTreatment(imageTreatmentId);
 
   const fontsLink = typography
     ? `https://fonts.googleapis.com/css2?${typography.googleFontsParam}&display=swap`
@@ -226,13 +229,27 @@ export function genomeToPrompt(
     sectionVariationSpec?.instructions ?? 'Every section follows the base genome.',
     '',
     '════════════════════════════════════════════════════════════════════════',
+    `IMAGE TREATMENT: ${imageTreatmentId}`,
+    '════════════════════════════════════════════════════════════════════════',
+    '',
+    imageTreatmentSpec?.description ?? 'Place images in standard rectangular containers.',
+    '',
+    'Required CSS for this treatment:',
+    imageTreatmentSpec?.css ?? '(default layout)',
+    '',
+    'Apply this treatment to EVERY image on the page (hero, features, testimonial',
+    'avatars, background images). The treatment is how the images are placed and',
+    'styled, not which images are chosen. The Unsplash photo selection (from the',
+    'REAL IMAGES block) stays the same regardless of treatment.',
+    '',
+    '════════════════════════════════════════════════════════════════════════',
     'PRODUCT BRIEF',
     '════════════════════════════════════════════════════════════════════════',
     '',
     brief,
     '',
     '════════════════════════════════════════════════════════════════════════',
-    'FULL GENOME (17 dimensions — all must visibly influence the design)',
+    'FULL GENOME (18 dimensions — all must visibly influence the design)',
     '════════════════════════════════════════════════════════════════════════',
     '',
     `  1.  Style archetype:  ${genome.genre}  ← the dominating concern above`,
@@ -254,6 +271,7 @@ export function genomeToPrompt(
     `  15. Style mutation:   ${mutationId}${mutationSpec ? ` — ${mutationSpec.summary}` : ''}`,
     `  16. Copy angle:       ${copyAngleId}${copyAngleSpec ? ' — see COPY ANGLE block' : ''}`,
     `  17. Section rhythm:   ${sectionVariationId}${sectionVariationSpec ? ' — see SECTION RHYTHM block' : ''}`,
+    `  18. Image treatment:  ${imageTreatmentId}${imageTreatmentSpec ? ' — see IMAGE TREATMENT block' : ''}`,
     '',
     constraintBlock,
     '',
@@ -503,6 +521,7 @@ export function serializeGenomeAsComment(genome: StyleGenome, variationNumber: n
     ...mutationLines,
     `    copyAngle:  ${genome.copyAngle ?? '(default)'}`,
     `    section:    ${genome.sectionVariation ?? '(default)'}`,
+    `    imgTreat:   ${genome.imageTreatment ?? '(default)'}`,
     '',
     '  SCORES: (filled in after judging)',
     '-->',
@@ -561,5 +580,6 @@ export function genomeSummary(genome: StyleGenome): string {
   if (genome.sectionVariation && genome.sectionVariation !== 'uniform') {
     parts.push(`section=${genome.sectionVariation}`);
   }
+  if (genome.imageTreatment) parts.push(`img=${genome.imageTreatment}`);
   return parts.join(' | ');
 }

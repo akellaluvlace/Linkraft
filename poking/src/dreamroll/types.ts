@@ -80,6 +80,13 @@ export interface SeedParameters {
    * sub-parameter. Creates internal rhythm within a single page.
    */
   sectionVariation?: string;
+  /**
+   * Dimension 18 — IMAGE TREATMENT: how images are placed, cropped, and styled.
+   * Controls presentation, not content. editorial-bleed | collage | masked-shapes |
+   * duotone-filter | peek-through | filmstrip | single-hero-only |
+   * background-ambient | device-mockup | scattered.
+   */
+  imageTreatment?: string;
   /** Generation temperature, kept for backward compat. */
   temperature: number;
 }

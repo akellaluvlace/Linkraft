@@ -40,6 +40,7 @@ const FIELD_TO_WEIGHT_KEY: Array<[keyof SeedParameters, keyof ParamWeights]> = [
   ['wildcard', 'wildcard'],
   ['copyAngle', 'copyAngle'],
   ['sectionVariation', 'sectionVariation'],
+  ['imageTreatment', 'imageTreatment'],
 ];
 
 /**

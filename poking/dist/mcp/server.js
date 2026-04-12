@@ -36673,6 +36673,62 @@ var SECTION_VARIATION_POOL = SECTION_VARIATION_SPECS.map((s) => s.id);
 function getSectionVariation(id) {
   return SECTION_VARIATION_SPECS.find((s) => s.id === id);
 }
+var IMAGE_TREATMENT_SPECS = [
+  {
+    id: "editorial-bleed",
+    description: "Images break the grid, extend past containers, overlap text sections. Magazine-style full-bleed.",
+    css: "width: calc(100% + 120px); margin-left: -60px; margin-top: -40px (overlap previous section)"
+  },
+  {
+    id: "collage",
+    description: "3-5 images at different sizes and angles, overlapping with rotation. Polaroid/scrapbook feel.",
+    css: "position: relative on container; each img is position: absolute with transform: rotate(-3deg), box-shadow, z-index stacking"
+  },
+  {
+    id: "masked-shapes",
+    description: "Images clipped into circles, hexagons, blobs (clip-path). Organic cutouts instead of rectangles.",
+    css: "clip-path: circle(50%), or clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%)"
+  },
+  {
+    id: "duotone-filter",
+    description: "Images mapped to two palette colors via CSS filter: grayscale + mix-blend-mode overlay.",
+    css: '.duo { position: relative; } .duo img { filter: grayscale(100%) contrast(1.1); } .duo::after { content:""; position:absolute; inset:0; background: var(--accent); mix-blend-mode: multiply; opacity: 0.6; }'
+  },
+  {
+    id: "peek-through",
+    description: "Images partially hidden behind text or sections. Only 40-60% visible. Creates intrigue.",
+    css: "overflow: hidden on parent; img translated 30% outside the visible area; hover reveals more"
+  },
+  {
+    id: "filmstrip",
+    description: "Horizontal scroll row of images at fixed height, no gaps. Cinema/contact-sheet aesthetic.",
+    css: "display: flex; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory; img { height: 280px; width: auto; scroll-snap-align: start; }"
+  },
+  {
+    id: "single-hero-only",
+    description: "One massive image, nothing else. Rest of page is pure typography. Image does all the visual work.",
+    css: "img { width: 100vw; height: 70vh; object-fit: cover; } No other images on the page."
+  },
+  {
+    id: "background-ambient",
+    description: "Images as full-section backgrounds at 10-20% opacity. Texture, not focal point. Text reads over them.",
+    css: "background-image on section; opacity: 0.12; background-size: cover; position: fixed or scroll"
+  },
+  {
+    id: "device-mockup",
+    description: "Image wrapped in a phone/laptop CSS frame (border-radius + shadow + bezel). App screenshot feel.",
+    css: '.device { border-radius: 24px; padding: 8px; background: #222; box-shadow: 0 20px 60px rgba(0,0,0,0.3); } img inside fills the "screen"'
+  },
+  {
+    id: "scattered",
+    description: "Images positioned absolutely at random-seeming coordinates around the page. Art-directed chaos.",
+    css: "position: absolute; top/left as percentages; rotation transforms; different sizes; pointer-events: none on decorative ones"
+  }
+];
+var IMAGE_TREATMENT_POOL = IMAGE_TREATMENT_SPECS.map((s) => s.id);
+function getImageTreatment(id) {
+  return IMAGE_TREATMENT_SPECS.find((s) => s.id === id);
+}
 function randomFrom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -36739,6 +36795,7 @@ function rollParams(weights, chaos = false, excludeStyles = []) {
     mutationMaterial,
     copyAngle: weightedPick(COPY_ANGLE_POOL, w?.copyAngle),
     sectionVariation: weightedPick(SECTION_VARIATION_POOL, w?.sectionVariation),
+    imageTreatment: weightedPick(IMAGE_TREATMENT_POOL, w?.imageTreatment),
     temperature: Math.round((0.7 + Math.random() * 0.6) * 100) / 100
   };
 }
@@ -36762,6 +36819,8 @@ function genomeToPrompt(genome, brief, variationNumber, outputPath, recentStyles
   const copyAngleSpec = getCopyAngle(copyAngleId);
   const sectionVariationId = genome.sectionVariation ?? "uniform";
   const sectionVariationSpec = getSectionVariation(sectionVariationId);
+  const imageTreatmentId = genome.imageTreatment ?? "editorial-bleed";
+  const imageTreatmentSpec = getImageTreatment(imageTreatmentId);
   const fontsLink = typography ? `https://fonts.googleapis.com/css2?${typography.googleFontsParam}&display=swap` : "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap";
   const distinctiveDescription = archetype?.distinctive ?? styleSignature;
   const requiredCSS = archetype?.distinctiveCSS ?? [];
@@ -36905,13 +36964,27 @@ function genomeToPrompt(genome, brief, variationNumber, outputPath, recentStyles
     sectionVariationSpec?.instructions ?? "Every section follows the base genome.",
     "",
     "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
+    `IMAGE TREATMENT: ${imageTreatmentId}`,
+    "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
+    "",
+    imageTreatmentSpec?.description ?? "Place images in standard rectangular containers.",
+    "",
+    "Required CSS for this treatment:",
+    imageTreatmentSpec?.css ?? "(default layout)",
+    "",
+    "Apply this treatment to EVERY image on the page (hero, features, testimonial",
+    "avatars, background images). The treatment is how the images are placed and",
+    "styled, not which images are chosen. The Unsplash photo selection (from the",
+    "REAL IMAGES block) stays the same regardless of treatment.",
+    "",
+    "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
     "PRODUCT BRIEF",
     "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
     "",
     brief,
     "",
     "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
-    "FULL GENOME (17 dimensions \u2014 all must visibly influence the design)",
+    "FULL GENOME (18 dimensions \u2014 all must visibly influence the design)",
     "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
     "",
     `  1.  Style archetype:  ${genome.genre}  \u2190 the dominating concern above`,
@@ -36933,6 +37006,7 @@ function genomeToPrompt(genome, brief, variationNumber, outputPath, recentStyles
     `  15. Style mutation:   ${mutationId}${mutationSpec ? ` \u2014 ${mutationSpec.summary}` : ""}`,
     `  16. Copy angle:       ${copyAngleId}${copyAngleSpec ? " \u2014 see COPY ANGLE block" : ""}`,
     `  17. Section rhythm:   ${sectionVariationId}${sectionVariationSpec ? " \u2014 see SECTION RHYTHM block" : ""}`,
+    `  18. Image treatment:  ${imageTreatmentId}${imageTreatmentSpec ? " \u2014 see IMAGE TREATMENT block" : ""}`,
     "",
     constraintBlock,
     "",
@@ -37172,6 +37246,7 @@ function serializeGenomeAsComment(genome, variationNumber) {
     ...mutationLines,
     `    copyAngle:  ${genome.copyAngle ?? "(default)"}`,
     `    section:    ${genome.sectionVariation ?? "(default)"}`,
+    `    imgTreat:   ${genome.imageTreatment ?? "(default)"}`,
     "",
     "  SCORES: (filled in after judging)",
     "-->"
@@ -37210,6 +37285,7 @@ function genomeSummary(genome) {
   if (genome.sectionVariation && genome.sectionVariation !== "uniform") {
     parts.push(`section=${genome.sectionVariation}`);
   }
+  if (genome.imageTreatment) parts.push(`img=${genome.imageTreatment}`);
   return parts.join(" | ");
 }
 
@@ -37349,7 +37425,8 @@ var TRACKED_FIELDS = [
   ["ctaStyle", "CtaStyle"],
   ["wildcard", "Constraint"],
   ["copyAngle", "CopyAngle"],
-  ["sectionVariation", "SectionVariation"]
+  ["sectionVariation", "SectionVariation"],
+  ["imageTreatment", "ImageTreatment"]
 ];
 function detectPatterns2(state) {
   const patterns = [];
@@ -37403,7 +37480,8 @@ var FIELD_TO_WEIGHT_KEY = {
   ctaStyle: "ctaStyle",
   wildcard: "wildcard",
   copyAngle: "copyAngle",
-  sectionVariation: "sectionVariation"
+  sectionVariation: "sectionVariation",
+  imageTreatment: "imageTreatment"
 };
 function applyAdjustments(state, adjustments) {
   if (!state.paramWeights) state.paramWeights = {};
@@ -37551,7 +37629,8 @@ var FIELD_TO_WEIGHT_KEY2 = [
   ["ctaStyle", "ctaStyle"],
   ["wildcard", "wildcard"],
   ["copyAngle", "copyAngle"],
-  ["sectionVariation", "sectionVariation"]
+  ["sectionVariation", "sectionVariation"],
+  ["imageTreatment", "imageTreatment"]
 ];
 function ensureUserPreferences(state) {
   if (!state.userPreferences) {
@@ -37635,7 +37714,8 @@ var CROSSOVER_FIELDS = [
   "ctaStyle",
   "wildcard",
   "copyAngle",
-  "sectionVariation"
+  "sectionVariation",
+  "imageTreatment"
 ];
 function breedGenomes(parentA, parentB, options = {}) {
   const random = options.random ?? Math.random;

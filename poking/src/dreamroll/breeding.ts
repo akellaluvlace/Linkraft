@@ -34,6 +34,7 @@ const CROSSOVER_FIELDS: Array<keyof SeedParameters> = [
   'wildcard',
   'copyAngle',
   'sectionVariation',
+  'imageTreatment',
 ];
 
 export interface BreedOptions {

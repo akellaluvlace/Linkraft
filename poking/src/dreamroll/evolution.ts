@@ -52,6 +52,7 @@ const TRACKED_FIELDS: Array<[string, string]> = [
   ['wildcard', 'Constraint'],
   ['copyAngle', 'CopyAngle'],
   ['sectionVariation', 'SectionVariation'],
+  ['imageTreatment', 'ImageTreatment'],
 ];
 
 /**
@@ -133,6 +134,7 @@ const FIELD_TO_WEIGHT_KEY: Record<string, string> = {
   wildcard: 'wildcard',
   copyAngle: 'copyAngle',
   sectionVariation: 'sectionVariation',
+  imageTreatment: 'imageTreatment',
 };
 
 export function applyAdjustments(state: DreamrollState, adjustments: EvolutionAdjustment[]): void {

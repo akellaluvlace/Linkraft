@@ -118,9 +118,10 @@ describe('genomeToPrompt includes the new dimensions', () => {
 
   it('lists copy angle and section rhythm in the FULL GENOME block', () => {
     const prompt = genomeToPrompt(makeGenome(), 'X', 1, '/tmp/x.html');
-    expect(prompt).toContain('17 dimensions');
+    expect(prompt).toContain('18 dimensions');
     expect(prompt).toContain('Copy angle:');
     expect(prompt).toContain('Section rhythm:');
+    expect(prompt).toContain('Image treatment:');
   });
 
   it('falls back to a default copyAngle when missing', () => {

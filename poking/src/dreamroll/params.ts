@@ -829,6 +829,79 @@ export function getSectionVariation(id: string): SectionVariationSpec | undefine
 }
 
 // ============================================================================
+// Dimension 18: IMAGE TREATMENT (10 options)
+// Controls HOW images are placed, cropped, and styled — not WHICH images.
+// Each treatment has explicit CSS rules the generator must apply.
+// ============================================================================
+
+export interface ImageTreatmentSpec {
+  id: string;
+  /** How this treatment affects image layout and styling. */
+  description: string;
+  /** Concrete CSS rules the generator must use. */
+  css: string;
+}
+
+export const IMAGE_TREATMENT_SPECS: ImageTreatmentSpec[] = [
+  {
+    id: 'editorial-bleed',
+    description: 'Images break the grid, extend past containers, overlap text sections. Magazine-style full-bleed.',
+    css: 'width: calc(100% + 120px); margin-left: -60px; margin-top: -40px (overlap previous section)',
+  },
+  {
+    id: 'collage',
+    description: '3-5 images at different sizes and angles, overlapping with rotation. Polaroid/scrapbook feel.',
+    css: 'position: relative on container; each img is position: absolute with transform: rotate(-3deg), box-shadow, z-index stacking',
+  },
+  {
+    id: 'masked-shapes',
+    description: 'Images clipped into circles, hexagons, blobs (clip-path). Organic cutouts instead of rectangles.',
+    css: 'clip-path: circle(50%), or clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%)',
+  },
+  {
+    id: 'duotone-filter',
+    description: 'Images mapped to two palette colors via CSS filter: grayscale + mix-blend-mode overlay.',
+    css: '.duo { position: relative; } .duo img { filter: grayscale(100%) contrast(1.1); } .duo::after { content:""; position:absolute; inset:0; background: var(--accent); mix-blend-mode: multiply; opacity: 0.6; }',
+  },
+  {
+    id: 'peek-through',
+    description: 'Images partially hidden behind text or sections. Only 40-60% visible. Creates intrigue.',
+    css: 'overflow: hidden on parent; img translated 30% outside the visible area; hover reveals more',
+  },
+  {
+    id: 'filmstrip',
+    description: 'Horizontal scroll row of images at fixed height, no gaps. Cinema/contact-sheet aesthetic.',
+    css: 'display: flex; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory; img { height: 280px; width: auto; scroll-snap-align: start; }',
+  },
+  {
+    id: 'single-hero-only',
+    description: 'One massive image, nothing else. Rest of page is pure typography. Image does all the visual work.',
+    css: 'img { width: 100vw; height: 70vh; object-fit: cover; } No other images on the page.',
+  },
+  {
+    id: 'background-ambient',
+    description: 'Images as full-section backgrounds at 10-20% opacity. Texture, not focal point. Text reads over them.',
+    css: 'background-image on section; opacity: 0.12; background-size: cover; position: fixed or scroll',
+  },
+  {
+    id: 'device-mockup',
+    description: 'Image wrapped in a phone/laptop CSS frame (border-radius + shadow + bezel). App screenshot feel.',
+    css: '.device { border-radius: 24px; padding: 8px; background: #222; box-shadow: 0 20px 60px rgba(0,0,0,0.3); } img inside fills the "screen"',
+  },
+  {
+    id: 'scattered',
+    description: 'Images positioned absolutely at random-seeming coordinates around the page. Art-directed chaos.',
+    css: 'position: absolute; top/left as percentages; rotation transforms; different sizes; pointer-events: none on decorative ones',
+  },
+];
+
+export const IMAGE_TREATMENT_POOL: string[] = IMAGE_TREATMENT_SPECS.map(s => s.id);
+
+export function getImageTreatment(id: string): ImageTreatmentSpec | undefined {
+  return IMAGE_TREATMENT_SPECS.find(s => s.id === id);
+}
+
+// ============================================================================
 // Per-parameter weight map for evolution.
 // Higher weight = more likely to be picked.
 // ============================================================================
@@ -850,6 +923,7 @@ export interface ParamWeights {
   wildcard?: Record<string, number>;
   copyAngle?: Record<string, number>;
   sectionVariation?: Record<string, number>;
+  imageTreatment?: Record<string, number>;
 }
 
 function randomFrom<T>(arr: readonly T[]): T {
@@ -956,12 +1030,13 @@ export function rollParams(
     mutationMaterial,
     copyAngle: weightedPick(COPY_ANGLE_POOL, w?.copyAngle),
     sectionVariation: weightedPick(SECTION_VARIATION_POOL, w?.sectionVariation),
+    imageTreatment: weightedPick(IMAGE_TREATMENT_POOL, w?.imageTreatment),
     temperature: Math.round((0.7 + Math.random() * 0.6) * 100) / 100,
   };
 }
 
 /**
- * Returns all 17 pools for tests and documentation.
+ * Returns all 18 pools for tests and documentation.
  */
 export function getAllPools(): Record<string, readonly string[]> {
   return {
@@ -982,5 +1057,6 @@ export function getAllPools(): Record<string, readonly string[]> {
     mutation: MUTATION_POOL,
     copyAngle: COPY_ANGLE_POOL,
     sectionVariation: SECTION_VARIATION_POOL,
+    imageTreatment: IMAGE_TREATMENT_POOL,
   };
 }
