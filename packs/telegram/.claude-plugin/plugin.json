@@ -1,7 +1,0 @@
-{
-  "name": "linkraft-telegram",
-  "description": "Telegram Bot integration for Claude Code: send messages, manage groups, inline keyboards, handle updates",
-  "author": {
-    "name": "Akella inMotion"
-  }
-}

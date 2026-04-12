@@ -1,12 +1,11 @@
 // Overnight restart loop generator.
 //
-// When Claude's context window fills, the session dies. Neither dreamroll
-// nor sheep can restart themselves from inside — something external has to
-// relaunch Claude. This module generates a small shell/PowerShell script
-// the user runs in a separate terminal that does exactly that, forever,
-// until ctrl+c.
+// When Claude's context window fills, the session dies. Sheep can't restart
+// itself from inside — something external has to relaunch Claude. This module
+// generates a small shell/PowerShell script the user runs in a separate
+// terminal that does exactly that, forever, until ctrl+c.
 //
-// The script is written to the PROJECT ROOT (not .dreamroll/.sheep/) so
+// The script is written to the PROJECT ROOT (not .sheep/) so
 // the user sees it immediately and can run it without hunting. The script
 // self-locates via $PSScriptRoot or $(dirname $0) so it works no matter
 // where the user invokes it from.
@@ -14,7 +13,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-export type OvernightMode = 'dreamroll' | 'sheep';
+export type OvernightMode = 'sheep';
 
 export interface OvernightScript {
   path: string;

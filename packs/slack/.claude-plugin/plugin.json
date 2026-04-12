@@ -1,7 +1,0 @@
-{
-  "name": "linkraft-slack",
-  "description": "Slack integration for Claude Code: messages, channels, reactions, pins",
-  "author": {
-    "name": "Akella inMotion"
-  }
-}

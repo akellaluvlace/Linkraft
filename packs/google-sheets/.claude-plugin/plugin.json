@@ -1,7 +1,0 @@
-{
-  "name": "linkraft-google-sheets",
-  "description": "Google Sheets integration for Claude Code: create spreadsheets, read/write cell values, batch operations",
-  "author": {
-    "name": "Akella inMotion"
-  }
-}
