@@ -1,6 +1,12 @@
 ---
 name: dreamroll
 description: Overnight autonomous design generator using an 18-dimension Style Genome. Generates standalone HTML landing page variations with Lucide icons and Unsplash images, scores desktop + mobile with 3 judges, evolves toward gems. Runs until stopped.
+hooks:
+  PreToolUse:
+    - matcher: "mcp__plugin_playwright|mcp__plugin_chrome"
+      hooks:
+        - type: command
+          command: "echo {\"decision\":\"block\",\"reason\":\"BLOCKED: Dreamroll evaluates HTML/CSS source code directly. Do NOT use browser tools. Read the .html file and score from code.\"}"
 ---
 
 # Dreamroll: Overnight Design Generator
@@ -37,7 +43,7 @@ Call `dreamroll_start` with:
 
 The tool returns:
 - INITIALIZED status
-- A complete generation prompt for variation #001 with the full 14-dimension genome, CSS signatures, Google Fonts link, content template, and CSS quality rules
+- A complete generation prompt for variation #001 with the full 18-dimension genome, CSS signatures, Google Fonts link, content template, and CSS quality rules
 - Judge prompts for BRUTUS, VENUS, MERCURY
 
 ### Step 2: Generate the HTML
@@ -48,7 +54,7 @@ Read the generation prompt carefully. Write a single standalone HTML file to the
 - All CSS inline in a `<style>` tag inside `<head>`
 - Only the Google Fonts `<link>` is allowed as an external resource
 - Self-contained HTML, no build step needed to view
-- HTML comment at the top documenting all 14 genome dimensions (use the template the prompt provides)
+- HTML comment at the top documenting all 18 genome dimensions (use the template the prompt provides)
 - 9-section page content from the brief (real content, not lorem ipsum)
 - 60-30-10 color distribution
 - 8px spacing grid
@@ -56,7 +62,7 @@ Read the generation prompt carefully. Write a single standalone HTML file to the
 - Responsive at 375/768/1024/1440
 - `prefers-reduced-motion` media query
 - Total file size under 50KB
-- The design must visibly reflect ALL 14 genome dimensions
+- The design must visibly reflect ALL 18 genome dimensions
 
 ### Step 3: Score the variation
 
@@ -98,7 +104,7 @@ Go back to step 2. Loop forever until the response says "Stop requested".
 
 When your context runs low, the session naturally ends. State persists in `.dreamroll/state.json`. The PowerShell restart loop launches a new Claude session, which calls `dreamroll_start` again. The tool detects the existing running state and continues from `currentVariation + 1`.
 
-## The Style Genome (14 Dimensions)
+## The Style Genome (18 Dimensions)
 
 See `src/dreamroll/params.ts` for full pool definitions and metadata.
 
@@ -124,6 +130,10 @@ See `src/dreamroll/params.ts` for full pool definitions and metadata.
 13. CTA STYLE (6 options)        — solid-fill, brutalist-block, gradient-button, ...
 14. OBLIQUE CONSTRAINT (40 options) — one-font-only, max-3-colors, dark-mode-only, empty-hero,
                                        what-would-a-child-draw, the-last-page-on-earth, ...
+15. STYLE MUTATION (8 options)     — pure, mashup, invert, era-clash, material-swap, maximum, minimum, franken
+16. COPY ANGLE (10 options)        — pain-point-first, outcome-first, contrarian, story, data-driven, ...
+17. SECTION VARIATION (3 options)  — uniform, subtle, dramatic
+18. IMAGE TREATMENT (10 options)   — editorial-bleed, collage, masked-shapes, duotone-filter, ...
 ```
 
 ## Judges (Anti-Self-Bias)
