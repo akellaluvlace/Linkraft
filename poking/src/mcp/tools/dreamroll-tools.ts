@@ -10,6 +10,7 @@ import { maybeEvolve } from '../../dreamroll/evolution.js';
 import { likeVariation, hateVariation } from '../../dreamroll/feedback.js';
 import { breedGenomes, queuePendingChildren } from '../../dreamroll/breeding.js';
 import { capSidebarWeight } from '../../dreamroll/diversity.js';
+import { saveReferences, deriveWeightsFromReferences, type ReferenceDesignDNA } from '../../dreamroll/references.js';
 import { writeOvernightScript, overnightInstructions } from '../../shared/overnight.js';
 import type { DreamrollConfig, Variation } from '../../dreamroll/types.js';
 
@@ -46,6 +47,16 @@ export function registerDreamrollTools(server: McpServer): void {
       projectRoot: z.string().describe('Project root directory'),
       brief: z.string().optional().describe('Product brief for generated copy. Auto-detected from package.json on first call.'),
       pluginRoot: z.string().optional().describe('Linkraft plugin root (where agents/dreamroll-*.md live). Required to return judge prompts inline.'),
+      styleNote: z.string().optional().describe('Plain-text style guidance (e.g., "dark mode, minimal, big bold typography, no gradients"). Injected directly into the prompt as a constraint. Persists across the session.'),
+      references: z.array(z.object({
+        url: z.string(),
+        colors: z.array(z.string()),
+        fonts: z.array(z.string()),
+        radius: z.string(),
+        shadows: z.string(),
+        layout: z.string(),
+        mood: z.string(),
+      })).optional().describe('Extracted design DNA from --reference URLs. Claude scrapes each site before the first call and passes the results here. Saved to .dreamroll/references.json and used to bias evolution weights + generation prompt.'),
       completed: z.object({
         variationId: z.number(),
         filePath: z.string(),
@@ -58,7 +69,7 @@ export function registerDreamrollTools(server: McpServer): void {
         })),
       }).optional().describe('Previous variation result. Pass on every call after the first to record scores and trigger evolution.'),
     },
-    async ({ projectRoot, brief, pluginRoot, completed }) => {
+    async ({ projectRoot, brief, pluginRoot, styleNote, references, completed }) => {
       // 1. Load or create state
       let state = loadState(projectRoot);
       let initialized = false;
@@ -70,15 +81,38 @@ export function registerDreamrollTools(server: McpServer): void {
           budgetHours: 24,
           projectRoot,
           brief: resolvedBrief,
+          styleNote,
         };
         state = createState(config);
         const variationsDir = path.join(projectRoot, '.dreamroll', 'variations');
         if (!fs.existsSync(variationsDir)) fs.mkdirSync(variationsDir, { recursive: true });
+
+        // Persist references and derive weights on init
+        if (references && references.length > 0) {
+          state.referenceData = references as ReferenceDesignDNA[];
+          saveReferences(projectRoot, state.referenceData);
+          const refW = deriveWeightsFromReferences(state.referenceData);
+          if (refW) state.referenceWeights = refW as Record<string, Record<string, number>>;
+        }
+
         saveState(projectRoot, state);
         initialized = true;
       } else {
         state.stopRequested = false;
         capSidebarWeight(state);
+
+        // Allow updating references and style note on resume
+        if (references && references.length > 0) {
+          state.referenceData = references as ReferenceDesignDNA[];
+          saveReferences(projectRoot, state.referenceData);
+          const refW = deriveWeightsFromReferences(state.referenceData);
+          if (refW) state.referenceWeights = refW as Record<string, Record<string, number>>;
+          saveState(projectRoot, state);
+        }
+        if (styleNote) {
+          state.config.styleNote = styleNote;
+          saveState(projectRoot, state);
+        }
       }
 
       // 2. Honor stop flag from previous session
@@ -172,7 +206,11 @@ export function registerDreamrollTools(server: McpServer): void {
       // "avoid yourself".
       const fullHistory = state.recentStyles ?? [];
       const recentStyles = fullHistory.slice(0, -1);
-      const generationPrompt = genomeToPrompt(seed, state.config.brief ?? 'A product', nextId, outputPath, recentStyles);
+      const generationPrompt = genomeToPrompt(seed, state.config.brief ?? 'A product', nextId, outputPath, {
+        recentStyles,
+        references: state.referenceData,
+        styleNote: state.config.styleNote,
+      });
 
       // 5. Build judge prompts (if pluginRoot supplied)
       let judgeBlock = '';

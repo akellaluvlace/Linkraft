@@ -3222,8 +3222,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path34) {
-      let input = path34;
+    function removeDotSegments(path35) {
+      let input = path35;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3422,8 +3422,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path34, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path34 && path34 !== "/" ? path34 : void 0;
+        const [path35, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path35 && path35 !== "/" ? path35 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -6785,12 +6785,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs33, exportName) {
+    function addFormats(ajv, list, fs34, exportName) {
       var _a2;
       var _b;
       (_a2 = (_b = ajv.opts.code).formats) !== null && _a2 !== void 0 ? _a2 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs33[f]);
+        ajv.addFormat(f, fs34[f]);
     }
     module2.exports = exports2 = formatsPlugin;
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -7157,8 +7157,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path34, errorMaps, issueData } = params;
-  const fullPath = [...path34, ...issueData.path || []];
+  const { data, path: path35, errorMaps, issueData } = params;
+  const fullPath = [...path35, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -7273,11 +7273,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path34, key) {
+  constructor(parent, value, path35, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path34;
+    this._path = path35;
     this._key = key;
   }
   get path() {
@@ -11201,10 +11201,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path34) {
-  if (!path34)
+function getElementAtPath(obj, path35) {
+  if (!path35)
     return obj;
-  return path34.reduce((acc, key) => acc?.[key], obj);
+  return path35.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -11587,11 +11587,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path34, issues) {
+function prefixIssues(path35, issues) {
   return issues.map((iss) => {
     var _a2;
     (_a2 = iss).path ?? (_a2.path = []);
-    iss.path.unshift(path34);
+    iss.path.unshift(path35);
     return iss;
   });
 }
@@ -11774,7 +11774,7 @@ function formatError(error48, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error48, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error49, path34 = []) => {
+  const processError = (error49, path35 = []) => {
     var _a2, _b;
     for (const issue2 of error49.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
@@ -11784,7 +11784,7 @@ function treeifyError(error48, mapper = (issue2) => issue2.message) {
       } else if (issue2.code === "invalid_element") {
         processError({ issues: issue2.issues }, issue2.path);
       } else {
-        const fullpath = [...path34, ...issue2.path];
+        const fullpath = [...path35, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -11816,8 +11816,8 @@ function treeifyError(error48, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path34 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path34) {
+  const path35 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path35) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -24222,13 +24222,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path34 = ref.slice(1).split("/").filter(Boolean);
-  if (path34.length === 0) {
+  const path35 = ref.slice(1).split("/").filter(Boolean);
+  if (path35.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path34[0] === defsKey) {
-    const key = path34[1];
+  if (path35[0] === defsKey) {
+    const key = path35[1];
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -36049,8 +36049,8 @@ ${formatted}`
 }
 
 // src/mcp/tools/dreamroll-tools.ts
-var fs32 = __toESM(require("fs"));
-var path33 = __toESM(require("path"));
+var fs33 = __toESM(require("fs"));
+var path34 = __toESM(require("path"));
 
 // src/dreamroll/state.ts
 var fs30 = __toESM(require("fs"));
@@ -36838,8 +36838,178 @@ function rollParams(weights, chaos = false, excludeStyles = [], excludeLayouts =
   };
 }
 
+// src/dreamroll/references.ts
+var fs31 = __toESM(require("fs"));
+var path32 = __toESM(require("path"));
+function saveReferences(projectRoot, refs) {
+  const dir = path32.join(projectRoot, ".dreamroll");
+  if (!fs31.existsSync(dir)) fs31.mkdirSync(dir, { recursive: true });
+  const filePath = path32.join(dir, "references.json");
+  fs31.writeFileSync(filePath, JSON.stringify(refs, null, 2), "utf-8");
+  return filePath;
+}
+function formatReferencesForPrompt(refs) {
+  if (refs.length === 0) return [];
+  const lines = [
+    "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
+    "REFERENCE INSPIRATION (the user admires these sites)",
+    "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
+    "",
+    `The user pointed to these sites as aspirational references: ${refs.map((r) => r.url).join(", ")}.`,
+    "",
+    "Here is what makes each one distinctive:",
+    ""
+  ];
+  for (const ref of refs) {
+    lines.push(`  ${ref.url}:`);
+    if (ref.colors.length > 0) lines.push(`    Colors: ${ref.colors.join(", ")}`);
+    if (ref.fonts.length > 0) lines.push(`    Fonts: ${ref.fonts.join(", ")}`);
+    if (ref.radius) lines.push(`    Radius: ${ref.radius}`);
+    if (ref.shadows) lines.push(`    Shadows: ${ref.shadows}`);
+    if (ref.layout) lines.push(`    Layout: ${ref.layout}`);
+    if (ref.mood) lines.push(`    Mood: ${ref.mood}`);
+    lines.push("");
+  }
+  lines.push(
+    "Your variation should feel like it belongs in this company.",
+    "Do NOT copy them. Extract the PRINCIPLES: their restraint, their color",
+    "temperature, their spacing philosophy, their typography confidence.",
+    "Apply those principles to a fresh design that still follows the genome.",
+    ""
+  );
+  return lines;
+}
+function formatStyleNoteForPrompt(note) {
+  if (!note) return [];
+  return [
+    "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
+    "STYLE NOTE (user guidance)",
+    "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
+    "",
+    "The user provided this stylistic direction:",
+    "",
+    `  "${note}"`,
+    "",
+    "Treat this as a hard constraint. Every design decision should be",
+    "filtered through this note. If the genome conflicts with the note,",
+    "the note wins.",
+    ""
+  ];
+}
+var DARK_COLORS = ["#000", "#0a0a0a", "#0f172a", "#121212", "#18181b", "#1a1a2e", "#111"];
+var LIGHT_COLORS = ["#fff", "#ffffff", "#fafafa", "#f5f5f5", "#f8f8f8"];
+var FONT_TO_TYPOGRAPHY = {
+  "inter": ["poppins-inter", "space-grotesk-inter", "space-mono-inter", "bodoni-inter", "jetbrains-source", "cabinet-grotesk-inter"],
+  "source sans": ["playfair-source", "jetbrains-source"],
+  "dm sans": ["dm-serif-dm-sans", "syne-general-sans"],
+  "mono": ["space-mono-inter", "jetbrains-source", "fira-code-rubik", "ibm-plex-mono-sans"],
+  "serif": ["playfair-source", "abril-lato", "bodoni-inter", "dm-serif-dm-sans", "cormorant-proza", "instrument-serif-sans", "young-serif-outfit", "fraunces-commissioner"]
+};
+var RADIUS_TO_PARAM = {
+  "0": "sharp-zero",
+  "2px": "sharp-zero",
+  "4px": "subtle-small",
+  "6px": "subtle-small",
+  "8px": "moderate-medium",
+  "10px": "moderate-medium",
+  "12px": "moderate-medium",
+  "16px": "rounded-large",
+  "20px": "rounded-large",
+  "24px": "rounded-large",
+  "9999px": "pill-full",
+  "full": "pill-full",
+  "pill": "pill-full"
+};
+var SHADOW_TO_PARAM = {
+  "none": "no-shadows",
+  "no": "no-shadows",
+  "flat": "no-shadows",
+  "subtle": "subtle-ambient",
+  "light": "subtle-ambient",
+  "medium": "medium-layered",
+  "layered": "medium-layered",
+  "heavy": "dramatic-offset",
+  "dramatic": "dramatic-offset",
+  "neumorphic": "soft-neumorphic"
+};
+function deriveWeightsFromReferences(refs) {
+  if (refs.length === 0) return void 0;
+  const weights = {};
+  const allColors = refs.flatMap((r) => r.colors.map((c) => c.toLowerCase().trim()));
+  const darkCount = allColors.filter((c) => DARK_COLORS.some((d) => c.startsWith(d))).length;
+  const lightCount = allColors.filter((c) => LIGHT_COLORS.some((l) => c.startsWith(l))).length;
+  if (darkCount > lightCount) {
+    weights.palette = { "neon-on-dark": 2, "black-plus-accent": 2, "pastels": 0.5 };
+  } else if (lightCount > darkCount) {
+    weights.palette = { "pastels": 2, "earth-tones": 1.5, "neon-on-dark": 0.5 };
+  }
+  const allFonts = refs.flatMap((r) => r.fonts.map((f) => f.toLowerCase().trim()));
+  const typoWeights = {};
+  for (const font of allFonts) {
+    for (const [key, pairings] of Object.entries(FONT_TO_TYPOGRAPHY)) {
+      if (font.includes(key)) {
+        for (const p of pairings) typoWeights[p] = (typoWeights[p] ?? 1) * 2;
+      }
+    }
+  }
+  const allSans = allFonts.every((f) => !f.includes("serif") && !f.includes("playfair") && !f.includes("garamond"));
+  if (allSans) {
+    for (const serifPairing of FONT_TO_TYPOGRAPHY["serif"] ?? []) {
+      typoWeights[serifPairing] = (typoWeights[serifPairing] ?? 1) * 0.5;
+    }
+  }
+  if (Object.keys(typoWeights).length > 0) weights.typography = typoWeights;
+  const radiusMatches = refs.map((r) => {
+    const normalized = r.radius.toLowerCase().replace(/\s/g, "");
+    for (const [key, param] of Object.entries(RADIUS_TO_PARAM)) {
+      if (normalized.includes(key)) return param;
+    }
+    return null;
+  }).filter((r) => r !== null);
+  if (radiusMatches.length > 0) {
+    const rWeights = {};
+    for (const m of radiusMatches) rWeights[m] = (rWeights[m] ?? 1) * 2;
+    weights.borderRadius = rWeights;
+  }
+  const shadowMatches = refs.map((r) => {
+    const normalized = r.shadows.toLowerCase();
+    for (const [key, param] of Object.entries(SHADOW_TO_PARAM)) {
+      if (normalized.includes(key)) return param;
+    }
+    return null;
+  }).filter((r) => r !== null);
+  if (shadowMatches.length > 0) {
+    const sWeights = {};
+    for (const m of shadowMatches) sWeights[m] = (sWeights[m] ?? 1) * 2;
+    weights.shadows = sWeights;
+  }
+  const allMoods = refs.map((r) => r.mood.toLowerCase());
+  const moodWeights = {};
+  if (allMoods.some((m) => m.includes("dark"))) {
+    moodWeights["mysterious-dark"] = 2;
+    moodWeights["techy-hacker"] = 1.5;
+  }
+  if (allMoods.some((m) => m.includes("minimal"))) {
+    moodWeights["calm-zen"] = 2;
+    moodWeights["cold-clinical"] = 1.5;
+  }
+  if (allMoods.some((m) => m.includes("premium") || m.includes("luxury"))) {
+    moodWeights["premium-luxury"] = 2;
+  }
+  if (allMoods.some((m) => m.includes("playful") || m.includes("fun"))) {
+    moodWeights["playful-energy"] = 2;
+  }
+  if (allMoods.some((m) => m.includes("warm"))) {
+    moodWeights["warm-friendly"] = 2;
+  }
+  if (Object.keys(moodWeights).length > 0) weights.mood = moodWeights;
+  return Object.keys(weights).length > 0 ? weights : void 0;
+}
+
 // src/dreamroll/genome.ts
-function genomeToPrompt(genome, brief, variationNumber, outputPath, recentStyles = []) {
+function genomeToPrompt(genome, brief, variationNumber, outputPath, recentStylesOrCtx = []) {
+  const ctx = Array.isArray(recentStylesOrCtx) ? { recentStyles: recentStylesOrCtx } : recentStylesOrCtx;
+  const recentStyles = ctx.recentStyles ?? [];
   const styleSignature = getStyleSignature(genome.genre);
   const archetype = getStyleArchetype(genome.genre);
   const harmony = getHarmonyScheme(genome.colorPalette);
@@ -36933,6 +37103,8 @@ function genomeToPrompt(genome, brief, variationNumber, outputPath, recentStyles
     `Output path: ${outputPath}`,
     "",
     ...diversityBlock,
+    ...formatReferencesForPrompt([...ctx.references ?? []]),
+    ...formatStyleNoteForPrompt(ctx.styleNote ?? ""),
     ...mutationBanner,
     "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
     isMutation ? `PRIMARY ARCHETYPE: ${genome.genre} (the mutation operates on this)` : "VISUAL IDENTITY (this is the most important part)",
@@ -37375,18 +37547,18 @@ function genomeSummary(genome) {
 }
 
 // src/dreamroll/judges.ts
-var fs31 = __toESM(require("fs"));
-var path32 = __toESM(require("path"));
+var fs32 = __toESM(require("fs"));
+var path33 = __toESM(require("path"));
 var AUTO_DEDUCTION = 2;
 var JUDGE_NAMES = ["brutus", "venus", "mercury"];
 function loadJudgePrompt(judgeName, agentsDir) {
-  const filePath = path32.join(agentsDir, `dreamroll-${judgeName}.md`);
-  if (!fs31.existsSync(filePath)) {
+  const filePath = path33.join(agentsDir, `dreamroll-${judgeName}.md`);
+  if (!fs32.existsSync(filePath)) {
     process.stderr.write(`[dreamroll] Judge prompt not found: ${filePath}
 `);
     return null;
   }
-  const content = fs31.readFileSync(filePath, "utf-8");
+  const content = fs32.readFileSync(filePath, "utf-8");
   const stripped = content.replace(/^---[\s\S]*?---\n/, "");
   return stripped.trim();
 }
@@ -37947,7 +38119,8 @@ function rollSeedParameters(state) {
   const chaos = shouldInjectChaos(state?.currentVariation ?? 0);
   const evolutionWeights = state?.paramWeights;
   const userWeights = state ? computeUserPreferenceWeights(state) : void 0;
-  const merged = mergeWeights(evolutionWeights, userWeights);
+  const refWeights = state?.referenceWeights;
+  const merged = mergeWeights(mergeWeights(evolutionWeights, userWeights), refWeights);
   const excludedStyles = state ? getExcludedStyles(state) : [];
   const excludedLayouts = state ? getExcludedLayouts(state) : [];
   let seed = rollParams(merged, chaos, excludedStyles, excludedLayouts);
@@ -37974,17 +38147,17 @@ function getMorningReport(projectRoot) {
 var projectRootSchema3 = { projectRoot: external_exports3.string().describe("Project root directory") };
 function detectBrief(projectRoot, overrideBrief) {
   if (overrideBrief) return overrideBrief;
-  const pkgPath = path33.join(projectRoot, "package.json");
-  if (fs32.existsSync(pkgPath)) {
+  const pkgPath = path34.join(projectRoot, "package.json");
+  if (fs33.existsSync(pkgPath)) {
     try {
-      const pkg = JSON.parse(fs32.readFileSync(pkgPath, "utf-8"));
-      const name = typeof pkg["name"] === "string" ? pkg["name"] : path33.basename(projectRoot);
+      const pkg = JSON.parse(fs33.readFileSync(pkgPath, "utf-8"));
+      const name = typeof pkg["name"] === "string" ? pkg["name"] : path34.basename(projectRoot);
       const desc = typeof pkg["description"] === "string" ? pkg["description"] : "";
       return desc ? `${name}: ${desc}` : name;
     } catch {
     }
   }
-  return path33.basename(projectRoot);
+  return path34.basename(projectRoot);
 }
 function registerDreamrollTools(server) {
   server.tool(
@@ -37994,6 +38167,16 @@ function registerDreamrollTools(server) {
       projectRoot: external_exports3.string().describe("Project root directory"),
       brief: external_exports3.string().optional().describe("Product brief for generated copy. Auto-detected from package.json on first call."),
       pluginRoot: external_exports3.string().optional().describe("Linkraft plugin root (where agents/dreamroll-*.md live). Required to return judge prompts inline."),
+      styleNote: external_exports3.string().optional().describe('Plain-text style guidance (e.g., "dark mode, minimal, big bold typography, no gradients"). Injected directly into the prompt as a constraint. Persists across the session.'),
+      references: external_exports3.array(external_exports3.object({
+        url: external_exports3.string(),
+        colors: external_exports3.array(external_exports3.string()),
+        fonts: external_exports3.array(external_exports3.string()),
+        radius: external_exports3.string(),
+        shadows: external_exports3.string(),
+        layout: external_exports3.string(),
+        mood: external_exports3.string()
+      })).optional().describe("Extracted design DNA from --reference URLs. Claude scrapes each site before the first call and passes the results here. Saved to .dreamroll/references.json and used to bias evolution weights + generation prompt."),
       completed: external_exports3.object({
         variationId: external_exports3.number(),
         filePath: external_exports3.string(),
@@ -38006,7 +38189,7 @@ function registerDreamrollTools(server) {
         }))
       }).optional().describe("Previous variation result. Pass on every call after the first to record scores and trigger evolution.")
     },
-    async ({ projectRoot, brief, pluginRoot, completed }) => {
+    async ({ projectRoot, brief, pluginRoot, styleNote, references, completed }) => {
       let state = loadState(projectRoot);
       let initialized = false;
       if (!state || state.status === "completed" || state.status === "stopped") {
@@ -38017,16 +38200,34 @@ function registerDreamrollTools(server) {
           // never-stop
           budgetHours: 24,
           projectRoot,
-          brief: resolvedBrief
+          brief: resolvedBrief,
+          styleNote
         };
         state = createState(config2);
-        const variationsDir = path33.join(projectRoot, ".dreamroll", "variations");
-        if (!fs32.existsSync(variationsDir)) fs32.mkdirSync(variationsDir, { recursive: true });
+        const variationsDir = path34.join(projectRoot, ".dreamroll", "variations");
+        if (!fs33.existsSync(variationsDir)) fs33.mkdirSync(variationsDir, { recursive: true });
+        if (references && references.length > 0) {
+          state.referenceData = references;
+          saveReferences(projectRoot, state.referenceData);
+          const refW = deriveWeightsFromReferences(state.referenceData);
+          if (refW) state.referenceWeights = refW;
+        }
         saveState(projectRoot, state);
         initialized = true;
       } else {
         state.stopRequested = false;
         capSidebarWeight(state);
+        if (references && references.length > 0) {
+          state.referenceData = references;
+          saveReferences(projectRoot, state.referenceData);
+          const refW = deriveWeightsFromReferences(state.referenceData);
+          if (refW) state.referenceWeights = refW;
+          saveState(projectRoot, state);
+        }
+        if (styleNote) {
+          state.config.styleNote = styleNote;
+          saveState(projectRoot, state);
+        }
       }
       if (state.stopRequested) {
         stopRun(projectRoot, state);
@@ -38039,9 +38240,9 @@ function registerDreamrollTools(server) {
         const recordedMutation = variation?.seed.mutation ?? "pure";
         let finalScores = completed.scores;
         let deductionNote = "";
-        if (recordedStyle && completed.filePath && fs32.existsSync(completed.filePath)) {
+        if (recordedStyle && completed.filePath && fs33.existsSync(completed.filePath)) {
           try {
-            const htmlContent = fs32.readFileSync(completed.filePath, "utf-8");
+            const htmlContent = fs33.readFileSync(completed.filePath, "utf-8");
             const result = applyStyleAdherenceDeduction(completed.scores, htmlContent, recordedStyle, recordedMutation);
             finalScores = result.scores;
             if (result.skipped) {
@@ -38095,13 +38296,17 @@ function registerDreamrollTools(server) {
       else state.variations.push(placeholder);
       state.currentVariation = nextId;
       saveState(projectRoot, state);
-      const outputPath = path33.join(projectRoot, ".dreamroll", "variations", genomeFilename(nextId, seed));
+      const outputPath = path34.join(projectRoot, ".dreamroll", "variations", genomeFilename(nextId, seed));
       const fullHistory = state.recentStyles ?? [];
       const recentStyles = fullHistory.slice(0, -1);
-      const generationPrompt = genomeToPrompt(seed, state.config.brief ?? "A product", nextId, outputPath, recentStyles);
+      const generationPrompt = genomeToPrompt(seed, state.config.brief ?? "A product", nextId, outputPath, {
+        recentStyles,
+        references: state.referenceData,
+        styleNote: state.config.styleNote
+      });
       let judgeBlock = "";
       if (pluginRoot) {
-        const agentsDir = path33.join(pluginRoot, "agents");
+        const agentsDir = path34.join(pluginRoot, "agents");
         const prompts = getJudgeEvaluationPrompts(agentsDir, `${outputPath} \u2014 ${genomeSummary(seed)}`);
         if (prompts.length > 0) {
           const isMutation = (seed.mutation ?? "pure") !== "pure";
@@ -38233,11 +38438,11 @@ Brief: ${state.config.brief ?? "(none)"}` : `Dreamroll RESUMED at variation ${ne
     projectRootSchema3,
     async ({ projectRoot }) => {
       const reportText = getMorningReport(projectRoot);
-      const reportPath = path33.join(projectRoot, ".dreamroll", "report.md");
+      const reportPath = path34.join(projectRoot, ".dreamroll", "report.md");
       try {
-        const dir = path33.dirname(reportPath);
-        if (!fs32.existsSync(dir)) fs32.mkdirSync(dir, { recursive: true });
-        fs32.writeFileSync(reportPath, reportText, "utf-8");
+        const dir = path34.dirname(reportPath);
+        if (!fs33.existsSync(dir)) fs33.mkdirSync(dir, { recursive: true });
+        fs33.writeFileSync(reportPath, reportText, "utf-8");
       } catch {
       }
       return { content: [{ type: "text", text: `Written to ${reportPath}

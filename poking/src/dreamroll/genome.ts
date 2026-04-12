@@ -21,6 +21,11 @@ import {
   SHADOW_SPECS,
   CTA_STYLE_SPECS,
 } from './params.js';
+import {
+  formatReferencesForPrompt,
+  formatStyleNoteForPrompt,
+  type ReferenceDesignDNA,
+} from './references.js';
 
 /**
  * Re-exports SeedParameters under the spec's "StyleGenome" name.
@@ -44,13 +49,23 @@ export type StyleGenome = SeedParameters;
  *   9. HTML comment header template
  *  10. Constraint (third repetition) + failure warning
  */
+export interface PromptContext {
+  recentStyles?: readonly string[];
+  references?: readonly ReferenceDesignDNA[];
+  styleNote?: string;
+}
+
 export function genomeToPrompt(
   genome: StyleGenome,
   brief: string,
   variationNumber: number,
   outputPath: string,
-  recentStyles: readonly string[] = [],
+  recentStylesOrCtx: readonly string[] | PromptContext = [],
 ): string {
+  const ctx: PromptContext = Array.isArray(recentStylesOrCtx)
+    ? { recentStyles: recentStylesOrCtx as readonly string[] }
+    : recentStylesOrCtx as PromptContext;
+  const recentStyles = ctx.recentStyles ?? [];
   const styleSignature = getStyleSignature(genome.genre);
   const archetype = getStyleArchetype(genome.genre);
   const harmony = getHarmonyScheme(genome.colorPalette);
@@ -155,6 +170,8 @@ export function genomeToPrompt(
     `Output path: ${outputPath}`,
     '',
     ...diversityBlock,
+    ...formatReferencesForPrompt([...(ctx.references ?? [])]),
+    ...formatStyleNoteForPrompt(ctx.styleNote ?? ''),
     ...mutationBanner,
     '════════════════════════════════════════════════════════════════════════',
     isMutation

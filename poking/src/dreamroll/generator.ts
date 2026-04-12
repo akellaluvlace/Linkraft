@@ -46,7 +46,8 @@ export function rollSeedParameters(state?: DreamrollState): SeedParameters {
   const chaos = shouldInjectChaos(state?.currentVariation ?? 0);
   const evolutionWeights = state?.paramWeights as ParamWeights | undefined;
   const userWeights = state ? computeUserPreferenceWeights(state) : undefined;
-  const merged = mergeWeights(evolutionWeights, userWeights);
+  const refWeights = state?.referenceWeights as ParamWeights | undefined;
+  const merged = mergeWeights(mergeWeights(evolutionWeights, userWeights), refWeights);
   const excludedStyles = state ? getExcludedStyles(state) : [];
   const excludedLayouts = state ? getExcludedLayouts(state) : [];
 

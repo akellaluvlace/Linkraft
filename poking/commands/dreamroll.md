@@ -15,6 +15,14 @@ Start or resume the generation loop. Runs continuously until stopped.
 ### /linkraft dreamroll --brief "product description"
 Start with an explicit brief for content generation. Otherwise auto-detects from package.json.
 
+### /linkraft dreamroll --brief "..." --reference "linear.app, stripe.com, vercel.com"
+Start with reference URLs. Before calling `dreamroll_start`, use `web_fetch` to scrape each URL. For each site, extract: colors (hex values for bg, text, accent), font families, border-radius values, shadow style (none/subtle/medium/dramatic), layout pattern (single-column, split, bento, etc.), and overall mood (1-3 words). Pass the extracted data as the `references` parameter to `dreamroll_start`. The data is saved to `.dreamroll/references.json`, injected into every variation's prompt, and used to bias evolution weights. References persist across sessions.
+
+### /linkraft dreamroll --brief "..." --style-note "dark mode, minimal, big bold typography"
+Start with a plain-text style constraint. The note is injected directly into the generation prompt. Simpler than --reference (no scraping). If the genome conflicts with the style note, the note wins. Pass as the `styleNote` parameter to `dreamroll_start`. Persists across the session.
+
+Both --reference and --style-note are optional and combinable. Without them, dreamroll uses pure genome randomness.
+
 ### /linkraft dreamroll status
 Show progress: variations generated, gems found, elapsed time.
 

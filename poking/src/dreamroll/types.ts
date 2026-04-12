@@ -8,6 +8,8 @@ export interface DreamrollConfig {
   projectRoot: string;
   /** Product brief used in generated copy. Auto-detected from package.json/README if not provided. */
   brief?: string;
+  /** Plain-text style guidance injected directly into the generation prompt as a constraint. */
+  styleNote?: string;
 }
 
 /**
@@ -187,6 +189,25 @@ export interface DreamrollState {
    * rollSeedParameters is called multiple times for the same currentVariation.
    */
   lastDiversityReset?: number;
+  /**
+   * Extracted design DNA from --reference URLs. Persists across sessions so
+   * every variation in the run is influenced. Saved separately in
+   * .dreamroll/references.json for human readability.
+   */
+  referenceData?: Array<{
+    url: string;
+    colors: string[];
+    fonts: string[];
+    radius: string;
+    shadows: string;
+    layout: string;
+    mood: string;
+  }>;
+  /**
+   * Weights derived from reference data, merged into evolution + user preference
+   * weights at roll time. Computed once when references are set.
+   */
+  referenceWeights?: Record<string, Record<string, number>>;
 }
 
 export interface WildcardMutation {
