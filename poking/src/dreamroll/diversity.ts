@@ -104,19 +104,6 @@ export function trackLayoutHistory(state: DreamrollState, seed: SeedParameters):
  * recorded a reset at 20, no second reset happens even if this function is
  * called multiple times.
  */
-/**
- * One-time migration: caps the sidebar-anchor layout weight back to 1.0.
- * The evolution engine can inflate it over many variations; this ensures
- * it starts fresh on every session load. Call once after loading state.
- */
-export function capSidebarWeight(state: DreamrollState): void {
-  const layout = state.paramWeights?.['layout'] as Record<string, number> | undefined;
-  if (!layout) return;
-  if (layout['sidebar-anchor'] !== undefined && layout['sidebar-anchor'] > 1) {
-    layout['sidebar-anchor'] = 1;
-  }
-}
-
 export function maybeDiversityReset(state: DreamrollState): boolean {
   const current = state.currentVariation;
   if (current <= 0) return false;

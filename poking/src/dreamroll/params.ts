@@ -491,7 +491,7 @@ export const LAYOUT_POOL = [
   'bento-mosaic',
   'editorial-magazine',
   'card-grid',
-  'sidebar-anchor',
+  'offset-hero',
   'z-pattern',
   'stacked-panels',
 ];
@@ -501,7 +501,7 @@ export const LAYOUT_POOL = [
 // ============================================================================
 
 export const DENSITY_POOL = [
-  'ultra-minimal',
+  'airy',
   'sparse',
   'balanced',
   'information-rich',
@@ -729,16 +729,13 @@ export const WILDCARD_POOL = [
   'no-borders',
   'no-images-text-only',
   'only-system-fonts',
-  'no-padding-over-16px',
   'no-headings-over-3-words',
 
   // INVERSION
   'dark-mode-only',
   'light-mode-only',
-  'everything-centered',
   'all-uppercase',
   'all-lowercase',
-  'inverted-hierarchy',
 
   // MATERIAL
   'paper-texture',
@@ -751,7 +748,7 @@ export const WILDCARD_POOL = [
   'single-scroll-no-sections',
   'alternating-dark-light',
   'full-viewport-sections',
-  // 'sidebar-layout' removed — duplicates 'sidebar-anchor' in LAYOUT_POOL (dim 5)
+  // 'sidebar-layout' removed — sidebar layouts produce broken landing pages
   'asymmetric-whitespace',
   'css-grid-only-no-flexbox',
   'sticky-everything',
@@ -761,7 +758,6 @@ export const WILDCARD_POOL = [
   'simple-subtraction',
   'turn-it-upside-down',
   'empty-hero',
-  'one-element-per-kind',
   'make-blank-valuable',
   'what-would-a-child-draw',
   'design-for-one-person',
@@ -1014,6 +1010,15 @@ export function rollParams(
     mutationMaterial = randomFrom(MATERIALS);
   }
 
+  // Roll density then enforce mutation/density compatibility.
+  // Extreme mutations + extreme density = guaranteed garbage.
+  let density = weightedPick(DENSITY_POOL, w?.density);
+  if (mutation === 'franken' && (density === 'dense' || density === 'information-rich')) {
+    density = randomFrom(['balanced', 'sparse'] as const);
+  } else if (mutation === 'maximum' && (density === 'dense' || density === 'information-rich' || density === 'balanced')) {
+    density = randomFrom(['sparse', 'airy'] as const);
+  }
+
   return {
     genre: primary,
     colorPalette: weightedPick(PALETTE_POOL, w?.palette),
@@ -1021,7 +1026,7 @@ export function rollParams(
     typography: weightedPick(TYPOGRAPHY_POOL, w?.typography),
     typeScale: weightedPick(TYPE_SCALE_POOL, w?.typeScale),
     layoutArchetype: weightedPick(effectiveLayoutPool, w?.layout),
-    density: weightedPick(DENSITY_POOL, w?.density),
+    density,
     mood: weightedPick(MOOD_POOL, w?.mood),
     era: weightedPick(ERA_POOL, w?.era),
     animation: weightedPick(ANIMATION_POOL, w?.animation),

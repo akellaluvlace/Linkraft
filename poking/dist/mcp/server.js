@@ -36494,12 +36494,12 @@ var LAYOUT_POOL = [
   "bento-mosaic",
   "editorial-magazine",
   "card-grid",
-  "sidebar-anchor",
+  "offset-hero",
   "z-pattern",
   "stacked-panels"
 ];
 var DENSITY_POOL = [
-  "ultra-minimal",
+  "airy",
   "sparse",
   "balanced",
   "information-rich",
@@ -36644,15 +36644,12 @@ var WILDCARD_POOL = [
   "no-borders",
   "no-images-text-only",
   "only-system-fonts",
-  "no-padding-over-16px",
   "no-headings-over-3-words",
   // INVERSION
   "dark-mode-only",
   "light-mode-only",
-  "everything-centered",
   "all-uppercase",
   "all-lowercase",
-  "inverted-hierarchy",
   // MATERIAL
   "paper-texture",
   "glass-everything",
@@ -36663,7 +36660,7 @@ var WILDCARD_POOL = [
   "single-scroll-no-sections",
   "alternating-dark-light",
   "full-viewport-sections",
-  // 'sidebar-layout' removed — duplicates 'sidebar-anchor' in LAYOUT_POOL (dim 5)
+  // 'sidebar-layout' removed — sidebar layouts produce broken landing pages
   "asymmetric-whitespace",
   "css-grid-only-no-flexbox",
   "sticky-everything",
@@ -36672,7 +36669,6 @@ var WILDCARD_POOL = [
   "simple-subtraction",
   "turn-it-upside-down",
   "empty-hero",
-  "one-element-per-kind",
   "make-blank-valuable",
   "what-would-a-child-draw",
   "design-for-one-person",
@@ -36811,6 +36807,12 @@ function rollParams(weights, chaos = false, excludeStyles = [], excludeLayouts =
   } else if (mutation === "material-swap") {
     mutationMaterial = randomFrom(MATERIALS);
   }
+  let density = weightedPick(DENSITY_POOL, w?.density);
+  if (mutation === "franken" && (density === "dense" || density === "information-rich")) {
+    density = randomFrom(["balanced", "sparse"]);
+  } else if (mutation === "maximum" && (density === "dense" || density === "information-rich" || density === "balanced")) {
+    density = randomFrom(["sparse", "airy"]);
+  }
   return {
     genre: primary,
     colorPalette: weightedPick(PALETTE_POOL, w?.palette),
@@ -36818,7 +36820,7 @@ function rollParams(weights, chaos = false, excludeStyles = [], excludeLayouts =
     typography: weightedPick(TYPOGRAPHY_POOL, w?.typography),
     typeScale: weightedPick(TYPE_SCALE_POOL, w?.typeScale),
     layoutArchetype: weightedPick(effectiveLayoutPool, w?.layout),
-    density: weightedPick(DENSITY_POOL, w?.density),
+    density,
     mood: weightedPick(MOOD_POOL, w?.mood),
     era: weightedPick(ERA_POOL, w?.era),
     animation: weightedPick(ANIMATION_POOL, w?.animation),
@@ -36883,16 +36885,20 @@ function formatStyleNoteForPrompt(note) {
   if (!note) return [];
   return [
     "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
-    "STYLE NOTE (user guidance)",
+    "STYLE NOTE (OVERRIDES genome when they conflict)",
     "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
     "",
     "The user provided this stylistic direction:",
     "",
     `  "${note}"`,
     "",
-    "Treat this as a hard constraint. Every design decision should be",
-    "filtered through this note. If the genome conflicts with the note,",
-    "the note wins.",
+    "This is a HARD OVERRIDE. It takes priority over every genome parameter.",
+    'If the style-note says "warm white backgrounds" and the genome rolled',
+    "dark-mode-only or neon-on-dark, IGNORE the genome and follow the note.",
+    'If the style-note says "no gradients" and the genome rolled gradient-button',
+    "CTA style, use solid-fill instead. User intent beats random rolls. Always.",
+    "",
+    "The genome is a starting point. The style-note is the law.",
     ""
   ];
 }
@@ -37296,11 +37302,8 @@ function genomeToPrompt(genome, brief, variationNumber, outputPath, recentStyles
     "PAGE STRUCTURE (9 sections \u2014 use Lucide icons + Unsplash images throughout)",
     "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
     "",
-    "  1. Navigation     \u2014 HORIZONTAL TOP NAV BAR. Logo text + 3-4 links + CTA button.",
-    "                       Use a horizontal top navigation bar unless the layout dimension is",
-    "                       explicitly sidebar-anchor. Even when sidebar-anchor is rolled, the",
-    "                       sidebar must contain only nav links (not large empty space) and the",
-    "                       main content must fill at least 75% of viewport width.",
+    "  1. Navigation     \u2014 HORIZONTAL TOP NAV BAR. Always. Logo text + 3-4 links + CTA button.",
+    "                       No sidebar navigation. No vertical nav. Horizontal top bar only.",
     "                       Lucide menu/x for mobile toggle.",
     "  2. Hero           \u2014 headline (3-6 words) + sub + primary CTA with arrow-right icon.",
     "                       Use an Unsplash hero image that matches the brief.",
@@ -38093,13 +38096,6 @@ function trackLayoutHistory(state, seed) {
     state.recentLayouts.shift();
   }
 }
-function capSidebarWeight(state) {
-  const layout = state.paramWeights?.["layout"];
-  if (!layout) return;
-  if (layout["sidebar-anchor"] !== void 0 && layout["sidebar-anchor"] > 1) {
-    layout["sidebar-anchor"] = 1;
-  }
-}
 function maybeDiversityReset(state) {
   const current = state.currentVariation;
   if (current <= 0) return false;
@@ -38223,7 +38219,6 @@ function registerDreamrollTools(server) {
         initialized = true;
       } else {
         state.stopRequested = false;
-        capSidebarWeight(state);
         if (references && references.length > 0) {
           state.referenceData = references;
           saveReferences(projectRoot, state.referenceData);

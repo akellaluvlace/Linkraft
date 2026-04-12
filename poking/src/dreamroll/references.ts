@@ -98,16 +98,20 @@ export function formatStyleNoteForPrompt(note: string): string[] {
   if (!note) return [];
   return [
     '════════════════════════════════════════════════════════════════════════',
-    'STYLE NOTE (user guidance)',
+    'STYLE NOTE (OVERRIDES genome when they conflict)',
     '════════════════════════════════════════════════════════════════════════',
     '',
     'The user provided this stylistic direction:',
     '',
     `  "${note}"`,
     '',
-    'Treat this as a hard constraint. Every design decision should be',
-    'filtered through this note. If the genome conflicts with the note,',
-    'the note wins.',
+    'This is a HARD OVERRIDE. It takes priority over every genome parameter.',
+    'If the style-note says "warm white backgrounds" and the genome rolled',
+    'dark-mode-only or neon-on-dark, IGNORE the genome and follow the note.',
+    'If the style-note says "no gradients" and the genome rolled gradient-button',
+    'CTA style, use solid-fill instead. User intent beats random rolls. Always.',
+    '',
+    'The genome is a starting point. The style-note is the law.',
     '',
   ];
 }

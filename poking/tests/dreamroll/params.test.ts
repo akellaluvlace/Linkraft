@@ -46,7 +46,7 @@ describe('parameter pools', () => {
   });
 
   it('density has the 5 spec values', () => {
-    expect(DENSITY_POOL).toEqual(['ultra-minimal', 'sparse', 'balanced', 'information-rich', 'dense']);
+    expect(DENSITY_POOL).toEqual(['airy', 'sparse', 'balanced', 'information-rich', 'dense']);
   });
 
   it('style includes spec signature values', () => {
