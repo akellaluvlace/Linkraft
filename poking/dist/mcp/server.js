@@ -31614,6 +31614,11 @@ function estimateEffort(text) {
   return "L";
 }
 function extractFromRiskMatrix(md) {
+  const sectionItems = extractRisksBySections(md);
+  if (sectionItems.length > 0) return sectionItems;
+  return extractRisksFromTable(md);
+}
+function extractRisksBySections(md) {
   const items = [];
   const critical = extractSection(md, "Critical");
   if (critical) {
@@ -31654,11 +31659,76 @@ function extractFromRiskMatrix(md) {
   }
   return items;
 }
+function extractRisksFromTable(md) {
+  const items = [];
+  const lines = md.split("\n");
+  let sevCol = -1;
+  let riskCol = -1;
+  let headerIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!/^\s*\|.+\|/.test(line)) continue;
+    const cells = line.split("|").map((c) => c.trim().toLowerCase());
+    sevCol = cells.findIndex((c) => /^(severity|priority|level|rating|risk level)$/.test(c));
+    riskCol = cells.findIndex((c) => /^(risk|description|issue|finding|threat|name)$/.test(c));
+    if (sevCol >= 0 && riskCol >= 0) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx < 0) return items;
+  for (let i = headerIdx + 2; i < lines.length; i++) {
+    const line = lines[i];
+    if (!/^\s*\|.+\|/.test(line)) break;
+    if (/^\s*\|[\s|:-]+\|\s*$/.test(line)) continue;
+    const cells = line.split("|").map((c) => c.trim());
+    const sev = (cells[sevCol] ?? "").toLowerCase();
+    const risk = cells[riskCol] ?? "";
+    if (risk.length < 5) continue;
+    let priority;
+    if (/critical/i.test(sev)) priority = "must-fix";
+    else if (/high/i.test(sev)) priority = isLaunchBlocker(risk) ? "must-fix" : "should-fix";
+    else if (/medium/i.test(sev)) priority = "nice-to-have";
+    else if (/low/i.test(sev)) priority = "nice-to-have";
+    else priority = "should-fix";
+    items.push({
+      priority,
+      category: categorize(risk),
+      description: risk,
+      source: "RISK_MATRIX.md",
+      effort: estimateEffort(risk)
+    });
+  }
+  return items;
+}
 function extractFromArchitecture(md) {
   const items = [];
-  const weaknesses = extractSection(md, "Weaknesses") || extractSection(md, "Issues") || extractSection(md, "Problems") || extractSection(md, "Concerns");
-  if (!weaknesses) return items;
-  for (const bullet of extractBullets(weaknesses, 15)) {
+  const headingCandidates = [
+    "Weaknesses",
+    "Issues",
+    "Problems",
+    "Concerns",
+    "Improvement",
+    "Recommendations",
+    "Risks",
+    "Gaps",
+    "Limitations",
+    "Observations",
+    "Trade-off",
+    "Tradeoff",
+    "Technical Debt",
+    "Debt",
+    "Warnings",
+    "Challenges"
+  ];
+  let foundSection = null;
+  for (const heading of headingCandidates) {
+    foundSection = extractSection(md, heading);
+    if (foundSection) break;
+  }
+  const source = foundSection ?? md;
+  for (const bullet of extractBullets(source, 20)) {
+    if (!foundSection && !RISK_BULLET_RE.test(bullet)) continue;
     const priority = isLaunchBlocker(bullet) ? "must-fix" : "should-fix";
     items.push({
       priority,
@@ -31670,6 +31740,7 @@ function extractFromArchitecture(md) {
   }
   return items;
 }
+var RISK_BULLET_RE = /\b(risk|vuln|weakness|issue|problem|concern|gap|missing|lack|no\s+\w+\s+(?:handling|validation|auth|test|monitoring)|debt|limitation|challenge)\b/i;
 function extractFromSchema(md) {
   const items = [];
   const gaps = extractSection(md, "Gaps") || extractSection(md, "Missing") || extractSection(md, "Issues");

@@ -90,11 +90,26 @@ export function estimateEffort(text: string): 'S' | 'M' | 'L' {
 // ============================================================================
 
 /**
- * Pulls action items from a risk matrix by severity bucket.
- * Critical → must-fix, High → must-fix (if security/data) or should-fix,
- * Medium → nice-to-have, Accepted → skipped (these are knowingly untreated).
+ * Pulls action items from a risk matrix. Two strategies:
+ *
+ * Strategy 1 (section-based): look for "### Critical", "### High",
+ * "### Medium" heading sections with bullets or tables underneath.
+ *
+ * Strategy 2 (table-based fallback): if Strategy 1 finds nothing, scan
+ * the ENTIRE document for markdown table rows that contain a severity
+ * column (critical/high/medium/low). Claude often produces the risk
+ * matrix as one big table instead of separate sections per severity.
  */
 function extractFromRiskMatrix(md: string): HardeningItem[] {
+  // Strategy 1: section-based extraction
+  const sectionItems = extractRisksBySections(md);
+  if (sectionItems.length > 0) return sectionItems;
+
+  // Strategy 2: table-row scanning fallback
+  return extractRisksFromTable(md);
+}
+
+function extractRisksBySections(md: string): HardeningItem[] {
   const items: HardeningItem[] = [];
 
   const critical = extractSection(md, 'Critical');
@@ -140,17 +155,92 @@ function extractFromRiskMatrix(md: string): HardeningItem[] {
   return items;
 }
 
-/** Architecture weaknesses → must-fix if security/data, else should-fix. */
+/**
+ * Fallback: scan table rows for a severity column and extract each risk row.
+ * Handles the common case where Claude writes the entire risk matrix as one
+ * table with a "Severity" or "Priority" or "Level" column.
+ */
+function extractRisksFromTable(md: string): HardeningItem[] {
+  const items: HardeningItem[] = [];
+  const lines = md.split('\n');
+
+  // Find the header row to locate severity + risk columns
+  let sevCol = -1;
+  let riskCol = -1;
+  let headerIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (!/^\s*\|.+\|/.test(line)) continue;
+    const cells = line.split('|').map(c => c.trim().toLowerCase());
+    sevCol = cells.findIndex(c => /^(severity|priority|level|rating|risk level)$/.test(c));
+    riskCol = cells.findIndex(c => /^(risk|description|issue|finding|threat|name)$/.test(c));
+    if (sevCol >= 0 && riskCol >= 0) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx < 0) return items;
+
+  for (let i = headerIdx + 2; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (!/^\s*\|.+\|/.test(line)) break;
+    if (/^\s*\|[\s|:-]+\|\s*$/.test(line)) continue;
+    const cells = line.split('|').map(c => c.trim());
+    const sev = (cells[sevCol] ?? '').toLowerCase();
+    const risk = cells[riskCol] ?? '';
+    if (risk.length < 5) continue;
+
+    let priority: HardeningPriority;
+    if (/critical/i.test(sev)) priority = 'must-fix';
+    else if (/high/i.test(sev)) priority = isLaunchBlocker(risk) ? 'must-fix' : 'should-fix';
+    else if (/medium/i.test(sev)) priority = 'nice-to-have';
+    else if (/low/i.test(sev)) priority = 'nice-to-have';
+    else priority = 'should-fix';
+
+    items.push({
+      priority,
+      category: categorize(risk),
+      description: risk,
+      source: 'RISK_MATRIX.md',
+      effort: estimateEffort(risk),
+    });
+  }
+  return items;
+}
+
+/**
+ * Architecture weaknesses → must-fix if security/data, else should-fix.
+ * Claude uses many different heading names for the "problems" section:
+ * Weaknesses, Issues, Problems, Concerns, Areas for Improvement,
+ * Recommendations, Risks, Gaps, Limitations, Observations, Trade-offs.
+ * We try all of them. If none match, fall back to scanning every bullet
+ * in the document for risk-pattern keywords.
+ */
 function extractFromArchitecture(md: string): HardeningItem[] {
   const items: HardeningItem[] = [];
-  const weaknesses =
-    extractSection(md, 'Weaknesses') ||
-    extractSection(md, 'Issues') ||
-    extractSection(md, 'Problems') ||
-    extractSection(md, 'Concerns');
-  if (!weaknesses) return items;
 
-  for (const bullet of extractBullets(weaknesses, 15)) {
+  const headingCandidates = [
+    'Weaknesses', 'Issues', 'Problems', 'Concerns',
+    'Improvement', 'Recommendations', 'Risks', 'Gaps',
+    'Limitations', 'Observations', 'Trade-off', 'Tradeoff',
+    'Technical Debt', 'Debt', 'Warnings', 'Challenges',
+  ];
+
+  let foundSection: string | null = null;
+  for (const heading of headingCandidates) {
+    foundSection = extractSection(md, heading);
+    if (foundSection) break;
+  }
+
+  // Fallback: if no named section matched, scan ALL bullets in the doc
+  // for risk-pattern keywords
+  const source = foundSection ?? md;
+
+  for (const bullet of extractBullets(source, 20)) {
+    // When using the full-doc fallback, only take bullets that actually
+    // mention a risk/issue/gap (skip purely descriptive bullets)
+    if (!foundSection && !RISK_BULLET_RE.test(bullet)) continue;
+
     const priority: HardeningPriority = isLaunchBlocker(bullet) ? 'must-fix' : 'should-fix';
     items.push({
       priority,
@@ -162,6 +252,9 @@ function extractFromArchitecture(md: string): HardeningItem[] {
   }
   return items;
 }
+
+/** Matches bullets that describe a risk, gap, or issue (for the fallback scanner). */
+const RISK_BULLET_RE = /\b(risk|vuln|weakness|issue|problem|concern|gap|missing|lack|no\s+\w+\s+(?:handling|validation|auth|test|monitoring)|debt|limitation|challenge)\b/i;
 
 /** Schema gaps, missing RLS, or unsafe patterns → must-fix. */
 function extractFromSchema(md: string): HardeningItem[] {
