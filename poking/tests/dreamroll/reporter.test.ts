@@ -28,7 +28,6 @@ function makeGem(id: number, avgScore: number): Variation {
       verdict: 'gem',
       hasInstantKeep: false,
     },
-    screenshotPath: `.dreamroll/gems/v${id}/screenshot.png`,
     filesPath: null,
     createdAt: new Date().toISOString(),
   };
@@ -60,7 +59,6 @@ function makeDiscard(id: number): Variation {
       verdict: 'discard',
       hasInstantKeep: false,
     },
-    screenshotPath: null,
     filesPath: null,
     createdAt: new Date().toISOString(),
   };

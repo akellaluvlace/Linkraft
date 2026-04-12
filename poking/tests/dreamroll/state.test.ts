@@ -98,7 +98,6 @@ describe('addVariation', () => {
         wildcard: 'one-font-only',
       },
       verdict: { scores: [{ judge: 'brutus', score: 8, comment: 'Good' }], averageScore: 8, verdict: 'gem', hasInstantKeep: false },
-      screenshotPath: null,
       filesPath: null,
       createdAt: new Date().toISOString(),
     };

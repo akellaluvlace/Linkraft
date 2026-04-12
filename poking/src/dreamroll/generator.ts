@@ -129,7 +129,6 @@ export async function runDreamroll(options: GeneratorOptions): Promise<Dreamroll
       id: i,
       seed,
       verdict,
-      screenshotPath: null, // Playwright stub
       filesPath: null,
       createdAt: new Date().toISOString(),
     };

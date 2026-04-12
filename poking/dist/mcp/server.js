@@ -37615,8 +37615,7 @@ function generateReport(state) {
     variationId: v.id,
     averageScore: v.verdict.averageScore,
     scores: v.verdict.scores,
-    seed: v.seed,
-    screenshotPath: v.screenshotPath
+    seed: v.seed
   }));
   const patterns = detectPatterns2(state);
   const wildcardDiscoveries = [];
@@ -38065,7 +38064,6 @@ function registerDreamrollTools(server) {
             seed: rollSeedParameters(state),
             // fallback if the placeholder was lost
             verdict,
-            screenshotPath: null,
             filesPath: completed.filePath,
             createdAt: (/* @__PURE__ */ new Date()).toISOString()
           };
@@ -38089,7 +38087,6 @@ function registerDreamrollTools(server) {
         id: nextId,
         seed,
         verdict: null,
-        screenshotPath: null,
         filesPath: null,
         createdAt: (/* @__PURE__ */ new Date()).toISOString()
       };

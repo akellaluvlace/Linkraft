@@ -39,7 +39,7 @@ function makeVariation(id: number, seed: SeedParameters): Variation {
     id,
     seed,
     verdict: null,
-    screenshotPath: null,
+
     filesPath: null,
     createdAt: new Date().toISOString(),
   };

@@ -28,7 +28,7 @@ function makeVariation(id: number, layout: string, genre: string, mood: string, 
       verdict: isGem ? 'gem' : 'discard',
       hasInstantKeep: false,
     },
-    screenshotPath: null,
+
     filesPath: null,
     createdAt: new Date().toISOString(),
   };

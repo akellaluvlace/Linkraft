@@ -121,7 +121,6 @@ export interface Variation {
   id: number;
   seed: SeedParameters;
   verdict: JudgeVerdict | null;
-  screenshotPath: string | null;
   filesPath: string | null;
   createdAt: string;
 }
@@ -212,5 +211,4 @@ export interface GemSummary {
   averageScore: number;
   scores: JudgeScore[];
   seed: SeedParameters;
-  screenshotPath: string | null;
 }

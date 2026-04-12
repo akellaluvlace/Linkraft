@@ -76,7 +76,7 @@ function simulateCycle(
     id: variationId,
     seed,
     verdict,
-    screenshotPath: null,
+
     filesPath: filePath,
     createdAt: new Date().toISOString(),
   };
@@ -191,7 +191,7 @@ describe('dreamroll e2e: full skill-driven loop', () => {
           verdict: 'gem',
           hasInstantKeep: false,
         },
-        screenshotPath: null,
+    
         filesPath: null,
         createdAt: new Date().toISOString(),
       };

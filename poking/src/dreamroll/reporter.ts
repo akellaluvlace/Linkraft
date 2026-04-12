@@ -32,7 +32,6 @@ export function generateReport(state: DreamrollState): MorningReport {
       averageScore: v.verdict!.averageScore,
       scores: v.verdict!.scores,
       seed: v.seed,
-      screenshotPath: v.screenshotPath,
     }));
 
   const patterns = detectPatterns(state);

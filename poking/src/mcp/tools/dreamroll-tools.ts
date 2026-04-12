@@ -125,7 +125,7 @@ export function registerDreamrollTools(server: McpServer): void {
             id: completed.variationId,
             seed: rollSeedParameters(state), // fallback if the placeholder was lost
             verdict,
-            screenshotPath: null,
+
             filesPath: completed.filePath,
             createdAt: new Date().toISOString(),
           };
@@ -155,7 +155,6 @@ export function registerDreamrollTools(server: McpServer): void {
         id: nextId,
         seed,
         verdict: null,
-        screenshotPath: null,
         filesPath: null,
         createdAt: new Date().toISOString(),
       };

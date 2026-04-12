@@ -1,15 +1,15 @@
 ---
 name: dreamroll
-description: Overnight autonomous design generator using a 14-dimension Style Genome. Generates standalone HTML landing page variations, scores them with 3 judges, evolves toward gems. Runs until stopped.
+description: Overnight autonomous design generator using an 18-dimension Style Genome. Generates standalone HTML landing page variations with Lucide icons and Unsplash images, scores desktop + mobile with 3 judges, evolves toward gems. Runs until stopped.
 ---
 
 # Dreamroll: Overnight Design Generator
 
 ## What This Is
 
-Dreamroll generates standalone HTML landing page variations overnight using a **Style Genome** — 14 randomizable parameter dimensions that combine into design DNA. Each variation rolls all 14 dimensions, generates a self-contained HTML file with inline CSS only, and scores it with three judge personas (BRUTUS, VENUS, MERCURY). Every 5 variations, it detects patterns in gems and biases future rolls toward winning combinations. Mandatory chaos keeps at least 2 of every 5 variations fully random.
+Dreamroll generates standalone HTML landing page variations overnight using a **Style Genome** — 18 randomizable parameter dimensions that combine into design DNA. Each variation rolls all 18 dimensions, generates a self-contained HTML file with Lucide icons (via CDN), real Unsplash images, and CSS custom properties in :root for instant editability. Three judges (BRUTUS, VENUS, MERCURY) score both desktop and mobile (375x667) separately. Every 5 variations, it detects patterns in gems and biases future rolls toward winning combinations. Anti-convergence guardrails (diversity reset, chaos ramp, style + layout exclusion windows, unique trios) prevent pages from looking similar.
 
-Zero config. Zero external dependencies beyond Google Fonts. No API keys. No Playwright. No screenshots. Just HTML files on disk that open in any browser.
+Zero config. No API keys. No Playwright. No screenshots. Allowed external resources: Google Fonts, Lucide CDN, Unsplash images. Just HTML files on disk that open in any browser.
 
 Part of Linkraft. Fourth mode after plan, preflight, sheep.
 
@@ -202,12 +202,14 @@ The single `dreamroll_start` tool drives the entire generation loop. The skill c
 ```
 .dreamroll/
   state.json                live state, updated after every variation
-  report.md                 morning report (generated on demand or session end)
+  report.md                 morning report (generated on demand)
   variations/
-    variation_001.html      standalone, opens in any browser
-    variation_002.html
+    001_cyberpunk_neon-on-dark_pure.html     filenames encode genome
+    002_art-deco_jewel-tones_mashup.html
     ...
 ```
+
+Dreamroll generates ONLY `.html` files and state/config. No screenshots. No `.png`/`.jpg` output. No temp files. The judges evaluate HTML/CSS code directly.
 
 ## Evolution Engine
 
