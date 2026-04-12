@@ -751,7 +751,7 @@ export const WILDCARD_POOL = [
   'single-scroll-no-sections',
   'alternating-dark-light',
   'full-viewport-sections',
-  'sidebar-layout',
+  // 'sidebar-layout' removed — duplicates 'sidebar-anchor' in LAYOUT_POOL (dim 5)
   'asymmetric-whitespace',
   'css-grid-only-no-flexbox',
   'sticky-everything',
@@ -978,6 +978,7 @@ export function rollParams(
   weights?: ParamWeights & { mutation?: Record<string, number> },
   chaos = false,
   excludeStyles: readonly string[] = [],
+  excludeLayouts: readonly string[] = [],
 ): SeedParameters {
   const w = chaos ? undefined : weights;
   const stylePool = excludeStyles.length > 0
@@ -985,6 +986,11 @@ export function rollParams(
     : STYLE_POOL;
   const effectiveStylePool = stylePool.length > 0 ? stylePool : STYLE_POOL;
   const primary = weightedPick(effectiveStylePool, w?.style);
+
+  const layoutPool = excludeLayouts.length > 0
+    ? LAYOUT_POOL.filter(l => !excludeLayouts.includes(l))
+    : LAYOUT_POOL;
+  const effectiveLayoutPool = layoutPool.length > 0 ? layoutPool : LAYOUT_POOL;
 
   // Roll the mutation (15th dimension)
   const mutation = rollMutation(w?.mutation, chaos);
@@ -1014,7 +1020,7 @@ export function rollParams(
     harmonyBaseHue: Math.floor(Math.random() * 360),
     typography: weightedPick(TYPOGRAPHY_POOL, w?.typography),
     typeScale: weightedPick(TYPE_SCALE_POOL, w?.typeScale),
-    layoutArchetype: weightedPick(LAYOUT_POOL, w?.layout),
+    layoutArchetype: weightedPick(effectiveLayoutPool, w?.layout),
     density: weightedPick(DENSITY_POOL, w?.density),
     mood: weightedPick(MOOD_POOL, w?.mood),
     era: weightedPick(ERA_POOL, w?.era),

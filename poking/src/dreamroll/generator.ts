@@ -13,9 +13,11 @@ import { popPendingChild } from './breeding.js';
 import {
   maybeDiversityReset,
   getExcludedStyles,
+  getExcludedLayouts,
   isCombinationUsed,
   recordCombination,
   trackStyleHistory,
+  trackLayoutHistory,
   MAX_DIVERSITY_REROLLS,
 } from './diversity.js';
 
@@ -46,16 +48,18 @@ export function rollSeedParameters(state?: DreamrollState): SeedParameters {
   const userWeights = state ? computeUserPreferenceWeights(state) : undefined;
   const merged = mergeWeights(evolutionWeights, userWeights);
   const excludedStyles = state ? getExcludedStyles(state) : [];
+  const excludedLayouts = state ? getExcludedLayouts(state) : [];
 
-  let seed = rollParams(merged, chaos, excludedStyles);
+  let seed = rollParams(merged, chaos, excludedStyles, excludedLayouts);
   if (state) {
     let attempts = 0;
     while (isCombinationUsed(state, seed) && attempts < MAX_DIVERSITY_REROLLS) {
-      seed = rollParams(merged, chaos, excludedStyles);
+      seed = rollParams(merged, chaos, excludedStyles, excludedLayouts);
       attempts++;
     }
     recordCombination(state, seed);
     trackStyleHistory(state, seed);
+    trackLayoutHistory(state, seed);
   }
   return seed;
 }

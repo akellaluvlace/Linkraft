@@ -36627,7 +36627,7 @@ var WILDCARD_POOL = [
   "single-scroll-no-sections",
   "alternating-dark-light",
   "full-viewport-sections",
-  "sidebar-layout",
+  // 'sidebar-layout' removed — duplicates 'sidebar-anchor' in LAYOUT_POOL (dim 5)
   "asymmetric-whitespace",
   "css-grid-only-no-flexbox",
   "sticky-everything",
@@ -36752,11 +36752,13 @@ function rollMutation(weights, chaos = false) {
   for (const m of MUTATIONS) built[m.id] = weights?.[m.id] ?? m.weight;
   return weightedPick(MUTATION_POOL, built);
 }
-function rollParams(weights, chaos = false, excludeStyles = []) {
+function rollParams(weights, chaos = false, excludeStyles = [], excludeLayouts = []) {
   const w = chaos ? void 0 : weights;
   const stylePool = excludeStyles.length > 0 ? STYLE_POOL.filter((s) => !excludeStyles.includes(s)) : STYLE_POOL;
   const effectiveStylePool = stylePool.length > 0 ? stylePool : STYLE_POOL;
   const primary = weightedPick(effectiveStylePool, w?.style);
+  const layoutPool = excludeLayouts.length > 0 ? LAYOUT_POOL.filter((l) => !excludeLayouts.includes(l)) : LAYOUT_POOL;
+  const effectiveLayoutPool = layoutPool.length > 0 ? layoutPool : LAYOUT_POOL;
   const mutation = rollMutation(w?.mutation, chaos);
   let mutationSecondary;
   let mutationTertiary;
@@ -36779,7 +36781,7 @@ function rollParams(weights, chaos = false, excludeStyles = []) {
     harmonyBaseHue: Math.floor(Math.random() * 360),
     typography: weightedPick(TYPOGRAPHY_POOL, w?.typography),
     typeScale: weightedPick(TYPE_SCALE_POOL, w?.typeScale),
-    layoutArchetype: weightedPick(LAYOUT_POOL, w?.layout),
+    layoutArchetype: weightedPick(effectiveLayoutPool, w?.layout),
     density: weightedPick(DENSITY_POOL, w?.density),
     mood: weightedPick(MOOD_POOL, w?.mood),
     era: weightedPick(ERA_POOL, w?.era),
@@ -37086,7 +37088,12 @@ function genomeToPrompt(genome, brief, variationNumber, outputPath, recentStyles
     "PAGE STRUCTURE (9 sections \u2014 use Lucide icons + Unsplash images throughout)",
     "\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550",
     "",
-    "  1. Navigation     \u2014 logo text + 3-4 links + CTA button. Lucide menu/x for mobile toggle.",
+    "  1. Navigation     \u2014 HORIZONTAL TOP NAV BAR. Logo text + 3-4 links + CTA button.",
+    "                       Use a horizontal top navigation bar unless the layout dimension is",
+    "                       explicitly sidebar-anchor. Even when sidebar-anchor is rolled, the",
+    "                       sidebar must contain only nav links (not large empty space) and the",
+    "                       main content must fill at least 75% of viewport width.",
+    "                       Lucide menu/x for mobile toggle.",
     "  2. Hero           \u2014 headline (3-6 words) + sub + primary CTA with arrow-right icon.",
     "                       Use an Unsplash hero image that matches the brief.",
     '  3. Trust bar      \u2014 "Trusted by" + 4-6 placeholder company names. Lucide check-circle.',
@@ -37855,11 +37862,28 @@ function recordCombination(state, seed) {
 function getExcludedStyles(state) {
   return [...state.recentStyles ?? []];
 }
+function getExcludedLayouts(state) {
+  return [...state.recentLayouts ?? []];
+}
 function trackStyleHistory(state, seed) {
   if (!state.recentStyles) state.recentStyles = [];
   state.recentStyles.push(seed.genre);
   while (state.recentStyles.length > STYLE_EXCLUSION_WINDOW) {
     state.recentStyles.shift();
+  }
+}
+function trackLayoutHistory(state, seed) {
+  if (!state.recentLayouts) state.recentLayouts = [];
+  state.recentLayouts.push(seed.layoutArchetype);
+  while (state.recentLayouts.length > STYLE_EXCLUSION_WINDOW) {
+    state.recentLayouts.shift();
+  }
+}
+function capSidebarWeight(state) {
+  const layout = state.paramWeights?.["layout"];
+  if (!layout) return;
+  if (layout["sidebar-anchor"] !== void 0 && layout["sidebar-anchor"] > 1) {
+    layout["sidebar-anchor"] = 1;
   }
 }
 function maybeDiversityReset(state) {
@@ -37890,15 +37914,17 @@ function rollSeedParameters(state) {
   const userWeights = state ? computeUserPreferenceWeights(state) : void 0;
   const merged = mergeWeights(evolutionWeights, userWeights);
   const excludedStyles = state ? getExcludedStyles(state) : [];
-  let seed = rollParams(merged, chaos, excludedStyles);
+  const excludedLayouts = state ? getExcludedLayouts(state) : [];
+  let seed = rollParams(merged, chaos, excludedStyles, excludedLayouts);
   if (state) {
     let attempts = 0;
     while (isCombinationUsed(state, seed) && attempts < MAX_DIVERSITY_REROLLS) {
-      seed = rollParams(merged, chaos, excludedStyles);
+      seed = rollParams(merged, chaos, excludedStyles, excludedLayouts);
       attempts++;
     }
     recordCombination(state, seed);
     trackStyleHistory(state, seed);
+    trackLayoutHistory(state, seed);
   }
   return seed;
 }
@@ -37965,6 +37991,7 @@ function registerDreamrollTools(server) {
         initialized = true;
       } else {
         state.stopRequested = false;
+        capSidebarWeight(state);
       }
       if (state.stopRequested) {
         stopRun(projectRoot, state);

@@ -64,6 +64,14 @@ export function getExcludedStyles(state: DreamrollState): string[] {
 }
 
 /**
+ * Returns the set of layout pattern IDs that are currently in the exclusion
+ * window and therefore cannot be rolled next.
+ */
+export function getExcludedLayouts(state: DreamrollState): string[] {
+  return [...(state.recentLayouts ?? [])];
+}
+
+/**
  * Appends a rolled style to the recent-styles FIFO, evicting the oldest entry
  * once the window is full.
  */
@@ -72,6 +80,17 @@ export function trackStyleHistory(state: DreamrollState, seed: SeedParameters): 
   state.recentStyles.push(seed.genre);
   while (state.recentStyles.length > STYLE_EXCLUSION_WINDOW) {
     state.recentStyles.shift();
+  }
+}
+
+/**
+ * Appends a rolled layout to the recent-layouts FIFO. Same window size as styles.
+ */
+export function trackLayoutHistory(state: DreamrollState, seed: SeedParameters): void {
+  if (!state.recentLayouts) state.recentLayouts = [];
+  state.recentLayouts.push(seed.layoutArchetype);
+  while (state.recentLayouts.length > STYLE_EXCLUSION_WINDOW) {
+    state.recentLayouts.shift();
   }
 }
 
@@ -85,6 +104,19 @@ export function trackStyleHistory(state: DreamrollState, seed: SeedParameters): 
  * recorded a reset at 20, no second reset happens even if this function is
  * called multiple times.
  */
+/**
+ * One-time migration: caps the sidebar-anchor layout weight back to 1.0.
+ * The evolution engine can inflate it over many variations; this ensures
+ * it starts fresh on every session load. Call once after loading state.
+ */
+export function capSidebarWeight(state: DreamrollState): void {
+  const layout = state.paramWeights?.['layout'] as Record<string, number> | undefined;
+  if (!layout) return;
+  if (layout['sidebar-anchor'] !== undefined && layout['sidebar-anchor'] > 1) {
+    layout['sidebar-anchor'] = 1;
+  }
+}
+
 export function maybeDiversityReset(state: DreamrollState): boolean {
   const current = state.currentVariation;
   if (current <= 0) return false;

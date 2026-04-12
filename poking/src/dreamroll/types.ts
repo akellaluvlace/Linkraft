@@ -178,6 +178,11 @@ export interface DreamrollState {
    */
   recentStyles?: string[];
   /**
+   * FIFO of the last N layout pattern IDs that were rolled. Same exclusion window
+   * as styles: a layout cannot reappear while it is in this list.
+   */
+  recentLayouts?: string[];
+  /**
    * Variation number of the most recent diversity reset. Used to ensure the v20
    * / v40 / v60 reset fires exactly once per boundary even when
    * rollSeedParameters is called multiple times for the same currentVariation.

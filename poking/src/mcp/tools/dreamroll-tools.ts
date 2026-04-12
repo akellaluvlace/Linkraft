@@ -9,6 +9,7 @@ import { getJudgeEvaluationPrompts, calculateVerdict, applyStyleAdherenceDeducti
 import { maybeEvolve } from '../../dreamroll/evolution.js';
 import { likeVariation, hateVariation } from '../../dreamroll/feedback.js';
 import { breedGenomes, queuePendingChildren } from '../../dreamroll/breeding.js';
+import { capSidebarWeight } from '../../dreamroll/diversity.js';
 import { writeOvernightScript, overnightInstructions } from '../../shared/overnight.js';
 import type { DreamrollConfig, Variation } from '../../dreamroll/types.js';
 
@@ -77,6 +78,7 @@ export function registerDreamrollTools(server: McpServer): void {
         initialized = true;
       } else {
         state.stopRequested = false;
+        capSidebarWeight(state);
       }
 
       // 2. Honor stop flag from previous session
